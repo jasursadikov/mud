@@ -2,15 +2,15 @@ import os
 import configparser
 
 class Settings:
-	def __init__(self, file_name: str):
+	def __init__(self, file_name: str) -> None:
 		self.file_name = file_name
 		self.config = configparser.ConfigParser()
 		self.settings_file = os.path.join(os.path.expanduser('~'), self.file_name)
 		self.defaults = {
 			'mud': {
+				'config_path': '',
 				'nerd_fonts': True,
 				'auto_fetch': False,
-				'config_path': '',
 				'run_async': True,
 				'run_table': True
 			},
@@ -23,7 +23,7 @@ class Settings:
 		}
 		self.load_settings()
 
-	def load_settings(self):
+	def load_settings(self) -> None:
 		if not os.path.exists(self.settings_file):
 			self.config.read_dict(self.defaults)
 			self.save()
@@ -39,6 +39,6 @@ class Settings:
 
 		self.alias_settings = self.config['alias']
 
-	def save(self):
+	def save(self) -> None:
 		with open(self.settings_file, 'w') as configfile:
 			self.config.write(configfile)
