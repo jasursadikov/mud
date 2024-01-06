@@ -11,7 +11,7 @@ class Config:
         self.data = {}
         self.find()
 
-    def save(self, file_path: str):
+    def save(self, file_path: str) -> None:
         root = ET.Element("mud")
         def filter_labels(label):
             return bool(re.match(r'^\w+$', label))
@@ -35,7 +35,7 @@ class Config:
         with open(file_path, 'w', encoding='utf-8') as file:
             file.write(pretty_xml)
 
-    def find(self):
+    def find(self) -> None:
         if os.path.exists(utils.CONFIG_FILE_NAME):
             self.load(utils.CONFIG_FILE_NAME)
             return
@@ -48,7 +48,7 @@ class Config:
 
         utils.print_error('.mudconfig file was not found. Type `mud add --all` to create configuration file.')
 
-    def load(self, file_path: str):
+    def load(self, file_path: str) -> None:
         self.data = {}
         tree = ET.parse(file_path)
         root = tree.getroot()
@@ -72,17 +72,17 @@ class Config:
                 result[path] = labels
         return result
 
-    def add_label(self, path: str, label: str):
+    def add_label(self, path: str, label: str) -> None:
         if path not in self.data:
             self.data[path] = []
         if label not in self.data[path]:
             self.data[path].append(label)
 
-    def remove_path(self, path: str):
+    def remove_path(self, path: str) -> None:
         if path in self.data:
             del self.data[path]
 
-    def remove_label(self, path: str, label: str):
+    def remove_label(self, path: str, label: str) -> None:
         if path in self.data and label in self.data[path]:
             self.data[path].remove(label)
             if not self.data[path]:
