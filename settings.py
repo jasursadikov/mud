@@ -12,7 +12,8 @@ class Settings:
 				'nerd_fonts': True,
 				'auto_fetch': False,
 				'run_async': True,
-				'run_table': True
+				'run_table': True,
+				'simplify_branches': True
 			},
 			'alias': {
 				'to': 'git checkout',

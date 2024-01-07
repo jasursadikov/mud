@@ -98,25 +98,19 @@ class Commands:
 
         for path, labels in repos.items():
             formatted_path = self._get_formatted_path(path)
-            branch = self._get_branch_status(path)
-
-            branches = [line.strip() for line in subprocess.check_output(['git', 'branch'], text=True, cwd=path).split('\n') if line.strip()]
-            branches = [branch[2:] if branch.startswith('* ') else branch for branch in branches]
-
-            current_branch = next((branch for branch in branches if branch.startswith('*')), None)
-            if current_branch:
-                current_branch = current_branch[2:]
-
-            sorted_branches = sorted(branches, key=lambda x: branch_counter.get(x.strip('* '), 0), reverse=True)
+            branches = subprocess.check_output(['git', 'branch'], text=True, cwd=path).splitlines()
+            current_branch = next((branch.lstrip('* ') for branch in branches if branch.startswith('*')), None)
+            branches = [branch.lstrip('* ') for branch in branches]
+            sorted_branches = sorted(branches, key=lambda x: branch_counter.get(x, 0), reverse=True)
 
             if current_branch and current_branch in sorted_branches:
                 sorted_branches.remove(current_branch)
-                sorted_branches.insert(0, f'* {current_branch}')
+                sorted_branches.insert(0, current_branch)
 
-            formatted_branches = self._get_formatted_branches(sorted_branches)
+            formatted_branches = self._get_formatted_branches(sorted_branches, current_branch)
+
             colored_labels = self._get_formatted_labels(labels)
-
-            table.add_row([formatted_path, branch, formatted_branches, colored_labels])
+            table.add_row([formatted_path, formatted_branches, colored_labels])
 
         table = self._print_table(table)
         if len(table) != 0:
@@ -212,7 +206,7 @@ class Commands:
                 f'{utils.FOREGROUND["blue"]}{utils.glyph("release")}{utils.RESET}' if icon == 'release' else \
                 f'{utils.FOREGROUND["green"]}{utils.glyph("feature")}{utils.RESET}' if icon in ['feature', 'feat', 'develop'] else \
                 f'{utils.FOREGROUND["green"]}{utils.glyph("branch")}{utils.RESET}'
-            branch = f'{icon} {utils.STYLES["bold"]}{branch_path[0]}{utils.RESET}/{utils.FOREGROUND["blink"]}{("/".join(branch_path[1:]))}'
+            branch = f'{icon} {utils.STYLES["bold"]}{branch_path[0]}{utils.RESET}/{utils.STYLES["bold"]}{("/".join(branch_path[1:]))}'
         else:
             branch = f'{utils.FOREGROUND["cyan"]}{utils.glyph("branch")}{utils.RESET} {branch_stdout}'
         return branch
@@ -255,28 +249,41 @@ class Commands:
 
         return colored_label
 
-    def _get_formatted_branches(self, branches: List[str]) -> str:
+    def _get_formatted_branches(self, branches: List[str], current_branch: str) -> str:
         if len(branches) == 0:
             return ''
 
+        simplify_branches = utils.settings.config['mud'].getboolean('simplify_branches') == True
         output = ''
         for branch in branches:
+            is_origin = branch.startswith('origin/')
+            branch = branch.replace('origin/', '') if is_origin else branch
+            current_prefix = f'{utils.STYLES["italic"]}{utils.STYLES["bold"]}' if current_branch == branch else ''
+            current_prefix = current_prefix + utils.STYLES['dim'] if is_origin else current_prefix
+            origin_prefix = f'{utils.FOREGROUND["magenta"]}{utils.STYLES["dim"]}o/' if is_origin else ''
+            color = 'white'
             icon = utils.glyph('branch')
             if branch == 'master' or branch == 'main':
-                icon = f'{utils.FOREGROUND["yellow"]}{utils.glyph("master")}'
+                color = 'yellow'
+                icon = f'{utils.glyph("master")}'
             elif branch == 'develop':
-                icon = f'{utils.FOREGROUND["green"]}{utils.glyph("feature")}'
+                color = 'green'
+                icon = f'{utils.glyph("feature")}'
             elif '/' in branch:
                 parts = branch.split('/')
-                branch = '/'.join([p[0] for p in parts[:-1]] + [f'{utils.END_STYLES["dim"]}' + parts[-1]])
+                end_dim = '' if is_origin else utils.END_STYLES["dim"]
+                branch = '/'.join([p[0] for p in parts[:-1]] + [end_dim + (parts[-1][:10] + '..' if len(parts[-1]) > 10 else parts[-1])]) if simplify_branches else '/'.join([p for p in parts[:-1]] + [end_dim + (parts[-1][:10] + '..' if len(parts[-1]) > 10 else parts[-1])])
                 branch = f'{utils.STYLES["dim"]}{branch}'
                 icon = parts[0]
-                icon = f'{utils.FOREGROUND["red"]}{utils.glyph("bugfix")}' if icon in ['bugfix', 'bug', 'hotfix'] else \
-                    f'{utils.FOREGROUND["blue"]}{utils.glyph("release")}' if icon == 'release' else \
-                    f'{utils.FOREGROUND["green"]}{utils.glyph("feature")}' if icon in ['feature', 'feat', 'develop'] else \
-                    f'{utils.FOREGROUND["green"]}{utils.glyph("branch")}'
-
-            output += f"{icon} {branch}{utils.RESET} "
+                color = 'red' if icon in ['bugfix', 'bug', 'hotfix'] else \
+                    'blue' if icon == 'release' else \
+                    'green' if icon in ['feature', 'feat', 'develop'] else \
+                    'green' 
+                icon = f'{utils.glyph("bugfix")}' if icon in ['bugfix', 'bug', 'hotfix'] else \
+                    f'{utils.glyph("release")}' if icon == 'release' else \
+                    f'{utils.glyph("feature")}' if icon in ['feature', 'feat', 'develop'] else \
+                    f'{utils.glyph("branch")}'
+            output += f'{current_prefix}{utils.FOREGROUND[color]}{icon} {origin_prefix}{utils.FOREGROUND[color]}{branch}{utils.RESET} '
         return output        
 
     def _get_color_index(self, label: str) -> (str, str):
