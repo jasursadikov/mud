@@ -27,8 +27,9 @@ class Commands:
             colored_labels = self._get_formatted_labels(tags)
 
             # Sync with origin status
-            ahead_behind_cmd = subprocess.run(['git', 'rev-list', '--left-right', '--count', 'HEAD...@{upstream}'], shell=True, text=True, cwd=path, capture_output=True)
-            ahead, behind = self._get_formatted_ahead_behind(ahead_behind_cmd.stdout.strip())
+            ahead_behind_cmd = subprocess.run(['git', 'rev-list', '--left-right', '--count', 'HEAD...@{upstream}'], text=True, cwd=path, capture_output=True)
+            stdout = ahead_behind_cmd.stdout.strip().split()
+            ahead, behind = stdout[0], stdout[1]
             origin_sync = ''
             if ahead and ahead != '0':
                 origin_sync += f'{utils.FOREGROUND["bright_green"]}{utils.glyph("ahead")} {ahead}{utils.RESET}'
@@ -227,14 +228,6 @@ class Commands:
         log = cmd.stdout.strip()
         log = log[:max_chars] + '...' if len(log) > max_chars else log     
         return log
-
-    # ahead/behind sorting
-    def _get_formatted_ahead_behind(self, stdout : str) -> (str, str):
-        if stdout:
-            parts = stdout.split()
-            if len(parts) == 2:
-                return parts[0], parts[1]
-        return '', ''
 
     def _get_formatted_labels(self, labels: List[str]) -> str:
         if len(labels) == 0:
