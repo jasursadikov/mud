@@ -71,6 +71,7 @@ GLYPHS = {
     'failed': ('\uf00d', 'Failed'),
     'finished': ('\uf00c', 'Finished'),
     'running': ('\uf46a', 'Running'),
+    'label': ('\uf02e', '')
 }
 
 def print_about() -> None:

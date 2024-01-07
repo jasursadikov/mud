@@ -243,9 +243,7 @@ class Commands:
         colored_label = ''
         for label in labels:
             color_index = self._get_color_index(label)
-            background = utils.BACKGROUND[list(utils.BACKGROUND.keys())[color_index % len(utils.BACKGROUND) + 3]]
-            foreground = utils.FOREGROUND[list(utils.FOREGROUND.keys())[color_index % len(utils.FOREGROUND) + 3]]
-            colored_label += f"{foreground}{utils.glyph('(')}{utils.RESET}{background}{label}{utils.RESET}{foreground}{utils.glyph(')')}{utils.RESET}"
+            colored_label += f'{utils.FOREGROUND[list(utils.FOREGROUND.keys())[color_index % len(utils.FOREGROUND) + 3]]}{utils.glyph("label")}{utils.RESET} {label} '
 
         return colored_label
 
