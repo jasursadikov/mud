@@ -51,10 +51,10 @@ mud -b=master -d git pull
 
 Settings are stored in your home directory in `.mudsettings` file.
 
-- `nerd_fonts = True/False` - toggles whenever nerd font icons should be used in output. Affects `mud status` and `mud log` commands.
-- `auto_fetch = True/False` - when enabled, `mud status` and `mud log` do fetch for all repos when invoked.
-- `run_async = True/False` - affect general commands. When enabled, commands do run asyncronously and then print result when finished.
-- `run_table = True/False` - when enabled, commands output are displayed in the table with last message provided. Requires `run_async`.
+- `nerd_fonts = 0/1` - toggles whenever nerd font icons should be used in output. Affects `mud status` and `mud log` commands.
+- `auto_fetch = 0/1` - when enabled, `mud status` and `mud log` do fetch for all repos when invoked.
+- `run_async = 0/1` - affect general commands. When enabled, commands do run asyncronously and then print result when finished.
+- `run_table = 0/1` - when enabled, commands output are displayed in the table with last message provided. Requires `run_async`.
 - `config_path = /home/user/path/.mudconfig` - this is set up by `mud --set-global` command
 
 ### Aliases
