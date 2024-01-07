@@ -67,7 +67,10 @@ GLYPHS = {
     'feature': ('\uf0ad', ''),
     'branch': ('\ue725', ''),
     '(': ('\ue0b6', ''),
-    ')': ('\ue0b4', ' ')
+    ')': ('\ue0b4', ' '),
+    'failed': ('\uf00d', 'Failed'),
+    'finished': ('\uf00c', 'Finished'),
+    'running': ('\uf46a', 'Running'),
 }
 
 def print_about() -> None:

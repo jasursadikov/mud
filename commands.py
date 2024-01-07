@@ -141,36 +141,49 @@ class Commands:
         await asyncio.gather(*(run_process(path) for path in repos))
 
     # `mud <COMMAND>` when run_async = 1 and run_table = 1
-    async def _run_async_table_view(self, repos: List[str], command: [str]) -> None:
+    async def _run_async_table_view(self, repos: List[str], command: str) -> None:
         sem = asyncio.Semaphore(len(repos)) 
-        table = {repo: '' for repo in repos}
+        table = {repo: ['', ''] for repo in repos}
         async def task(repo: str) -> None:
             async with sem:
                 await self._run_process(repo, table, command)
         tasks = [asyncio.create_task(task(repo)) for repo in repos]
         await asyncio.gather(*tasks)
 
-    async def _run_process(self, repo_path, table, command: str) -> None:
+    async def _run_process(self, repo_path: str, table: Dict[str, List[str]], command: str) -> None:
         process = await asyncio.create_subprocess_shell(
             command,
             cwd=repo_path,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
         )
+
+        line = ''
+        status = "running"
         while True:
             line = await process.stdout.readline()
             if not line:
                 break
             line = line.decode().strip()
-            table[repo_path] = line
+            line = table[repo_path][0] if not line.strip() else line
+            table[repo_path] = [line, f'{utils.FOREGROUND["yellow"]}{utils.glyph("running")}']
             self._print_process(table)
 
-    def _print_process(self, info: Dict[str, str]) -> None:
+        return_code = await process.wait()
+        if return_code == 0:
+            status = f'{utils.FOREGROUND["green"]}{utils.glyph("finished")}'
+        else:
+            status = f'{utils.FOREGROUND["red"]}{utils.glyph("failed")} Code: {return_code}'
+
+        table[repo_path] = [table[repo_path][0], status]
+        self._print_process(table)
+
+    def _print_process(self, info: Dict[str, List[str]]) -> None:
         table = self._get_table()
 
-        for path, output in info.items():
+        for path, (line, status) in info.items():
             formatted_path = self._get_formatted_path(path)
-            table.add_row([formatted_path, output])
+            table.add_row([formatted_path, line, status])
 
         print(f'\x1bc{self._print_table(table)}\n', end='')
 
