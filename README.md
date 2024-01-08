@@ -25,7 +25,7 @@ All entries are stored in `.mudconfig` in XML format. After making your first en
 ## Using
 
 ### Commands
-- `mud <COMMAND>` will run command on all repositories. To filter repositories check [filtering](###filtering) section.
+- `mud <COMMAND>` will run command on all repositories. To filter repositories check [filtering](#filters) section.
 
 ### Info
 - `mud status` - displays status in a compact table for multiple repositories.
@@ -44,19 +44,19 @@ All filters should be applied before the command.
 ```
 Example:
 mud -b=master -d git pull
-# Filters out all repos with master branch and diverged branches and then runs pull command
+# Filters out all repos with master branch and diverged branches and then runs pull command.
 ```
 
 ## Settings
 
 Settings are stored in your home directory in `.mudsettings` file.
 
-- `config_path = /home/user/path/.mudconfig` - this is set up by `mud --set-global` command
-- `nerd_fonts = 0/1` - toggles whenever nerd font icons should be used in output. Affects `mud status` and `mud log` commands.
+- `config_path = /home/user/path/.mudconfig` - this is set up by `mud --set-global` [command](#global-mudconfig).
+- `nerd_fonts = 0/1` - toggles whenever nerd font icons should be used in output.
 - `auto_fetch = 0/1` - when enabled, `mud status` and `mud log` do fetch for all repos when invoked.
-- `run_async = 0/1` - affect general commands. When enabled, commands do run asyncronously and then print result when finished.
-- `run_table = 0/1` - when enabled, commands output are displayed in the table with last message provided. Requires `run_async`.
-- `simplify_branches = 0/1` - will simplify branch names in `mud branch` command, so folders will have only first character of the name
+- `run_async = 0/1` - enabled to run commands asyncronously.
+- `run_table = 0/1` - enable to see asyncronous commands in a table view. Requires `run_async`.
+- `simplify_branches = 0/1` - simplifies branch name in the branch view.
 
 ### Aliases
 You can create your own aliases for commands. To create your own aliases, edit .mudsettings file, `[alias]` section. .mudsettings has following aliases by default:
