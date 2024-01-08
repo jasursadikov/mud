@@ -75,10 +75,10 @@ GLYPHS = {
 }
 
 def print_about() -> None:
-    m = random.choice(FOREGROUND.values())
-    u = random.choice(FOREGROUND.values())
-    d = random.choice(FOREGROUND.values())
-    a = random.choice(FOREGROUND.values())
+    m = random.choice(list(FOREGROUND.values())[3:])
+    u = random.choice(list(FOREGROUND.values())[3:])
+    d = random.choice(list(FOREGROUND.values())[3:])
+    a = random.choice(list(FOREGROUND.values())[3:])
     print(f'''
 {m} __    __{u}  __  __{d}  _____   
 {m}/\ '-./  \{u}/\ \/\ \{d}/\  __-.     {STYLES['bold']}{a}Multidirectory git runner{RESET} [v1.0.0]
