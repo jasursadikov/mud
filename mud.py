@@ -72,7 +72,7 @@ class MudCLI:
                 print('Current .mudconfig set as a global configuration')
             return
         if sys.argv[1] in COMMANDS['version']:
-            utils.print_about()
+            utils.print_version()
             return
 
         self.config = Config()

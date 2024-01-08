@@ -74,7 +74,7 @@ GLYPHS = {
     'label': ('\uf02e', '')
 }
 
-def print_about() -> None:
+def print_version() -> None:
     m = random.choice(list(FOREGROUND.values())[3:])
     u = random.choice(list(FOREGROUND.values())[3:])
     d = random.choice(list(FOREGROUND.values())[3:])
