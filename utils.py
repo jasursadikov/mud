@@ -1,5 +1,7 @@
 import random
 
+from settings import Settings
+
 SETTINGS_FILE_NAME = '.mudsettings'
 CONFIG_FILE_NAME = '.mudconfig'
 RESET = '\033[0m'
@@ -74,11 +76,16 @@ GLYPHS = {
     'label': ('\uf02e', '')
 }
 
+settings: Settings
+
+
 def print_error(args: str) -> None:
     print(f'{FOREGROUND["red"]}Error:{RESET} {args}')
 
-def glyph(key: str) -> None:
+
+def glyph(key: str) -> str:
     return GLYPHS[key][0] if settings.mud_settings['nerd_fonts'] else GLYPHS[key][1]
+
 
 def print_version() -> None:
     m = random.choice(list(FOREGROUND.values())[3:])
