@@ -44,7 +44,7 @@ class MudCLI:
 
         add_parser = subparsers.add_parser(COMMANDS['add'][0], aliases=COMMANDS['add'][1:], help='Register directory')
         add_parser.add_argument('label', help='The label to add (optional)', nargs='?', default='', type=str)
-        add_parser.add_argument('path', help='Directory to add (optional)', nargs='?', type=str,)
+        add_parser.add_argument('path', help='Directory to add (optional)', nargs='?', type=str)
 
         remove_parser = subparsers.add_parser(COMMANDS['remove'][0], aliases=COMMANDS['remove'][1:], help='Remove label from directory or directory in .mudconfig')
         remove_parser.add_argument('label', help='Label to remove from directory (optional)', nargs='?', default='', type=str)
@@ -64,6 +64,7 @@ class MudCLI:
         if len(sys.argv) == 1 or sys.argv[1] in COMMANDS['help']:
             self.parser.print_help()
             return
+        # Sets global repository in .mudsettings
         if sys.argv[1] in COMMANDS['set-global']:
             config_path = os.path.join(os.getcwd(), utils.CONFIG_FILE_NAME)
             if os.path.exists(config_path):
@@ -71,12 +72,12 @@ class MudCLI:
                 utils.settings.save()
                 print('Current .mudconfig set as a global configuration')
             return
+        # Prints version
         if sys.argv[1] in COMMANDS['version']:
             utils.print_version()
             return
 
         self.config = Config()
-        # Filter out repositories if user provided filters
         self._filter_repos()
 
         if len(self.repos) == 0:
@@ -140,6 +141,7 @@ class MudCLI:
             utils.print_error(f'Invalid input. Please provide a value to remove.')
         self.config.save(utils.CONFIG_FILE_NAME)
 
+    # Filter out repositories if user provided filters
     def _filter_repos(self) -> None:
         self.repos = self.config.all()
         branch = None

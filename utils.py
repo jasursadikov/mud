@@ -74,6 +74,12 @@ GLYPHS = {
     'label': ('\uf02e', '')
 }
 
+def print_error(args: str) -> None:
+    print(f'{FOREGROUND["red"]}Error:{RESET} {args}')
+
+def glyph(key: str) -> None:
+    return GLYPHS[key][0] if settings.mud_settings['nerd_fonts'] else GLYPHS[key][1]
+
 def print_version() -> None:
     m = random.choice(list(FOREGROUND.values())[3:])
     u = random.choice(list(FOREGROUND.values())[3:])
@@ -86,9 +92,3 @@ def print_version() -> None:
 {m} \ \_\ \ \_\{u} \_____\{d} \____-    {RESET}https://github.com/jasursadikov/mud
 {m}  \/_/  \/_/{u}\/_____/{d}\/____/    {RESET}Type 'mud --help' for help
 ''')
-
-def print_error(args: str) -> None:
-    print(f'{FOREGROUND["red"]}Error:{RESET} {args}')
-
-def glyph(key: str) -> None:
-    return GLYPHS[key][0] if settings.mud_settings['nerd_fonts'] else GLYPHS[key][1]

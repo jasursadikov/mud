@@ -25,15 +25,17 @@ class Commands:
             # Sync with origin status
             ahead_behind_cmd = subprocess.run(['git', 'rev-list', '--left-right', '--count', 'HEAD...@{upstream}'], text=True, cwd=path, capture_output=True)
             stdout = ahead_behind_cmd.stdout.strip().split()
-            ahead, behind = stdout[0], stdout[1]
-            origin_sync = ''
-            if ahead and ahead != '0':
-                origin_sync += f'{utils.FOREGROUND["bright_green"]}{utils.glyph("ahead")} {ahead}{utils.RESET}'
-            if behind and behind != '0':
-                if origin_sync:
-                    origin_sync += ' '
-                origin_sync += f'{utils.FOREGROUND["bright_blue"]}{utils.glyph("behind")} {behind}{utils.RESET}'
-
+            if len(stdout) >= 2:
+                ahead, behind = stdout[0], stdout[1]
+                origin_sync = ''
+                if ahead and ahead != '0':
+                    origin_sync += f'{utils.FOREGROUND["bright_green"]}{utils.glyph("ahead")} {ahead}{utils.RESET}'
+                if behind and behind != '0':
+                    if origin_sync:
+                        origin_sync += ' '
+                    origin_sync += f'{utils.FOREGROUND["bright_blue"]}{utils.glyph("behind")} {behind}{utils.RESET}'
+            else:
+                origin_sync = ''
             # Git status
             status_cmd = subprocess.run(['git', 'status', '-s'], text=True, cwd=path, capture_output=True)
             files = [line.lstrip() for line in status_cmd.stdout.strip().splitlines()]
@@ -46,7 +48,7 @@ class Commands:
                 elif file.startswith('D'): removed += 1
                 elif file.startswith('R'): moved += 1
             status = ''
-            if added:     status += f'{utils.FOREGROUND["green"]}{added} {utils.glyph("added")}{utils.RESET} '
+            if added:     status += f'{utils.FOREGROUND["bright_green"]}{added} {utils.glyph("added")}{utils.RESET} '
             if modified:  status += f'{utils.FOREGROUND["yellow"]}{modified} {utils.glyph("modified")}{utils.RESET} ' 
             if moved:     status += f'{utils.FOREGROUND["blue"]}{moved} {utils.glyph("moved")}{utils.RESET} '
             if removed:   status += f'{utils.FOREGROUND["red"]}{removed} {utils.glyph("removed")}{utils.RESET} '
@@ -54,9 +56,7 @@ class Commands:
 
             table.add_row([formatted_path , branch, origin_sync, status, author, commit, colored_labels])
 
-        table = self._print_table(table)
-        if len(table) != 0:
-            print(table)
+        self._print_table(table)
 
     # `mud log` command implementation
     def log(self, repos: Dict[str, List[str]]) -> None:
@@ -74,9 +74,7 @@ class Commands:
 
             table.add_row([formatted_path , branch, author, commit_time, commit, colored_labels])
 
-        table = self._print_table(table)
-        if len(table) != 0:
-            print(table)
+        self._print_table(table)
 
     # `mud branch` command implementation
     def branches(self, repos: Dict[str, List[str]]) -> None:
@@ -107,9 +105,7 @@ class Commands:
             colored_labels = self._get_formatted_labels(labels)
             table.add_row([formatted_path, formatted_branches, colored_labels])
 
-        table = self._print_table(table)
-        if len(table) != 0:
-            print(table)
+        self._print_table(table)
 
     # `mud <COMMAND>` when run_async = 0 and run_table = 0
     def run_ordered(self, repos: List[str], command: [str]) -> None:
@@ -126,14 +122,9 @@ class Commands:
         sem = asyncio.Semaphore(len(repos))
         async def run_process(path: str) -> None:
             async with sem:
-                process = await asyncio.create_subprocess_shell(
-                    command,
-                    cwd=path,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE
-                )
+                process = await asyncio.create_subprocess_shell(command, cwd=path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 stdout, stderr = await process.communicate()
-                print(f'{self._get_formatted_path(path)}>{utils.RESET} {command}{utils.RESET}')
+                print(f'{self._get_formatted_path(path)}>{utils.RESET} {command}')
                 if stderr:
                     print(stderr.decode())
                 if stdout and not stdout.isspace():
@@ -151,12 +142,7 @@ class Commands:
         await asyncio.gather(*tasks)
 
     async def _run_process(self, repo_path: str, table: Dict[str, List[str]], command: str) -> None:
-        process = await asyncio.create_subprocess_shell(
-            command,
-            cwd=repo_path,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
+        process = await asyncio.create_subprocess_shell(command, cwd=repo_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         line = ''
         status = "running"
@@ -185,16 +171,22 @@ class Commands:
             formatted_path = self._get_formatted_path(path)
             table.add_row([formatted_path, line, status])
 
-        print(f'\x1bc{self._print_table(table)}\n', end='')
+        print(f'\x1bc{self._table_to_str(table)}\n', end='')
 
-    def _print_table(self, table: PrettyTable) -> str:
+    def _print_table(self, table: PrettyTable):
+        table = self._table_to_str(table)
+        if len(table) != 0:
+            print(table)
+
+    def _table_to_str(self, table: PrettyTable) -> str:
         table = table.get_string()
         table = '\n'.join(line.lstrip() for line in table.splitlines())
         return table
-    
+
     def _get_table(self) -> PrettyTable:
         return PrettyTable(border=False, header=False, style=PLAIN_COLUMNS, align='l')
 
+    # Prettyfied repository path
     def _get_formatted_path(self, path: str) -> str:
         return f'{utils.STYLES["dim"]}{utils.FOREGROUND["gray"]}../{utils.RESET}{utils.STYLES["dim"]}{path}{utils.RESET}'
 
@@ -282,7 +274,7 @@ class Commands:
                     f'{utils.glyph("feature")}' if icon in ['feature', 'feat', 'develop'] else \
                     f'{utils.glyph("branch")}'
             output += f'{current_prefix}{utils.FOREGROUND[color]}{icon} {origin_prefix}{utils.FOREGROUND[color]}{branch}{utils.RESET} '
-        return output        
+        return output
 
     def _get_color_index(self, label: str) -> (str, str):
         if label not in self.label_color_cache:
