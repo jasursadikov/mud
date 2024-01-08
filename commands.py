@@ -56,9 +56,7 @@ class Commands:
 
             table.add_row([formatted_path , branch, origin_sync, status, author, commit, colored_labels])
 
-        table = self._table_to_str(table)
-        if len(table) != 0:
-            print(table)
+        self._print_table(table)
 
     # `mud log` command implementation
     def log(self, repos: Dict[str, List[str]]) -> None:
@@ -76,9 +74,7 @@ class Commands:
 
             table.add_row([formatted_path , branch, author, commit_time, commit, colored_labels])
 
-        table = self._table_to_str(table)
-        if len(table) != 0:
-            print(table)
+        self._print_table(table)
 
     # `mud branch` command implementation
     def branches(self, repos: Dict[str, List[str]]) -> None:
@@ -109,9 +105,7 @@ class Commands:
             colored_labels = self._get_formatted_labels(labels)
             table.add_row([formatted_path, formatted_branches, colored_labels])
 
-        table = self._table_to_str(table)
-        if len(table) != 0:
-            print(table)
+        self._print_table(table)
 
     # `mud <COMMAND>` when run_async = 0 and run_table = 0
     def run_ordered(self, repos: List[str], command: [str]) -> None:
@@ -178,6 +172,11 @@ class Commands:
             table.add_row([formatted_path, line, status])
 
         print(f'\x1bc{self._table_to_str(table)}\n', end='')
+
+    def _print_table(self, table: PrettyTable):
+        table = self._table_to_str(table)
+        if len(table) != 0:
+            print(table)
 
     def _table_to_str(self, table: PrettyTable) -> str:
         table = table.get_string()
@@ -275,7 +274,7 @@ class Commands:
                     f'{utils.glyph("feature")}' if icon in ['feature', 'feat', 'develop'] else \
                     f'{utils.glyph("branch")}'
             output += f'{current_prefix}{utils.FOREGROUND[color]}{icon} {origin_prefix}{utils.FOREGROUND[color]}{branch}{utils.RESET} '
-        return output        
+        return output
 
     def _get_color_index(self, label: str) -> (str, str):
         if label not in self.label_color_cache:
