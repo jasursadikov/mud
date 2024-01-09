@@ -137,8 +137,7 @@ class Commands:
 
         async def run_process(path: str) -> None:
             async with sem:
-                process = await asyncio.create_subprocess_shell(command, cwd=path, stdout=subprocess.PIPE,
-                                                                stderr=subprocess.PIPE)
+                process = await asyncio.create_subprocess_shell(command, cwd=path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 stdout, stderr = await process.communicate()
                 print(f'{self._get_formatted_path(path)}>{RESET} {command}')
                 if stderr:
@@ -161,8 +160,7 @@ class Commands:
         await asyncio.gather(*tasks)
 
     async def _run_process(self, repo_path: str, table: Dict[str, List[str]], command: str) -> None:
-        process = await asyncio.create_subprocess_shell(command, cwd=repo_path, stdout=subprocess.PIPE,
-                                                        stderr=subprocess.PIPE)
+        process = await asyncio.create_subprocess_shell(command, cwd=repo_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         while True:
             line = await process.stdout.readline()
