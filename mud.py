@@ -37,7 +37,8 @@ class MudCLI:
         self.config = None
         self.parser = self._create_parser()
 
-    def _create_parser(self) -> ArgumentParser:
+    @staticmethod
+    def _create_parser() -> ArgumentParser:
         parser = argparse.ArgumentParser(description=f'mud allows you to run commands in multiple directories.')
         subparsers = parser.add_subparsers(dest='command')
 
@@ -138,7 +139,7 @@ class MudCLI:
         if len(sys.argv) > 1 and sys.argv[1] in [cmd for group in COMMANDS.values() for cmd in group]:
             args = self.parser.parse_args()
             if args.command in COMMANDS['init']:
-                self.add(args)
+                self.init(args)
             elif args.command in COMMANDS['add']:
                 self.add(args)
             elif args.command in COMMANDS['remove']:
@@ -240,15 +241,16 @@ class MudCLI:
             for repo in self.repos:
                 subprocess.run(['git', 'fetch'], cwd=repo, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-    async def _fetch_repo_async(self, repo: str) -> None:
-        await asyncio.to_thread(subprocess.run, ['git', 'fetch'], cwd=repo, stdout=subprocess.DEVNULL,
-                                stderr=subprocess.DEVNULL)
-
     async def _fetch_all_async(self) -> None:
         tasks = [self._fetch_repo_async(repo) for repo in self.repos]
         await asyncio.gather(*tasks)
 
-    def _parse_aliases(self):
+    @staticmethod
+    async def _fetch_repo_async(repo: str) -> None:
+        await asyncio.to_thread(subprocess.run, ['git', 'fetch'], cwd=repo, stdout=subprocess.DEVNULL,
+                                stderr=subprocess.DEVNULL)
+    @staticmethod
+    def _parse_aliases():
         for alias, command in dict(utils.settings.alias_settings).items():
             if sys.argv[0] == alias:
                 sys.argv[0] = command
@@ -256,6 +258,5 @@ class MudCLI:
 
 if __name__ == '__main__':
     utils.settings = Settings(utils.SETTINGS_FILE_NAME)
-
     cli = MudCLI()
     cli.run()
