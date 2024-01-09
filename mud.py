@@ -8,6 +8,7 @@ import subprocess
 from argparse import ArgumentParser
 
 import utils
+from utils import TEXT, RESET, STYLES
 from config import Config
 from settings import Settings
 from commands import Commands
@@ -127,6 +128,7 @@ class MudCLI:
             utils.print_version()
             return
 
+        current_directory = os.getcwd()
         self.config = Config()
         self._filter_repos()
 
@@ -139,6 +141,7 @@ class MudCLI:
         if len(sys.argv) > 1 and sys.argv[1] in [cmd for group in COMMANDS.values() for cmd in group]:
             args = self.parser.parse_args()
             if args.command in COMMANDS['init']:
+                os.chdir(current_directory)
                 self.init(args)
             elif args.command in COMMANDS['add']:
                 self.add(args)
@@ -167,12 +170,16 @@ class MudCLI:
                 self.cmd_runner.run_ordered(self.repos.keys(), command_str)
 
     def init(self, args) -> None:
+        self.config.data = {}
         index = 0
         directories = [d for d in os.listdir('.') if os.path.isdir(d) and os.path.isdir(os.path.join(d, '.git'))]
         for directory in directories:
+            if directory in self.config.paths():
+                continue
             self.config.add_label(directory, getattr(args, 'label', ''))
             index += 1
-            print(f'{directory} added')
+            path = f'{STYLES["dim"]}{TEXT["gray"]}../{RESET}{STYLES["dim"]}{directory}{RESET}'
+            print(f'{path} {TEXT["green"]}added{RESET}')
         if index == 0:
             utils.print_error('No git repositories were found in this directory')
             return
