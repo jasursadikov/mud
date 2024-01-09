@@ -5,7 +5,7 @@ from settings import Settings
 SETTINGS_FILE_NAME = '.mudsettings'
 CONFIG_FILE_NAME = '.mudconfig'
 RESET = '\033[0m'
-FOREGROUND = {
+TEXT = {
     'white': '\033[37m',
     'gray': '\033[90m',
     'black': '\033[30m',
@@ -23,7 +23,7 @@ FOREGROUND = {
     'bright_magenta': '\033[95m',
     'bright_cyan': '\033[96m',
 }
-BACKGROUND = {
+BACK = {
     'white': '\033[47m',
     'medium_gray': '\033[100m',
     'black': '\033[40m',
@@ -80,7 +80,7 @@ settings: Settings
 
 
 def print_error(args: str) -> None:
-    print(f'{FOREGROUND["red"]}Error:{RESET} {args}')
+    print(f'{TEXT["red"]}Error:{RESET} {args}')
 
 
 def glyph(key: str) -> str:
@@ -88,10 +88,10 @@ def glyph(key: str) -> str:
 
 
 def print_version() -> None:
-    m = random.choice(list(FOREGROUND.values())[3:])
-    u = random.choice(list(FOREGROUND.values())[3:])
-    d = random.choice(list(FOREGROUND.values())[3:])
-    a = random.choice(list(FOREGROUND.values())[3:])
+    m = random.choice(list(TEXT.values())[3:])
+    u = random.choice(list(TEXT.values())[3:])
+    d = random.choice(list(TEXT.values())[3:])
+    a = random.choice(list(TEXT.values())[3:])
     print(f'''
 {m} __    __{u}  __  __{d}  _____   
 {m}/\ '-./  \{u}/\ \/\ \{d}/\  __-.     {STYLES['bold']}{a}Multidirectory git runner{RESET} [v1.0.0]

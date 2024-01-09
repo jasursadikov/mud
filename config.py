@@ -41,6 +41,7 @@ class Config:
         if os.path.exists(utils.CONFIG_FILE_NAME):
             self.load(utils.CONFIG_FILE_NAME)
             return
+
         if utils.settings.mud_settings['config_path'] != '' and os.path.exists(
                 utils.settings.mud_settings['config_path']):
             directory = os.path.dirname(utils.settings.mud_settings['config_path'])
