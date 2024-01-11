@@ -4,6 +4,17 @@
 
 mud is a multidirectory git runner. Using this tool you can run git commands in a groups of repositories. This tool is not limited to git commands only, you can run any commands as you wish, but this tool was primarally designed to be used with git, so each referenced directory should have `.git`.
 
+## Installing
+
+There is no an installation guide for this tool, but if you're using Linux like I do, I would suggest to download this repo somewhere and create a symlink to the `mud.py` file in `~/bin` directory in order to run this script.
+You can copy following bash script and run it.
+```bash
+git clone https://github.com/jasursadikov/mud
+cd mud
+ln -s $PWD/mud.py ~/bin/mud
+chmod +x ~/bin/mud
+```
+
 ## Getting started
 
 To get using `mud`, run `mud init` command to create `.mudconfig` file. This file is important to keep references to repositories. All repositories in current dictionary would be included to `.mudconfig`.
