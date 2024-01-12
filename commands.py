@@ -161,6 +161,7 @@ class Commands:
 
     async def _run_process(self, repo_path: str, table: Dict[str, List[str]], command: str) -> None:
         process = await asyncio.create_subprocess_shell(command, cwd=repo_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        table[repo_path] = ['', f'{TEXT["yellow"]}{glyph("running")}']
 
         while True:
             line = await process.stdout.readline()
