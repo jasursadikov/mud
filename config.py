@@ -31,8 +31,8 @@ class Config:
                 dir_element.set("label", formatted_labels)
 
         rough_string = ElementTree.tostring(root, 'utf-8')
-        reparsed = minidom.parseString(rough_string)
-        pretty_xml = reparsed.toprettyxml(indent="\t")
+        parsed = minidom.parseString(rough_string)
+        pretty_xml = parsed.toprettyxml(indent="\t")
 
         with open(file_path, 'w', encoding='utf-8') as file:
             file.write(pretty_xml)

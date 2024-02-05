@@ -43,71 +43,26 @@ class MudCLI:
         parser = argparse.ArgumentParser(description=f'mud allows you to run commands in multiple directories.')
         subparsers = parser.add_subparsers(dest='command')
 
-        subparsers.add_parser(COMMANDS['init'][0],
-                              aliases=COMMANDS['init'][1:],
-                              help='Initializing .mudconfig, adds all repositories in this directory to .mudconfig')
-        subparsers.add_parser(COMMANDS['status'][0],
-                              aliases=COMMANDS['status'][1:],
-                              help='Displays git status in a table view')
-        subparsers.add_parser(COMMANDS['branches'][0],
-                              aliases=COMMANDS['branches'][1:],
-                              help='Displays all branches in a table view')
-        subparsers.add_parser(COMMANDS['log'][0],
-                              aliases=COMMANDS['log'][1:],
-                              help='Displays log of last commit for all repos in a table view')
+        subparsers.add_parser(COMMANDS['init'][0], aliases=COMMANDS['init'][1:], help='Initializing .mudconfig, adds all repositories in this directory to .mudconfig')
+        subparsers.add_parser(COMMANDS['status'][0], aliases=COMMANDS['status'][1:], help='Displays git status in a table view')
+        subparsers.add_parser(COMMANDS['branches'][0], aliases=COMMANDS['branches'][1:], help='Displays all branches in a table view')
+        subparsers.add_parser(COMMANDS['log'][0], aliases=COMMANDS['log'][1:], help='Displays log of last commit for all repos in a table view')
 
-        add_parser = subparsers.add_parser(COMMANDS['add'][0],
-                                           aliases=COMMANDS['add'][1:],
-                                           help='Register directory')
-        add_parser.add_argument('label',
-                                help='The label to add (optional)',
-                                nargs='?',
-                                default='',
-                                type=str)
-        add_parser.add_argument('path',
-                                help='Directory to add (optional)',
-                                nargs='?',
-                                type=str)
+        add_parser = subparsers.add_parser(COMMANDS['add'][0], aliases=COMMANDS['add'][1:], help='Register directory')
+        add_parser.add_argument('label', help='The label to add (optional)', nargs='?', default='', type=str)
+        add_parser.add_argument('path', help='Directory to add (optional)', nargs='?', type=str)
 
-        remove_parser = subparsers.add_parser(COMMANDS['remove'][0],
-                                              aliases=COMMANDS['remove'][1:],
-                                              help='Remove label from directory or directory in .mudconfig')
-        remove_parser.add_argument('label',
-                                   help='Label to remove from directory (optional)',
-                                   nargs='?',
-                                   default='',
-                                   type=str)
-        remove_parser.add_argument('path', help='Directory to remove (optional)',
-                                   nargs='?',
-                                   type=str)
+        remove_parser = subparsers.add_parser(COMMANDS['remove'][0], aliases=COMMANDS['remove'][1:], help='Remove label from directory or directory in .mudconfig')
+        remove_parser.add_argument('label', help='Label to remove from directory (optional)', nargs='?', default='', type=str)
+        remove_parser.add_argument('path', help='Directory to remove (optional)', nargs='?', type=str)
 
-        parser.add_argument(*LABEL_PREFIX, metavar='LABEL',
-                            nargs='?',
-                            default='',
-                            type=str,
-                            help='Filter repos with provided label')
-        parser.add_argument(*BRANCH_PREFIX,
-                            metavar='BRANCH',
-                            nargs='?',
-                            default='',
-                            type=str,
-                            help='Filter repos with provided branch')
-        parser.add_argument(*MODIFIED_ATTR,
-                            action='store_true',
-                            help='Filter modified repos')
-        parser.add_argument(*DIVERGED_ATTR,
-                            action='store_true',
-                            help='Filter diverged repos')
-        parser.add_argument(COMMANDS['set-global'][0],
-                            help='Sets \'.mudconfig\' in current directory as your global \'.mudconfig\' so you can '
-                                 'use it anywhere',
-                            action='store_true')
-        parser.add_argument(COMMANDS['version'][0],
-                            help='Displays current version of mud',
-                            action='store_true')
-        parser.add_argument('catch_all',
-                            nargs='*',
-                            help='Type any commands to execute among repositories.')
+        parser.add_argument(*LABEL_PREFIX, metavar='LABEL', nargs='?', default='', type=str, help='Filter repos with provided label')
+        parser.add_argument(*BRANCH_PREFIX, metavar='BRANCH', nargs='?', default='', type=str, help='Filter repos with provided branch')
+        parser.add_argument(*MODIFIED_ATTR, action='store_true', help='Filter modified repos')
+        parser.add_argument(*DIVERGED_ATTR, action='store_true', help='Filter diverged repos')
+        parser.add_argument(COMMANDS['set-global'][0], help='Sets \'.mudconfig\' in current directory as your global \'.mudconfig\' so you can use it anywhere', action='store_true')
+        parser.add_argument(COMMANDS['version'][0], help='Displays current version of mud', action='store_true')
+        parser.add_argument('catch_all', nargs='*', help='Type any commands to execute among repositories.')
         return parser
 
     def run(self) -> None:
@@ -229,11 +184,8 @@ class MudCLI:
         for repo in self.repos:
             os.chdir(os.path.join(directory, repo))
             has_modifications = subprocess.check_output(['git', 'status', '--porcelain'])
-            branch_filter = branch is not None and branch.strip() and subprocess.check_output(
-                ['git', 'rev-parse', '--abbrev-ref', 'HEAD']).strip().decode('utf-8') != branch
-            is_diverged = not any('ahead' in line or 'behind' in line for line in
-                                  subprocess.check_output(['git', 'status', '--branch', '--porcelain']).decode(
-                                      'utf-8').splitlines() if line.startswith('##'))
+            branch_filter = (branch is not None and branch.strip() and subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD']).strip().decode('utf-8') != branch)
+            is_diverged = not any('ahead' in line or 'behind' in line for line in subprocess.check_output(['git', 'status', '--branch', '--porcelain']).decode('utf-8').splitlines() if line.startswith('##'))
             if (modified and not has_modifications) or (branch and branch_filter) or (diverged and is_diverged):
                 to_delete.append(repo)
 
@@ -254,8 +206,8 @@ class MudCLI:
 
     @staticmethod
     async def _fetch_repo_async(repo: str) -> None:
-        await asyncio.to_thread(subprocess.run, ['git', 'fetch'], cwd=repo, stdout=subprocess.DEVNULL,
-                                stderr=subprocess.DEVNULL)
+        await asyncio.to_thread(subprocess.run, ['git', 'fetch'], cwd=repo, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, bufsize=-1)
+
     @staticmethod
     def _parse_aliases():
         for alias, command in dict(utils.settings.alias_settings).items():

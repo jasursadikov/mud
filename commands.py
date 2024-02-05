@@ -20,13 +20,10 @@ class Commands:
         for path, tags in repos.items():
             formatted_path = self._get_formatted_path(path)
             branch = self._get_branch_status(path)
-            author = self._get_authors_name(path)
-            commit = self._get_commit_message(path, 30)
             colored_labels = self._get_formatted_labels(tags)
 
             # Sync with origin status
-            ahead_behind_cmd = subprocess.run(['git', 'rev-list', '--left-right', '--count', 'HEAD...@{upstream}'],
-                                              text=True, cwd=path, capture_output=True)
+            ahead_behind_cmd = subprocess.run(['git', 'rev-list', '--left-right', '--count', 'HEAD...@{upstream}'], text=True, cwd=path, capture_output=True)
             stdout = ahead_behind_cmd.stdout.strip().split()
             if len(stdout) >= 2:
                 ahead, behind = stdout[0], stdout[1]
@@ -66,7 +63,7 @@ class Commands:
             if not files:
                 status = f'{TEXT["green"]}{glyph("clear")}{RESET}'
 
-            table.add_row([formatted_path, branch, origin_sync, status, author, commit, colored_labels])
+            table.add_row([formatted_path, branch, origin_sync, status, colored_labels])
 
         self._print_table(table)
 
@@ -81,8 +78,7 @@ class Commands:
             colored_labels = self._get_formatted_labels(labels)
 
             # Commit time
-            commit_time_cmd = subprocess.run(['git', 'log', '-1', '--pretty=format:%cd', '--date=relative'], text=True,
-                                             cwd=path, capture_output=True)
+            commit_time_cmd = subprocess.run(['git', 'log', '-1', '--pretty=format:%cd', '--date=relative'], text=True, cwd=path, capture_output=True)
             commit_time = commit_time_cmd.stdout.strip()
 
             table.add_row([formatted_path, branch, author, commit_time, commit, colored_labels])
@@ -94,8 +90,7 @@ class Commands:
         table = self._get_table()
         all_branches = {}
         for path in repos.keys():
-            raw_branches = [line.strip() for line in
-                            subprocess.check_output(['git', 'branch'], text=True, cwd=path).split('\n') if line.strip()]
+            raw_branches = [line.strip() for line in subprocess.check_output(['git', 'branch'], text=True, cwd=path).split('\n') if line.strip()]
             for branch in raw_branches:
                 branch = branch.replace(' ', '').replace('*', '')
                 if branch not in all_branches:
@@ -267,7 +262,7 @@ class Commands:
         if len(branches) == 0:
             return ''
 
-        simplify_branches = utils.settings.config['mud'].getboolean('simplify_branches') == True
+        simplify_branches = utils.settings.config['mud'].getboolean('simplify_branches') is True
         output = ''
         for branch in branches:
             is_origin = branch.startswith('origin/')
