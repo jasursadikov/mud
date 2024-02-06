@@ -183,7 +183,15 @@ class Commands:
             formatted_path = self._get_formatted_path(path)
             table.add_row([formatted_path, line, status])
 
-        print(f'\x1bc{self._table_to_str(table)}\n', end='')
+        table_str = self._table_to_str(table)
+        num_lines = table_str.count('\n') + 1
+
+        if hasattr(self, '_last_printed_lines') and self._last_printed_lines > 0:
+            for _ in range(self._last_printed_lines):
+                print('\033[A\033[K', end='')
+
+        print(f'{table_str}\n', end='')
+        self._last_printed_lines = num_lines
 
     def _print_table(self, table: PrettyTable):
         table = self._table_to_str(table)
