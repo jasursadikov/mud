@@ -127,12 +127,12 @@ class Commands:
                 print(result.stdout)
 
     # `mud <COMMAND>` when run_async = 1 and run_table = 0
-    async def run_async(self, repos: List[str], command: str) -> None:
+    async def run_async(self, repos: List[str], command: List[str]) -> None:
         sem = asyncio.Semaphore(len(repos))
 
         async def run_process(path: str) -> None:
             async with sem:
-                process = await asyncio.create_subprocess_shell(command, cwd=path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                process = await asyncio.create_subprocess_exec(*command, cwd=path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 stdout, stderr = await process.communicate()
                 print(f'{self._get_formatted_path(path)}>{RESET} {command}')
                 if stderr:
@@ -143,7 +143,7 @@ class Commands:
         await asyncio.gather(*(run_process(path) for path in repos))
 
     # `mud <COMMAND>` when run_async = 1 and run_table = 1
-    async def run_async_table_view(self, repos: List[str], command: str) -> None:
+    async def run_async_table_view(self, repos: List[str], command: List[str]) -> None:
         sem = asyncio.Semaphore(len(repos))
         table = {repo: ['', ''] for repo in repos}
 
@@ -154,8 +154,8 @@ class Commands:
         tasks = [asyncio.create_task(task(repo)) for repo in repos]
         await asyncio.gather(*tasks)
 
-    async def _run_process(self, repo_path: str, table: Dict[str, List[str]], command: str) -> None:
-        process = await asyncio.create_subprocess_shell(command, cwd=repo_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    async def _run_process(self, repo_path: str, table: Dict[str, List[str]], command: List[str]) -> None:
+        process = await asyncio.create_subprocess_exec(*command, cwd=repo_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         table[repo_path] = ['', f'{TEXT["yellow"]}{glyph("running")}']
 
         while True:

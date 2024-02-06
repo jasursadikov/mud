@@ -115,14 +115,13 @@ class MudCLI:
         else:
             del sys.argv[0]
             self._parse_aliases()
-            command_str = ' '.join(sys.argv)
             if utils.settings.config['mud'].getboolean('run_async'):
                 if utils.settings.config['mud'].getboolean('run_table'):
-                    asyncio.run(self.cmd_runner.run_async_table_view(self.repos.keys(), command_str))
+                    asyncio.run(self.cmd_runner.run_async_table_view(self.repos.keys(), sys.argv))
                 else:
-                    asyncio.run(self.cmd_runner.run_async(self.repos.keys(), command_str))
+                    asyncio.run(self.cmd_runner.run_async(self.repos.keys(), sys.argv))
             else:
-                self.cmd_runner.run_ordered(self.repos.keys(), command_str)
+                self.cmd_runner.run_ordered(self.repos.keys(), sys.argv)
 
     def init(self, args) -> None:
         self.config.data = {}
