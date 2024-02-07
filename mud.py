@@ -211,7 +211,7 @@ class MudCLI:
     def _parse_aliases():
         for alias, command in dict(utils.settings.alias_settings).items():
             if sys.argv[0] == alias:
-                sys.argv[0] = command
+                sys.argv = command.split(' ')
 
 
 if __name__ == '__main__':
