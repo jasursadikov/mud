@@ -211,10 +211,14 @@ class MudCLI:
     def _parse_aliases():
         for alias, command in dict(utils.settings.alias_settings).items():
             if sys.argv[0] == alias:
-                sys.argv = command.split(' ')
+                del sys.argv[0]
+                sys.argv = command.split(' ') + sys.argv
 
 
 if __name__ == '__main__':
-    utils.settings = Settings(utils.SETTINGS_FILE_NAME)
-    cli = MudCLI()
-    cli.run()
+    try:
+        utils.settings = Settings(utils.SETTINGS_FILE_NAME)
+        cli = MudCLI()
+        cli.run()
+    except KeyboardInterrupt:
+        utils.print_error('Stopped by user')
