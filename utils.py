@@ -61,7 +61,7 @@ GLYPHS = {
     'modified': ('\uf040', '*'),
     'added': ('\uf067', '+'),
     'removed': ('\uf1f8', '-'),
-    'moved': ('\uf4d5', 'M'),
+    'moved': ('\uf064', 'M'),
     'clear': ('\uf00c', 'Clear'),
     'master': ('\uf015', ''),
     'bugfix': ('\uf188', ''),
