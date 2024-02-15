@@ -218,6 +218,7 @@ class MudCLI:
 if __name__ == '__main__':
     try:
         utils.settings = Settings(utils.SETTINGS_FILE_NAME)
+        utils.set_up()
         cli = MudCLI()
         cli.run()
     except KeyboardInterrupt:

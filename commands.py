@@ -2,7 +2,7 @@ import utils
 import asyncio
 import subprocess
 
-from utils import TEXT, BACK, RESET, STYLES, END_STYLES, glyph
+from utils import TEXT, BACK, RESET, STYLES, END_STYLES
 from typing import List, Dict
 from collections import Counter
 from prettytable import PrettyTable, PLAIN_COLUMNS
@@ -11,8 +11,9 @@ from prettytable import PrettyTable, PLAIN_COLUMNS
 class Commands:
     def __init__(self, repos):
         self.repos = repos
-        self.label_color_cache = {}
-        self.current_color_index = 0
+        self._label_color_cache = {}
+        self._current_color_index = 0
+        self._last_printed_lines = None
 
     # `mud status` command implementation
     def status(self, repos: Dict[str, List[str]]) -> None:
@@ -29,11 +30,11 @@ class Commands:
                 ahead, behind = stdout[0], stdout[1]
                 origin_sync = ''
                 if ahead and ahead != '0':
-                    origin_sync += f'{TEXT["bright_green"]}{glyph("ahead")} {ahead}{RESET}'
+                    origin_sync += f'{TEXT["bright_green"]}{utils.GLYPHS["ahead"]} {ahead}{RESET}'
                 if behind and behind != '0':
                     if origin_sync:
                         origin_sync += ' '
-                    origin_sync += f'{TEXT["bright_blue"]}{glyph("behind")} {behind}{RESET}'
+                    origin_sync += f'{TEXT["bright_blue"]}{utils.GLYPHS["behind"]} {behind}{RESET}'
             else:
                 origin_sync = ''
             # Git status
@@ -53,15 +54,15 @@ class Commands:
                     moved += 1
             status = ''
             if added:
-                status += f'{TEXT["bright_green"]}{added} {glyph("added")}{RESET} '
+                status += f'{TEXT["bright_green"]}{added} {utils.GLYPHS["added"]}{RESET} '
             if modified:
-                status += f'{TEXT["yellow"]}{modified} {glyph("modified")}{RESET} '
+                status += f'{TEXT["yellow"]}{modified} {utils.GLYPHS["modified"]}{RESET} '
             if moved:
-                status += f'{TEXT["blue"]}{moved} {glyph("moved")}{RESET} '
+                status += f'{TEXT["blue"]}{moved} {utils.GLYPHS["moved"]}{RESET} '
             if removed:
-                status += f'{TEXT["red"]}{removed} {glyph("removed")}{RESET} '
+                status += f'{TEXT["red"]}{removed} {utils.GLYPHS["removed"]}{RESET} '
             if not files:
-                status = f'{TEXT["green"]}{glyph("clear")}{RESET}'
+                status = f'{TEXT["green"]}{utils.GLYPHS["clear"]}{RESET}'
 
             table.add_row([formatted_path, branch, origin_sync, status, colored_labels])
 
@@ -90,7 +91,8 @@ class Commands:
         table = self._get_table()
         all_branches = {}
         for path in repos.keys():
-            raw_branches = [line.strip() for line in subprocess.check_output(['git', 'branch'], text=True, cwd=path).split('\n') if line.strip()]
+            raw_branches = [line.strip() for line in
+                            subprocess.check_output(['git', 'branch'], text=True, cwd=path).split('\n') if line.strip()]
             for branch in raw_branches:
                 branch = branch.replace(' ', '').replace('*', '')
                 if branch not in all_branches:
@@ -132,7 +134,8 @@ class Commands:
 
         async def run_process(path: str) -> None:
             async with sem:
-                process = await asyncio.create_subprocess_exec(*command, cwd=path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                process = await asyncio.create_subprocess_exec(*command, cwd=path, stdout=subprocess.PIPE,
+                                                               stderr=subprocess.PIPE)
                 stdout, stderr = await process.communicate()
                 print(f'{self._get_formatted_path(path)}>{RESET} {command}')
                 if stderr:
@@ -156,7 +159,7 @@ class Commands:
 
     async def _run_process(self, repo_path: str, table: Dict[str, List[str]], command: List[str]) -> None:
         process = await asyncio.create_subprocess_exec(*command, cwd=repo_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        table[repo_path] = ['', f'{TEXT["yellow"]}{glyph("running")}']
+        table[repo_path] = ['', f'{TEXT["yellow"]}{utils.GLYPHS["running"]}']
 
         while True:
             line = await process.stdout.readline()
@@ -164,14 +167,14 @@ class Commands:
                 break
             line = line.decode().strip()
             line = table[repo_path][0] if not line.strip() else line
-            table[repo_path] = [line, f'{TEXT["yellow"]}{glyph("running")}']
+            table[repo_path] = [line, f'{TEXT["yellow"]}{utils.GLYPHS["running"]}']
             self._print_process(table)
 
         return_code = await process.wait()
         if return_code == 0:
-            status = f'{TEXT["green"]}{glyph("finished")}'
+            status = f'{TEXT["green"]}{utils.GLYPHS["finished"]}'
         else:
-            status = f'{TEXT["red"]}{glyph("failed")} Code: {return_code}'
+            status = f'{TEXT["red"]}{utils.GLYPHS["failed"]} Code: {return_code}'
 
         table[repo_path] = [table[repo_path][0], status]
         self._print_process(table)
@@ -220,19 +223,19 @@ class Commands:
                                     capture_output=True)
         branch_stdout = branch_cmd.stdout.strip()
         if branch_stdout == 'master' or branch_stdout == 'main':
-            branch = f'{TEXT["yellow"]}{glyph("master")}{RESET} {branch_stdout}'
+            branch = f'{TEXT["yellow"]}{utils.GLYPHS["master"]}{RESET} {branch_stdout}'
         elif branch_stdout == 'develop':
-            branch = f'{TEXT["green"]}{glyph("feature")}{RESET} {branch_stdout}'
+            branch = f'{TEXT["green"]}{utils.GLYPHS["feature"]}{RESET} {branch_stdout}'
         elif '/' in branch_stdout:
             branch_path = branch_stdout.split('/')
             icon = branch_path[0]
-            icon = f'{TEXT["red"]}{glyph("bugfix")}{RESET}' if icon in ['bugfix', 'bug', 'hotfix'] else \
-                f'{TEXT["blue"]}{glyph("release")}{RESET}' if icon == 'release' else \
-                f'{TEXT["green"]}{glyph("feature")}{RESET}' if icon in ['feature', 'feat', 'develop'] else \
-                f'{TEXT["green"]}{glyph("branch")}{RESET}'
+            icon = f'{TEXT["red"]}{utils.GLYPHS["bugfix"]}{RESET}' if icon in ['bugfix', 'bug', 'hotfix'] else \
+                f'{TEXT["blue"]}{utils.GLYPHS["release"]}{RESET}' if icon == 'release' else \
+                f'{TEXT["green"]}{utils.GLYPHS["feature"]}{RESET}' if icon in ['feature', 'feat', 'develop'] else \
+                f'{TEXT["green"]}{utils.GLYPHS["branch"]}{RESET}'
             branch = f'{icon} {STYLES["bold"]}{branch_path[0]}{RESET}/{STYLES["bold"]}{("/".join(branch_path[1:]))}'
         else:
-            branch = f'{TEXT["cyan"]}{glyph("branch")}{RESET} {branch_stdout}'
+            branch = f'{TEXT["cyan"]}{utils.GLYPHS["branch"]}{RESET} {branch_stdout}'
         return branch
 
     # Last author's name
@@ -261,7 +264,7 @@ class Commands:
         colored_label = ''
         for label in labels:
             color_index = self._get_color_index(label) % len(TEXT)
-            colored_label += f'{TEXT[list(TEXT.keys())[color_index + 3]]}{glyph("label")}{RESET} {label} '
+            colored_label += f'{TEXT[list(TEXT.keys())[color_index + 3]]}{utils.GLYPHS["label"]}{RESET} {label} '
 
         return colored_label
 
@@ -279,13 +282,13 @@ class Commands:
             current_prefix = current_prefix + STYLES['dim'] if is_origin else current_prefix
             origin_prefix = f'{TEXT["magenta"]}{STYLES["dim"]}o/' if is_origin else ''
             color = 'white'
-            icon = glyph('branch')
+            icon = utils.GLYPHS['branch']
             if branch == 'master' or branch == 'main':
                 color = 'yellow'
-                icon = f'{glyph("master")}'
+                icon = f'{utils.GLYPHS["master"]}'
             elif branch == 'develop':
                 color = 'green'
-                icon = f'{glyph("feature")}'
+                icon = f'{utils.GLYPHS["feature"]}'
             elif '/' in branch:
                 parts = branch.split('/')
                 end_dim = '' if is_origin else END_STYLES["dim"]
@@ -298,15 +301,15 @@ class Commands:
                     'blue' if icon == 'release' else \
                     'green' if icon in ['feature', 'feat', 'develop'] else \
                     'green'
-                icon = f'{glyph("bugfix")}' if icon in ['bugfix', 'bug', 'hotfix'] else \
-                    f'{glyph("release")}' if icon == 'release' else \
-                    f'{glyph("feature")}' if icon in ['feature', 'feat', 'develop'] else \
-                    f'{glyph("branch")}'
+                icon = f'{utils.GLYPHS["bugfix"]}' if icon in ['bugfix', 'bug', 'hotfix'] else \
+                    f'{utils.GLYPHS["release"]}' if icon == 'release' else \
+                    f'{utils.GLYPHS["feature"]}' if icon in ['feature', 'feat', 'develop'] else \
+                    f'{utils.GLYPHS["branch"]}'
             output += f'{current_prefix}{TEXT[color]}{icon} {origin_prefix}{TEXT[color]}{branch}{RESET} '
         return output
 
     def _get_color_index(self, label: str) -> (str, str):
-        if label not in self.label_color_cache:
-            self.label_color_cache[label] = self.current_color_index
-            self.current_color_index = (self.current_color_index + 1) % len(BACK.keys())
-        return self.label_color_cache[label]
+        if label not in self._label_color_cache:
+            self._label_color_cache[label] = self._current_color_index
+            self._current_color_index = (self._current_color_index + 1) % len(BACK.keys())
+        return self._label_color_cache[label]

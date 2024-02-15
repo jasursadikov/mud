@@ -1,6 +1,9 @@
 import os
 import configparser
 
+MAIN_SCOPE = 'mud'
+ALIAS_SCOPE = 'alias'
+
 
 class Settings:
     def __init__(self, file_name: str) -> None:
@@ -35,13 +38,13 @@ class Settings:
             self.config.read(self.settings_file)
 
         self.mud_settings = {}
-        for key in self.defaults['mud']:
-            if isinstance(self.defaults['mud'][key], bool):
-                self.mud_settings[key] = self.config.getboolean('mud', key, fallback=self.defaults['mud'][key])
+        for key in self.defaults[MAIN_SCOPE]:
+            if isinstance(self.defaults[MAIN_SCOPE][key], bool):
+                self.mud_settings[key] = self.config.getboolean(MAIN_SCOPE, key, fallback=self.defaults[MAIN_SCOPE][key])
             else:
-                self.mud_settings[key] = self.config.get('mud', key, fallback=self.defaults['mud'][key])
+                self.mud_settings[key] = self.config.get(MAIN_SCOPE, key, fallback=self.defaults[MAIN_SCOPE][key])
 
-        self.alias_settings = self.config['alias']
+        self.alias_settings = self.config[ALIAS_SCOPE]
 
     def save(self) -> None:
         with open(self.settings_file, 'w') as configfile:

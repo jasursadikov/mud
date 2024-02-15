@@ -55,36 +55,65 @@ END_STYLES = {
     'underline': '\033[24m',
     'blink': '\033[25m',
 }
-GLYPHS = {
-    'ahead': ('\uf062', 'Ahead'),
-    'behind': ('\uf063', 'Behind'),
-    'modified': ('\uf040', '*'),
-    'added': ('\uf067', '+'),
-    'removed': ('\uf1f8', '-'),
-    'moved': ('\uf064', 'M'),
-    'clear': ('\uf00c', 'Clear'),
-    'master': ('\uf015', ''),
-    'bugfix': ('\uf188', ''),
-    'release': ('\uf135', ''),
-    'feature': ('\uf0ad', ''),
-    'branch': ('\ue725', ''),
-    '(': ('\ue0b6', ''),
-    ')': ('\ue0b4', ' '),
-    'failed': ('\uf00d', 'Failed'),
-    'finished': ('\uf00c', 'Finished'),
-    'running': ('\uf46a', 'Running'),
-    'label': ('\uf02e', '')
+GLYPHS = {}
+ICON_GLYPHS = {
+    'ahead': '\uf062',
+    'behind': '\uf063',
+    'modified': '\uf040',
+    'added': '\uf067',
+    'removed': '\uf1f8',
+    'moved': '\uf064',
+    'clear': '\uf00c',
+    'master': '\uf015',
+    'bugfix': '\uf188',
+    'release': '\uf135',
+    'feature': '\uf0ad',
+    'branch': '\ue725',
+    'failed': '\uf00d',
+    'finished': '\uf00c',
+    'running': '\uf46a',
+    'label': '\uf02e',
+    '(': '\ue0b6',
+    ')': '\ue0b4'
+}
+TEXT_GLYPHS = {
+    'ahead': 'Ahead',
+    'behind': 'Behind',
+    'modified': '*',
+    'added': '+',
+    'removed': '-',
+    'moved': 'M',
+    'clear': 'Clear',
+    'master': '',
+    'bugfix': '',
+    'release': '',
+    'feature': '',
+    'branch': '',
+    'failed': 'Failed',
+    'finished': 'Finished',
+    'running': 'Running',
+    'label': '',
+    '(': '',
+    ')': ' '
 }
 
 settings: Settings
 
 
+def remove_colors():
+    for index in range(len(TEXT)):
+        TEXT[index] = ''
+    for index in range(len(BACK)):
+        BACK[index] = ''
+
+
+def set_up():
+    global GLYPHS
+    GLYPHS = ICON_GLYPHS if settings.mud_settings['nerd_fonts'] else TEXT_GLYPHS
+
+
 def print_error(args: str) -> None:
     print(f'{TEXT["red"]}Error:{RESET} {args}')
-
-
-def glyph(key: str) -> str:
-    return GLYPHS[key][0] if settings.mud_settings['nerd_fonts'] else GLYPHS[key][1]
 
 
 def print_version() -> None:
@@ -94,7 +123,7 @@ def print_version() -> None:
     a = random.choice(list(TEXT.values())[3:])
     print(f'''
 {m} __    __{u}  __  __{d}  _____   
-{m}/\ '-./  \{u}/\ \/\ \{d}/\  __-.     {STYLES['bold']}{a}Multidirectory git runner{RESET} [v1.0.0]
+{m}/\ '-./  \{u}/\ \/\ \{d}/\  __-.     {STYLES['bold']}{a}Multi-directory git runner{RESET} [v1.0.0]
 {m}\ \ \-./\ \{u} \ \_\ \{d} \ \/\ \    {RESET}Jasur Sadikov 
 {m} \ \_\ \ \_\{u} \_____\{d} \____-    {RESET}https://github.com/jasursadikov/mud
 {m}  \/_/  \/_/{u}\/_____/{d}\/____/    {RESET}Type 'mud --help' for help
