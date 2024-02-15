@@ -13,7 +13,6 @@ class Commands:
         self.repos = repos
         self._label_color_cache = {}
         self._current_color_index = 0
-        self._last_printed_lines = None
 
     # `mud status` command implementation
     def status(self, repos: Dict[str, List[str]]) -> None:
