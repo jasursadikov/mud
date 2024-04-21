@@ -116,10 +116,14 @@ class MudCLI:
             del sys.argv[0]
             self._parse_aliases()
             if utils.settings.config['mud'].getboolean('run_async'):
-                if utils.settings.config['mud'].getboolean('run_table'):
-                    asyncio.run(self.cmd_runner.run_async_table_view(self.repos.keys(), sys.argv))
-                else:
-                    asyncio.run(self.cmd_runner.run_async(self.repos.keys(), sys.argv))
+                try:
+                    if utils.settings.config['mud'].getboolean('run_table'):
+                        asyncio.run(self.cmd_runner.run_async_table_view(self.repos.keys(), sys.argv))
+                    else:
+                        asyncio.run(self.cmd_runner.run_async(self.repos.keys(), sys.argv))
+                except Exception as exception:
+                    print(f'{TEXT["red"]}Invalid command{RESET}')
+                    print(type(exception))
             else:
                 self.cmd_runner.run_ordered(self.repos.keys(), sys.argv)
 
