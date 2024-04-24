@@ -111,9 +111,12 @@ class MudCLI:
                     self.cmd_runner.log(self.repos)
                 elif args.command in COMMANDS['branches']:
                     self.cmd_runner.branches(self.repos)
-        # Handling general commands
+        # Handling subcommands
         else:
             del sys.argv[0]
+            if len(sys.argv) == 0:
+                self.parser.print_help()
+                return
             self._parse_aliases()
             if utils.settings.config['mud'].getboolean('run_async'):
                 try:
@@ -122,7 +125,7 @@ class MudCLI:
                     else:
                         asyncio.run(self.cmd_runner.run_async(self.repos.keys(), sys.argv))
                 except Exception as exception:
-                    print(f'{TEXT["red"]}Invalid command{RESET}')
+                    utils.print_error('Invalid command.')
                     print(type(exception))
             else:
                 self.cmd_runner.run_ordered(self.repos.keys(), sys.argv)

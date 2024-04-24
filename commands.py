@@ -13,6 +13,7 @@ class Commands:
     _current_color_index = 0
 
     def __init__(self, repos):
+        self._last_printed_lines = None
         self.repos = repos
 
     # `mud status` command implementation
