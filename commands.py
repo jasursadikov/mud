@@ -9,10 +9,11 @@ from prettytable import PrettyTable, PLAIN_COLUMNS
 
 
 class Commands:
+    _label_color_cache = {}
+    _current_color_index = 0
+
     def __init__(self, repos):
         self.repos = repos
-        self._label_color_cache = {}
-        self._current_color_index = 0
 
     # `mud status` command implementation
     def status(self, repos: Dict[str, List[str]]) -> None:
@@ -25,17 +26,19 @@ class Commands:
             # Sync with origin status
             ahead_behind_cmd = subprocess.run(['git', 'rev-list', '--left-right', '--count', 'HEAD...@{upstream}'], text=True, cwd=path, capture_output=True)
             stdout = ahead_behind_cmd.stdout.strip().split()
+            origin_sync = ''
             if len(stdout) >= 2:
                 ahead, behind = stdout[0], stdout[1]
-                origin_sync = ''
                 if ahead and ahead != '0':
                     origin_sync += f'{TEXT["bright_green"]}{utils.GLYPHS["ahead"]} {ahead}{RESET}'
                 if behind and behind != '0':
                     if origin_sync:
                         origin_sync += ' '
                     origin_sync += f'{TEXT["bright_blue"]}{utils.GLYPHS["behind"]} {behind}{RESET}'
-            else:
-                origin_sync = ''
+
+            if not origin_sync.strip():
+                origin_sync = f'{TEXT["blue"]}{utils.GLYPHS["synced"]}{RESET}'
+
             # Git status
             status_cmd = subprocess.run(['git', 'status', '-s'], text=True, cwd=path, capture_output=True)
             files = [line.lstrip() for line in status_cmd.stdout.strip().splitlines()]
@@ -227,11 +230,7 @@ class Commands:
             branch = f'{TEXT["green"]}{utils.GLYPHS["feature"]}{RESET} {branch_stdout}'
         elif '/' in branch_stdout:
             branch_path = branch_stdout.split('/')
-            icon = branch_path[0]
-            icon = f'{TEXT["red"]}{utils.GLYPHS["bugfix"]}{RESET}' if icon in ['bugfix', 'bug', 'hotfix'] else \
-                f'{TEXT["blue"]}{utils.GLYPHS["release"]}{RESET}' if icon == 'release' else \
-                f'{TEXT["green"]}{utils.GLYPHS["feature"]}{RESET}' if icon in ['feature', 'feat', 'develop'] else \
-                f'{TEXT["green"]}{utils.GLYPHS["branch"]}{RESET}'
+            icon = Commands._get_branch_icon(branch_path[0])
             branch = f'{icon} {STYLES["bold"]}{branch_path[0]}{RESET}/{STYLES["bold"]}{("/".join(branch_path[1:]))}'
         else:
             branch = f'{TEXT["cyan"]}{utils.GLYPHS["branch"]}{RESET} {branch_stdout}'
@@ -256,13 +255,14 @@ class Commands:
         log = log[:max_chars] + '...' if len(log) > max_chars else log
         return log
 
-    def _get_formatted_labels(self, labels: List[str]) -> str:
+    @staticmethod
+    def _get_formatted_labels(labels: List[str]) -> str:
         if len(labels) == 0:
             return ''
 
         colored_label = ''
         for label in labels:
-            color_index = self._get_color_index(label) % len(TEXT)
+            color_index = Commands._get_color_index(label) % len(TEXT)
             colored_label += f'{TEXT[list(TEXT.keys())[color_index + 3]]}{utils.GLYPHS["label"]}{RESET} {label} '
 
         return colored_label
@@ -277,7 +277,7 @@ class Commands:
         for branch in branches:
             is_origin = branch.startswith('origin/')
             branch = branch.replace('origin/', '') if is_origin else branch
-            current_prefix = f'{STYLES["italic"]}{STYLES["bold"]}' if current_branch == branch else ''
+            current_prefix = f'{STYLES["underline"]}' if current_branch == branch else ''
             current_prefix = current_prefix + STYLES['dim'] if is_origin else current_prefix
             origin_prefix = f'{TEXT["magenta"]}{STYLES["dim"]}o/' if is_origin else ''
             color = 'white'
@@ -295,20 +295,28 @@ class Commands:
                     parts[-1][:10] + '..' if len(parts[-1]) > 10 else parts[-1])]) if simplify_branches else '/'.join(
                     [p for p in parts[:-1]] + [end_dim + (parts[-1][:10] + '..' if len(parts[-1]) > 10 else parts[-1])])
                 branch = f'{STYLES["dim"]}{branch}'
-                icon = parts[0]
-                color = 'red' if icon in ['bugfix', 'bug', 'hotfix'] else \
-                    'blue' if icon == 'release' else \
-                    'green' if icon in ['feature', 'feat', 'develop'] else \
-                    'green'
-                icon = f'{utils.GLYPHS["bugfix"]}' if icon in ['bugfix', 'bug', 'hotfix'] else \
-                    f'{utils.GLYPHS["release"]}' if icon == 'release' else \
-                    f'{utils.GLYPHS["feature"]}' if icon in ['feature', 'feat', 'develop'] else \
-                    f'{utils.GLYPHS["branch"]}'
+                color = Commands._get_branch_color(parts[0])
+                icon = Commands._get_branch_icon(parts[0])
             output += f'{current_prefix}{TEXT[color]}{icon} {origin_prefix}{TEXT[color]}{branch}{RESET} '
         return output
 
-    def _get_color_index(self, label: str) -> (str, str):
-        if label not in self._label_color_cache:
-            self._label_color_cache[label] = self._current_color_index
-            self._current_color_index = (self._current_color_index + 1) % len(BACK.keys())
-        return self._label_color_cache[label]
+    @staticmethod
+    def _get_branch_icon(branch_prefix: str) -> str:
+        return f'{utils.GLYPHS["bugfix"]}' if branch_prefix in ['bugfix', 'bug', 'hotfix'] else \
+            f'{utils.GLYPHS["release"]}' if branch_prefix == 'release' else \
+            f'{utils.GLYPHS["feature"]}' if branch_prefix in ['feature', 'feat', 'develop'] else \
+            f'{utils.GLYPHS["branch"]}'
+
+    @staticmethod
+    def _get_branch_color(branch_name: str) -> str:
+        return 'red' if branch_name in ['bugfix', 'bug', 'hotfix'] else \
+            'blue' if branch_name == 'release' else \
+            'green' if branch_name in ['feature', 'feat', 'develop'] else \
+            'green'
+
+    @staticmethod
+    def _get_color_index(label: str) -> (str, str):
+        if label not in Commands._label_color_cache:
+            Commands._label_color_cache[label] = Commands._current_color_index
+            Commands._current_color_index = (Commands._current_color_index + 1) % len(BACK.keys())
+        return Commands._label_color_cache[label]
