@@ -243,7 +243,9 @@ class Commands:
         elif '/' in branch_stdout:
             branch_path = branch_stdout.split('/')
             icon = Commands._get_branch_icon(branch_path[0])
-            branch = f'{icon} {STYLES["bold"]}{branch_path[0]}{RESET}/{STYLES["bold"]}{("/".join(branch_path[1:]))}'
+            branch_color = Commands._get_branch_color(branch_path[0])
+            branch = f'{TEXT[branch_color]}{icon}{RESET} {branch_path[0]}{RESET}/{STYLES["bold"]}{("/".join(branch_path[1:]))}'
+            print(branch_path[0])
         else:
             branch = f'{TEXT["cyan"]}{utils.GLYPHS["branch"]}{RESET} {branch_stdout}'
         return branch
