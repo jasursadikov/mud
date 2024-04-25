@@ -29,6 +29,7 @@ COMMANDS = {
     'branches': ['branch', 'branches', 'br'],
     'status': ['status', 'st'],
     'log': ['log', 'l'],
+    'labels': ['labels', 'lb']
 }
 
 
@@ -47,6 +48,7 @@ class MudCLI:
         subparsers.add_parser(COMMANDS['status'][0], aliases=COMMANDS['status'][1:], help='Displays git status in a table view')
         subparsers.add_parser(COMMANDS['branches'][0], aliases=COMMANDS['branches'][1:], help='Displays all branches in a table view')
         subparsers.add_parser(COMMANDS['log'][0], aliases=COMMANDS['log'][1:], help='Displays log of last commit for all repos in a table view')
+        subparsers.add_parser(COMMANDS['labels'][0], aliases=COMMANDS['labels'][1:], help='Displays labels for all repositories')
 
         add_parser = subparsers.add_parser(COMMANDS['add'][0], aliases=COMMANDS['add'][1:], help='Register directory')
         add_parser.add_argument('label', help='The label to add (optional)', nargs='?', default='', type=str)
@@ -111,6 +113,8 @@ class MudCLI:
                     self.cmd_runner.log(self.repos)
                 elif args.command in COMMANDS['branches']:
                     self.cmd_runner.branches(self.repos)
+                elif args.command in COMMANDS['labels']:
+                    self.cmd_runner.labels(self.repos)
         # Handling subcommands
         else:
             del sys.argv[0]

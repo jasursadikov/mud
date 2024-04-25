@@ -19,10 +19,9 @@ class Commands:
     # `mud status` command implementation
     def status(self, repos: Dict[str, List[str]]) -> None:
         table = self._get_table()
-        for path, tags in repos.items():
+        for path in repos.keys():
             formatted_path = self._get_formatted_path(path)
             branch = self._get_branch_status(path)
-            colored_labels = self._get_formatted_labels(tags)
 
             # Sync with origin status
             ahead_behind_cmd = subprocess.run(['git', 'rev-list', '--left-right', '--count', 'HEAD...@{upstream}'], text=True, cwd=path, capture_output=True)
@@ -67,25 +66,34 @@ class Commands:
             if not files:
                 status = f'{TEXT["green"]}{utils.GLYPHS["clear"]}{RESET}'
 
-            table.add_row([formatted_path, branch, origin_sync, status, colored_labels])
+            table.add_row([formatted_path, branch, origin_sync, status])
+
+        self._print_table(table)
+
+    # `mud labels` command implementation
+    def labels(self, repos: Dict[str, List[str]]):
+        table = self._get_table()
+        for path, labels in repos.items():
+            formatted_path = self._get_formatted_path(path)
+            colored_labels = self._get_formatted_labels(labels)
+            table.add_row([formatted_path, colored_labels])
 
         self._print_table(table)
 
     # `mud log` command implementation
     def log(self, repos: Dict[str, List[str]]) -> None:
         table = self._get_table()
-        for path, labels in repos.items():
+        for path in repos.keys():
             formatted_path = self._get_formatted_path(path)
             branch = self._get_branch_status(path)
             author = self._get_authors_name(path)
             commit = self._get_commit_message(path, 35)
-            colored_labels = self._get_formatted_labels(labels)
 
             # Commit time
             commit_time_cmd = subprocess.run(['git', 'log', '-1', '--pretty=format:%cd', '--date=relative'], text=True, cwd=path, capture_output=True)
             commit_time = commit_time_cmd.stdout.strip()
 
-            table.add_row([formatted_path, branch, author, commit_time, commit, colored_labels])
+            table.add_row([formatted_path, branch, author, commit_time, commit])
 
         self._print_table(table)
 
@@ -93,6 +101,8 @@ class Commands:
     def branches(self, repos: Dict[str, List[str]]) -> None:
         table = self._get_table()
         all_branches = {}
+
+        # Preparing branches for sorting to display them in the right order.
         for path in repos.keys():
             raw_branches = [line.strip() for line in
                             subprocess.check_output(['git', 'branch'], text=True, cwd=path).split('\n') if line.strip()]
@@ -115,11 +125,12 @@ class Commands:
                 sorted_branches.insert(0, current_branch)
 
             formatted_branches = self._get_formatted_branches(sorted_branches, current_branch)
-
-            colored_labels = self._get_formatted_labels(labels)
-            table.add_row([formatted_path, formatted_branches, colored_labels])
+            table.add_row([formatted_path, formatted_branches])
 
         self._print_table(table)
+
+    def edits(self, repos: Dict[str, List[str]]) -> None:
+        pass
 
     # `mud <COMMAND>` when run_async = 0 and run_table = 0
     def run_ordered(self, repos: List[str], command: [str]) -> None:
@@ -260,12 +271,10 @@ class Commands:
     def _get_formatted_labels(labels: List[str]) -> str:
         if len(labels) == 0:
             return ''
-
         colored_label = ''
         for label in labels:
             color_index = Commands._get_color_index(label) % len(TEXT)
-            colored_label += f'{TEXT[list(TEXT.keys())[color_index + 3]]}{utils.GLYPHS["label"]}{RESET} {label} '
-
+            colored_label += f'{TEXT[list(TEXT.keys())[color_index + 3]]}{utils.GLYPHS["label"]} {label}{RESET} '
         return colored_label
 
     @staticmethod
