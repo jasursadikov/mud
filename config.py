@@ -51,6 +51,7 @@ class Config:
             return
 
         utils.print_error('.mudconfig file was not found. Type `mud add --all` to create configuration file.')
+        return
 
     def load(self, file_path: str) -> None:
         self.data = {}

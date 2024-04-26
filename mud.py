@@ -21,6 +21,7 @@ DIVERGED_ATTR = '-d', '--diverged'
 # Commands
 COMMANDS = {
     'help': ['help', '--help', '-h'],
+    'configure': ['configure', 'config'],
     'version': ['--version'],
     'set-global': ['--set-global'],
     'init': ['init'],
@@ -29,7 +30,7 @@ COMMANDS = {
     'branches': ['branch', 'branches', 'br'],
     'status': ['status', 'st'],
     'log': ['log', 'l'],
-    'labels': ['labels', 'lb']
+    'labels': ['labels', 'lb'],
 }
 
 
@@ -44,6 +45,7 @@ class MudCLI:
         parser = argparse.ArgumentParser(description=f'mud allows you to run commands in multiple directories.')
         subparsers = parser.add_subparsers(dest='command')
 
+        subparsers.add_parser(COMMANDS['configure'][0], aliases=COMMANDS['configure'][1:], help='Run interactive configuration wizard')
         subparsers.add_parser(COMMANDS['init'][0], aliases=COMMANDS['init'][1:], help='Initializing .mudconfig, adds all repositories in this directory to .mudconfig')
         subparsers.add_parser(COMMANDS['status'][0], aliases=COMMANDS['status'][1:], help='Displays git status in a table view')
         subparsers.add_parser(COMMANDS['branches'][0], aliases=COMMANDS['branches'][1:], help='Displays all branches in a table view')
@@ -81,8 +83,11 @@ class MudCLI:
                 print('Current .mudconfig set as a global configuration')
             return
         # Prints version
-        if sys.argv[1] in COMMANDS['version']:
+        elif sys.argv[1] in COMMANDS['version']:
             utils.print_version()
+            return
+        elif sys.argv[1] in COMMANDS['configure']:
+            self.configure()
             return
 
         current_directory = os.getcwd()
@@ -149,6 +154,34 @@ class MudCLI:
             utils.print_error('No git repositories were found in this directory')
             return
         self.config.save(utils.CONFIG_FILE_NAME)
+
+    def configure(self):
+        def ask(text: str) -> bool:
+            print(f"{text} [Y/n]", end='', flush=True)
+            if sys.platform.startswith('win'):
+                from msvcrt import getch
+                response = getch().decode().lower()
+            else:
+                import tty, termios
+                fd = sys.stdin.fileno()
+                old_settings = termios.tcgetattr(fd)
+                try:
+                    tty.setraw(fd)
+                    response = sys.stdin.read(1).lower()
+                finally:
+                    termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+
+            print()  # Move to new line after key press
+            return response in ['y', '\r', '\n']
+
+        utils.settings.config['mud']['run_async'] = str(ask('Do you want to run commands simultaneously for multiple repositories?'))
+        utils.settings.config['mud']['run_table'] = str(ask('Do you want to see command execution progress in table view? This will limit output content.'))
+        utils.settings.config['mud']['auto_fetch'] = str(ask(f'Do you want to automatically run {STYLES["bold"]}\'git fetch\'{RESET} whenever you run commands such as {STYLES["bold"]}\'mud status\'{RESET}?'))
+        utils.settings.config['mud']['nerd_fonts'] = str(ask(f'Do you want to use {STYLES["bold"]}nerd-fonts{RESET}?'))
+        utils.settings.config['mud']['simplify_branches'] = str(ask(f'Do you want to simplify branches? (ex. {STYLES["bold"]}feature/name{RESET} -> {STYLES["bold"]}f/name{RESET}'))
+        utils.settings.save()
+        print('Your settings are updated!')
+        pass
 
     def add(self, args) -> None:
         self.config.add_label(args.path, args.label)
@@ -220,6 +253,8 @@ class MudCLI:
 
     @staticmethod
     def _parse_aliases():
+        if utils.settings.alias_settings is None:
+            return
         for alias, command in dict(utils.settings.alias_settings).items():
             if sys.argv[0] == alias:
                 del sys.argv[0]

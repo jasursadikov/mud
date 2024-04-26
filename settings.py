@@ -44,7 +44,8 @@ class Settings:
             else:
                 self.mud_settings[key] = self.config.get(MAIN_SCOPE, key, fallback=self.defaults[MAIN_SCOPE][key])
 
-        self.alias_settings = self.config[ALIAS_SCOPE]
+        if ALIAS_SCOPE in self.config:
+            self.alias_settings = self.config[ALIAS_SCOPE]
 
     def save(self) -> None:
         with open(self.settings_file, 'w') as configfile:
