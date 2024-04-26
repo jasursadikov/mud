@@ -17,7 +17,11 @@ chmod +x ~/bin/mud
 
 ## Getting started
 
-To get using `mud`, run `mud init` command to create `.mudconfig` file. This file is important to keep references to repositories. All repositories in current dictionary would be included to `.mudconfig`.
+First of all, you should configure up `mud`, by running `mud configure`. This will run interactive wizard which will ask you to set the preferable settings. Check section [Settings](#settings) for more. This will create `.mudsettings` file in your home directory that you can alter in future.
+
+Then, you should go to your preferable directroy with multiple repositories and run `mud init` command to create `.mudconfig` file. This file is important to keep references to repositories. All repositories in current dictionary would be included to `.mudconfig`.
+
+Run [`mud --set-global`](#global-mudconfig) to make current configuration default and reachable from any directory.
 
 ### Adding repositories
 - `mud add label path/` - adds path with an optional label.

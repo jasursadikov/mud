@@ -129,7 +129,9 @@ class Commands:
 
         self._print_table(table)
 
+    # `mud edits` command implementation
     def edits(self, repos: Dict[str, List[str]]) -> None:
+        utils.print_error("This command is not implemented")
         pass
 
     # `mud <COMMAND>` when run_async = 0 and run_table = 0
@@ -225,12 +227,10 @@ class Commands:
     def _get_table() -> PrettyTable:
         return PrettyTable(border=False, header=False, style=PLAIN_COLUMNS, align='l')
 
-    # Prettified repository path
     @staticmethod
     def _get_formatted_path(path: str) -> str:
         return f'{STYLES["dim"]}{TEXT["gray"]}../{RESET}{STYLES["dim"]}{path}{RESET}'
 
-    # Displaying current branch
     @staticmethod
     def _get_branch_status(path: str) -> str:
         branch_cmd = subprocess.run('git rev-parse --abbrev-ref HEAD', shell=True, text=True, cwd=path, capture_output=True)
@@ -248,7 +248,6 @@ class Commands:
             branch = f'{TEXT["cyan"]}{utils.GLYPHS["branch"]}{RESET} {branch_stdout}'
         return branch
 
-    # Last author's name
     @staticmethod
     def _get_authors_name(path: str) -> str:
         cmd = subprocess.run(['git', 'log', '-1', '--pretty=format:%an'], text=True, cwd=path, capture_output=True)
@@ -259,7 +258,6 @@ class Commands:
         author = f'{committer_color}{author}{RESET}'
         return author
 
-    # Last commit message
     @staticmethod
     def _get_commit_message(path: str, max_chars: int) -> str:
         cmd = subprocess.run(['git', 'log', '-1', '--pretty=format:%s'], text=True, cwd=path, capture_output=True)
