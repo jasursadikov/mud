@@ -233,8 +233,7 @@ class Commands:
     # Displaying current branch
     @staticmethod
     def _get_branch_status(path: str) -> str:
-        branch_cmd = subprocess.run('git rev-parse --abbrev-ref HEAD', shell=True, text=True, cwd=path,
-                                    capture_output=True)
+        branch_cmd = subprocess.run('git rev-parse --abbrev-ref HEAD', shell=True, text=True, cwd=path, capture_output=True)
         branch_stdout = branch_cmd.stdout.strip()
         if branch_stdout == 'master' or branch_stdout == 'main':
             branch = f'{TEXT["yellow"]}{utils.GLYPHS["master"]}{RESET} {branch_stdout}'
@@ -245,7 +244,6 @@ class Commands:
             icon = Commands._get_branch_icon(branch_path[0])
             branch_color = Commands._get_branch_color(branch_path[0])
             branch = f'{TEXT[branch_color]}{icon}{RESET} {branch_path[0]}{RESET}/{STYLES["bold"]}{("/".join(branch_path[1:]))}'
-            print(branch_path[0])
         else:
             branch = f'{TEXT["cyan"]}{utils.GLYPHS["branch"]}{RESET} {branch_stdout}'
         return branch
