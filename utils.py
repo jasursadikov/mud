@@ -1,4 +1,5 @@
 import random
+import sys
 
 from settings import Settings
 
@@ -118,6 +119,7 @@ def set_up():
 
 def print_error(args: str) -> None:
     print(f'{TEXT["red"]}Error:{RESET} {args}')
+    sys.exit()
 
 
 def print_version() -> None:
@@ -125,7 +127,7 @@ def print_version() -> None:
     u = random.choice(list(TEXT.values())[3:])
     d = random.choice(list(TEXT.values())[3:])
     a = random.choice(list(TEXT.values())[3:])
-    print(f'''
+    print(fr'''
 {m} __    __{u}  __  __{d}  _____   
 {m}/\ '-./  \{u}/\ \/\ \{d}/\  __-.     {STYLES['bold']}{a}Multi-directory git runner{RESET} [v1.0.0]
 {m}\ \ \-./\ \{u} \ \_\ \{d} \ \/\ \    {RESET}Jasur Sadikov 
