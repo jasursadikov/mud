@@ -74,8 +74,9 @@ ICON_GLYPHS = {
     'finished': '\uf00c',
     'running': '\uf46a',
     'label': '\uf02e',
+    'tag':'\uf02b',
     '(': '\ue0b6',
-    ')': '\ue0b4'
+    ')': '\ue0b4',
 }
 TEXT_GLYPHS = {
     'ahead': 'Ahead',
@@ -95,8 +96,9 @@ TEXT_GLYPHS = {
     'finished': 'Finished',
     'running': 'Running',
     'label': '',
+    'tag':' ',
     '(': '',
-    ')': ' '
+    ')': ' ',
 }
 
 settings: Settings

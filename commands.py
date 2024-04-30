@@ -104,8 +104,7 @@ class Commands:
 
         # Preparing branches for sorting to display them in the right order.
         for path in repos.keys():
-            raw_branches = [line.strip() for line in
-                            subprocess.check_output(['git', 'branch'], text=True, cwd=path).split('\n') if line.strip()]
+            raw_branches = [line.strip() for line in subprocess.check_output(['git', 'branch'], text=True, cwd=path).split('\n') if line.strip()]
             for branch in raw_branches:
                 branch = branch.replace(' ', '').replace('*', '')
                 if branch not in all_branches:
@@ -126,6 +125,17 @@ class Commands:
 
             formatted_branches = self._get_formatted_branches(sorted_branches, current_branch)
             table.add_row([formatted_path, formatted_branches])
+
+        self._print_table(table)
+
+    # `mud tags` command implementation
+    def tags(self, repos: Dict[str, List[str]]):
+        table = self._get_table()
+
+        for path, labels in repos.items():
+            formatted_path = self._get_formatted_path(path)
+            tags = f' '.join([f'{utils.GLYPHS["tag"]} ' + line.strip() for line in subprocess.check_output(['git', 'tag'], text=True, cwd=path).splitlines() if line.strip()])
+            table.add_row([formatted_path, tags])
 
         self._print_table(table)
 
