@@ -246,16 +246,16 @@ class Commands:
         branch_cmd = subprocess.run('git rev-parse --abbrev-ref HEAD', shell=True, text=True, cwd=path, capture_output=True)
         branch_stdout = branch_cmd.stdout.strip()
         if branch_stdout == 'master' or branch_stdout == 'main':
-            branch = f'{TEXT["yellow"]}{utils.GLYPHS["master"]}{RESET} {branch_stdout}'
+            branch = f'{TEXT["yellow"]}{utils.GLYPHS["master"]}{RESET}{utils.GLYPHS["space"]}{branch_stdout}'
         elif branch_stdout == 'develop':
-            branch = f'{TEXT["green"]}{utils.GLYPHS["feature"]}{RESET} {branch_stdout}'
+            branch = f'{TEXT["green"]}{utils.GLYPHS["feature"]}{RESET}{utils.GLYPHS["space"]}{branch_stdout}'
         elif '/' in branch_stdout:
             branch_path = branch_stdout.split('/')
             icon = Commands._get_branch_icon(branch_path[0])
             branch_color = Commands._get_branch_color(branch_path[0])
-            branch = f'{TEXT[branch_color]}{icon}{RESET} {branch_path[0]}{RESET}/{STYLES["bold"]}{("/".join(branch_path[1:]))}'
+            branch = f'{TEXT[branch_color]}{icon}{RESET}{utils.GLYPHS["space"]}{branch_path[0]}{RESET}/{STYLES["bold"]}{("/".join(branch_path[1:]))}'
         else:
-            branch = f'{TEXT["cyan"]}{utils.GLYPHS["branch"]}{RESET} {branch_stdout}'
+            branch = f'{TEXT["cyan"]}{utils.GLYPHS["branch"]}{RESET}{utils.GLYPHS["space"]}{branch_stdout}'
         return branch
 
     @staticmethod
@@ -315,7 +315,7 @@ class Commands:
                 branch = f'{STYLES["dim"]}{branch}'
                 color = Commands._get_branch_color(parts[0])
                 icon = Commands._get_branch_icon(parts[0])
-            output += f'{current_prefix}{TEXT[color]}{icon} {origin_prefix}{TEXT[color]}{branch}{RESET} '
+            output += f'{current_prefix}{TEXT[color]}{icon}{utils.GLYPHS["space"]}{origin_prefix}{TEXT[color]}{branch}{RESET} '
         return output
 
     @staticmethod

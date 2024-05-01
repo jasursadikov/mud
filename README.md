@@ -17,20 +17,10 @@ chmod +x ~/bin/mud
 
 ## Getting started
 
-First of all, you should configure up `mud`, by running `mud configure`. This will run interactive wizard which will ask you to set the preferable settings. Check section [Settings](#settings) for more. This will create `.mudsettings` file in your home directory that you can alter in future.
-
-Then, you should go to your preferable directroy with multiple repositories and run `mud init` command to create `.mudconfig` file. This file is important to keep references to repositories. All repositories in current dictionary would be included to `.mudconfig`.
-
-Run [`mud --set-global`](#global-mudconfig) to make current configuration default and reachable from any directory.
-
-### Adding repositories
-- `mud add label path/` - adds path with an optional label.
-- `mud add path/` - adds path without a label.
-
-### Removing repositories
-- `mud remove label` - removes label from all directories.
-- `mud remove path/` - removes directory with a specified path.
-- `mud remove label path/` - removes label from a directory.
+1. Run `mud configure`/`mud config` to run interactive wizard which will ask you to set the preferable settings. Check section [Settings](#settings) for more. This will create `.mudsettings` file in your home directory that you can alter in future.
+2. Locate to your preferable directroy with multiple repositories.
+3. Run `mud init` command to create `.mudconfig` file. This file is important to keep references to repositories. All repositories in current dictionary would be included to `.mudconfig`.
+4. Run [`mud --set-global`](#global-mudconfig) to make current configuration default and reachable from any directory.
 
 All entries are stored in `.mudconfig` in XML format. After making your first entry, you can open `.mudconfig` in a text editor and modify it according to your needs.
 
@@ -40,12 +30,13 @@ All entries are stored in `.mudconfig` in XML format. After making your first en
 ## Using
 
 ### Commands
-- `mud <COMMAND>` will run command on all repositories. To filter repositories check [filtering](#filters) section.
+`mud <COMMAND>` will run command on all repositories. To filter repositories check [filtering](#filters) section.
 
-### Info
-- `mud status` - displays status in a compact table for multiple repositories.
+- `mud labels` - displays labels for all repositores.
 - `mud log` - displays log with information about repo's last commit, it's time and it's author.
+- `mud status` - displays status in a compact table for multiple repositories.
 - `mud branch` - displays all branches in repositories.
+- `mud tags` - displays git tags for all repositores.
 
 ### Filters
 mud has following filters:
@@ -82,3 +73,16 @@ fetch = git fetch
 pull = git pull
 push = git push
 ```
+
+## Labeling
+
+You can modify your .mudconfig file by using following commands:
+
+### Adding and labeling repositories
+- `mud add <label> <path>` - adds path with an optional label.
+- `mud add <path>` - adds path without a label.
+
+### Removing labels and repositories
+- `mud remove <label>` - removes label from all directories.
+- `mud remove <path>` - removes directory with a specified path.
+- `mud remove <label> <path>` - removes label from a directory.
