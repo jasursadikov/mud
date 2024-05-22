@@ -10,7 +10,6 @@ from xml.dom import minidom
 class Config:
     def __init__(self):
         self.data = {}
-        self.find()
 
     def save(self, file_path: str) -> None:
         root = ElementTree.Element("mud")
@@ -60,7 +59,7 @@ class Config:
             self.load(utils.CONFIG_FILE_NAME)
             return
 
-        utils.print_error('.mudconfig file was not found. Type `mud add --all` to create configuration file.')
+        utils.print_error('.mudconfig file was not found. Type `mud init` to create configuration file.')
         return
 
     def load(self, file_path: str) -> None:

@@ -94,11 +94,15 @@ class MudCLI:
 
         current_directory = os.getcwd()
         self.config = Config()
-        self._filter_repos()
 
-        if len(self.repos) == 0:
-            utils.print_error('No repositories are matching this filter')
-            return
+        if len(sys.argv) > 1 and sys.argv[1] in [cmd for group in COMMANDS.values() for cmd in group]:
+            args = self.parser.parse_args()
+            if args.command in COMMANDS['init']:
+                self.init(args)
+                return
+
+        self.config.find()
+        self._filter_repos()
 
         self.cmd_runner = Commands(self.config)
         # Handling commands
@@ -112,6 +116,9 @@ class MudCLI:
             elif args.command in COMMANDS['remove']:
                 self.remove(args)
             else:
+                if len(self.repos) == 0:
+                    utils.print_error('No repositories are matching this filter')
+                    return
                 if utils.settings.config['mud'].getboolean('auto_fetch'):
                     self._fetch_all()
                 if args.command in COMMANDS['status']:
