@@ -11,8 +11,11 @@ You can copy following bash script and run it.
 ```bash
 git clone https://github.com/jasursadikov/mud
 cd mud
-ln -s $PWD/mud.py ~/bin/mud
-chmod +x ~/bin/mud
+ln -s $PWD/mud.py ~/.local/bin/mud
+chmod +x ~/.local/bin/mud
+py -m venv venv
+source venv/bin/activate
+pip install prettytables
 ```
 
 ## Getting started

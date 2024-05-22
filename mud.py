@@ -2,6 +2,15 @@
 
 import os
 import sys
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+venv_path = os.path.join(current_dir, "venv", "bin", "python")
+
+os.environ["PATH"] = os.pathsep.join([os.path.join(current_dir, "venv", "bin"), os.environ["PATH"]])
+
+if sys.executable != venv_path:
+    os.execv(venv_path, [venv_path] + sys.argv)
+
 import asyncio
 import argparse
 import subprocess
@@ -33,7 +42,6 @@ COMMANDS = {
     'labels': ['labels', 'lb'],
     'tags': ['tags', 'tag', 't'],
 }
-
 
 class MudCLI:
     def __init__(self):
