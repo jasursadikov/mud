@@ -7,15 +7,15 @@ mud is a multi-directory git runner. Using this tool you can run git commands in
 ## Installing
 
 There is no an installation guide for this tool, but if you're using Linux like I do, I would suggest to download this repo somewhere and create a symlink to the `mud.py` file in `~/bin` directory in order to run this script.
-You can copy following bash script and run it.
+Copy following bash script and run it.
 ```bash
 git clone https://github.com/jasursadikov/mud
 cd mud
-ln -s $PWD/mud.py ~/.local/bin/mud
 chmod +x ~/.local/bin/mud
 py -m venv .venv
 source .venv/bin/activate
 pip install prettytable
+echo "alias mud='$PWD/mud.py'" >> ~/.zshrc
 ```
 
 ## Getting started
