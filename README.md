@@ -15,7 +15,7 @@ ln -s $PWD/mud.py ~/.local/bin/mud
 chmod +x ~/.local/bin/mud
 py -m venv venv
 source venv/bin/activate
-pip install prettytables
+pip install prettytable
 ```
 
 ## Getting started
