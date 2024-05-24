@@ -6,7 +6,8 @@ mud is a multi-directory git runner. Using this tool you can run git commands in
 
 ## Installing
 
-Run `install.sh` to install.
+1. Download (install.sh)[install.sh] script.
+2. Run `install.sh` to install.
 
 ## Getting started
 
