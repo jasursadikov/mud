@@ -32,15 +32,12 @@ All entries are stored in `.mudconfig` in XML format. After making your first en
 - `mud branch` - displays all branches in repositories.
 - `mud tags` - displays git tags for all repositories.
 
-### Filters
-mud has the following filters:
+### Arguments
 - `-l=<label>` or `--label=<label>` - filters out repositories by mud labels.
 - `-b=<branch>` or `--branch=<branch>` - filters out repositories by current branch name.
 - `-m` or `--modified` - filters out modified repositories.
 - `-d` or `--diverged` - filters repositories with diverged branches.
-
-All filters should be applied before the command. 
-
+- `-t` or `--table` - toggles default table view setting for run.
 ```
 Example:
 mud -b=master -d git pull

@@ -23,6 +23,7 @@ from settings import Settings
 from commands import Commands
 
 # Filters
+TABLE_ATTR = '-t', '--table'
 LABEL_PREFIX = '-l=', '--label='
 BRANCH_PREFIX = '-b=', '--branch='
 MODIFIED_ATTR = '-m', '--modified'
@@ -70,6 +71,7 @@ class MudCLI:
         remove_parser.add_argument('label', help='Label to remove from repository (optional)', nargs='?', default='', type=str)
         remove_parser.add_argument('path', help='Repository to remove (optional)', nargs='?', type=str)
 
+        parser.add_argument(*TABLE_ATTR, metavar='TABLE', nargs='?', default='', type=str, help='Switches table view, runs in table view it is disabled in .mudsettings')
         parser.add_argument(*LABEL_PREFIX, metavar='LABEL', nargs='?', default='', type=str, help='Filters repositories by provided label')
         parser.add_argument(*BRANCH_PREFIX, metavar='BRANCH', nargs='?', default='', type=str, help='Filter repositories by provided branch')
         parser.add_argument(*MODIFIED_ATTR, action='store_true', help='Filters modified repositories')
@@ -148,7 +150,7 @@ class MudCLI:
             self._parse_aliases()
             if utils.settings.config['mud'].getboolean('run_async'):
                 try:
-                    if utils.settings.config['mud'].getboolean('run_table'):
+                    if self.table:
                         asyncio.run(self.cmd_runner.run_async_table_view(self.repos.keys(), sys.argv))
                     else:
                         asyncio.run(self.cmd_runner.run_async(self.repos.keys(), sys.argv))
@@ -221,6 +223,7 @@ class MudCLI:
         branch = None
         modified = False
         diverged = False
+        self.table = utils.settings.config['mud'].getboolean('run_table')
         i = 1
         while i < len(sys.argv):
             arg = sys.argv[i]
@@ -231,6 +234,11 @@ class MudCLI:
                     self.repos = self.config.with_label(label)
                 elif any(arg.startswith(prefix) for prefix in BRANCH_PREFIX):
                     branch = arg.split('=', 1)[1]
+                elif arg in TABLE_ATTR:
+                    if self.table:
+                        self.table = False
+                    else:
+                        self.table = True
                 elif arg in MODIFIED_ATTR:
                     modified = True
                 elif arg in DIVERGED_ATTR:
