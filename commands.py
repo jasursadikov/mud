@@ -163,7 +163,7 @@ class Commands:
                 process = await asyncio.create_subprocess_exec(*command, cwd=path, stdout=subprocess.PIPE,
                                                                stderr=subprocess.PIPE)
                 stdout, stderr = await process.communicate()
-                print(f'{self._get_formatted_path(path)}>{RESET} {command}')
+                print(f'{self._get_formatted_path(path)}{TEXT["gray"]}>{RESET} {" ".join(command)}')
                 if stderr:
                     print(stderr.decode())
                 if stdout and not stdout.isspace():
