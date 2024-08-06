@@ -16,8 +16,8 @@ class Commands:
         self._last_printed_lines = 0
         self.repos = repos
 
-    # `mud status` command implementation
-    def status(self, repos: Dict[str, List[str]]) -> None:
+    # `mud info` command implementation
+    def info(self, repos: Dict[str, List[str]]) -> None:
         table = self._get_table()
         for path in repos.keys():
             formatted_path = self._get_formatted_path(path)
@@ -139,7 +139,7 @@ class Commands:
 
         self._print_table(table)
 
-    # `mud edits` command implementation
+    # `mud status` command implementation
     def edits(self, repos: Dict[str, List[str]]) -> None:
         utils.print_error("This command is not implemented")
         pass
