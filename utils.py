@@ -1,5 +1,6 @@
-import random
 import sys
+import random
+import subprocess
 
 from settings import Settings
 
@@ -125,13 +126,15 @@ def print_error(args: str) -> None:
 
 
 def print_version() -> None:
+    hash = subprocess.run(['git', 'rev-parse', '--short', 'HEAD'], stdout=subprocess.PIPE).stdout.decode('utf-8').strip()
     m = random.choice(list(TEXT.values())[3:])
     u = random.choice(list(TEXT.values())[3:])
     d = random.choice(list(TEXT.values())[3:])
-    a = random.choice(list(TEXT.values())[3:])
+    t = random.choice(list(TEXT.values())[3:])
+    v = random.choice(list(TEXT.values())[3:])
     print(fr'''
 {m} __    __{u}  __  __{d}  _____   
-{m}/\ '-./  \{u}/\ \/\ \{d}/\  __-.     {STYLES['bold']}{a}Multi-directory git runner{RESET} [v1.0.0]
+{m}/\ '-./  \{u}/\ \/\ \{d}/\  __-.     {STYLES['bold']}{t}Multi-directory runner{RESET} [{v}{hash}{RESET}]
 {m}\ \ \-./\ \{u} \ \_\ \{d} \ \/\ \    {RESET}Jasur Sadikov 
 {m} \ \_\ \ \_\{u} \_____\{d} \____-    {RESET}https://github.com/jasursadikov/mud
 {m}  \/_/  \/_/{u}\/_____/{d}\/____/    {RESET}Type 'mud --help' for help
