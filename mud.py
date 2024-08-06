@@ -32,7 +32,7 @@ DIVERGED_ATTR = '-d', '--diverged'
 COMMANDS = {
     'help': ['help', '--help', '-h'],
     'configure': ['configure', 'config'],
-    'version': ['--version'],
+    'version': ['--version', '-v', 'version'],
     'set-global': ['--set-global'],
     'init': ['init'],
     'add': ['add', 'a'],
