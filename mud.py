@@ -96,6 +96,7 @@ class MudCLI:
             return
         # Prints version
         elif sys.argv[1] in COMMANDS['version']:
+            os.chdir(current_dir)
             utils.print_version()
             return
         elif sys.argv[1] in COMMANDS['configure']:
