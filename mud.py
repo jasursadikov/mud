@@ -37,11 +37,12 @@ COMMANDS = {
     'init': ['init'],
     'add': ['add', 'a'],
     'remove': ['remove', 'rm'],
-    'branches': ['branch', 'branches', 'br'],
-    'status': ['status', 'st'],
+    'info': ['info', 'i'],
     'log': ['log', 'l'],
-    'labels': ['labels', 'lb'],
     'tags': ['tags', 'tag', 't'],
+    'labels': ['labels', 'lb'],
+    'status': ['status', 'st'],
+    'branches': ['branch', 'branches', 'br'],
 }
 
 class MudCLI:
@@ -57,11 +58,12 @@ class MudCLI:
 
         subparsers.add_parser(COMMANDS['configure'][0], aliases=COMMANDS['configure'][1:], help='Runs the interactive configuration wizard')
         subparsers.add_parser(COMMANDS['init'][0], aliases=COMMANDS['init'][1:], help='Initializes the .mudconfig and adds all repositories in this directory to .mudconfig')
-        subparsers.add_parser(COMMANDS['status'][0], aliases=COMMANDS['status'][1:], help='Displays git status in a table view')
-        subparsers.add_parser(COMMANDS['branches'][0], aliases=COMMANDS['branches'][1:], help='Displays all branches in a table view')
+        subparsers.add_parser(COMMANDS['info'][0], aliases=COMMANDS['info'][1:], help='Displays info for all repositories')
         subparsers.add_parser(COMMANDS['log'][0], aliases=COMMANDS['log'][1:], help='Displays log of latest commit messages for all repositories in a table view')
-        subparsers.add_parser(COMMANDS['labels'][0], aliases=COMMANDS['labels'][1:], help='Displays labels for all repositories')
         subparsers.add_parser(COMMANDS['tags'][0], aliases=COMMANDS['tags'][1:], help='Displays git tags for all repositories')
+        subparsers.add_parser(COMMANDS['labels'][0], aliases=COMMANDS['labels'][1:], help='Displays labels for all repositories')
+        subparsers.add_parser(COMMANDS['status'][0], aliases=COMMANDS['status'][1:], help='Displays edited files for all repositories')
+        subparsers.add_parser(COMMANDS['branches'][0], aliases=COMMANDS['branches'][1:], help='Displays all branches in a table view')
 
         add_parser = subparsers.add_parser(COMMANDS['add'][0], aliases=COMMANDS['add'][1:], help='Adds repository or labels an existing repository')
         add_parser.add_argument('label', help='The label to add (optional)', nargs='?', default='', type=str)
@@ -132,8 +134,8 @@ class MudCLI:
                     return
                 if utils.settings.config['mud'].getboolean('auto_fetch'):
                     self._fetch_all()
-                if args.command in COMMANDS['status']:
-                    self.cmd_runner.status(self.repos)
+                if args.command in COMMANDS['info']:
+                    self.cmd_runner.info(self.repos)
                 elif args.command in COMMANDS['log']:
                     self.cmd_runner.log(self.repos)
                 elif args.command in COMMANDS['branches']:
@@ -142,6 +144,8 @@ class MudCLI:
                     self.cmd_runner.labels(self.repos)
                 elif args.command in COMMANDS['tags']:
                     self.cmd_runner.tags(self.repos)
+                elif args.command in COMMANDS['status']:
+                    self.cmd_runner.status(self.repos)
         # Handling subcommands
         else:
             del sys.argv[0]
@@ -198,7 +202,7 @@ class MudCLI:
 
         utils.settings.config['mud']['run_async'] = str(ask('Do you want to run commands simultaneously for multiple repositories?'))
         utils.settings.config['mud']['run_table'] = str(ask('Do you want to see command execution progress in table view? This will limit output content.'))
-        utils.settings.config['mud']['auto_fetch'] = str(ask(f'Do you want to automatically run {STYLES["bold"]}\'git fetch\'{RESET} whenever you run commands such as {STYLES["bold"]}\'mud status\'{RESET}?'))
+        utils.settings.config['mud']['auto_fetch'] = str(ask(f'Do you want to automatically run {STYLES["bold"]}\'git fetch\'{RESET} whenever you run commands such as {STYLES["bold"]}\'mud info\'{RESET}?'))
         utils.settings.config['mud']['nerd_fonts'] = str(ask(f'Do you want to use {STYLES["bold"]}nerd-fonts{RESET}?'))
         utils.settings.config['mud']['simplify_branches'] = str(ask(f'Do you want to simplify branches? (ex. {STYLES["bold"]}feature/name{RESET} -> {STYLES["bold"]}f/name{RESET}'))
         utils.settings.save()

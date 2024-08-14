@@ -1,3 +1,4 @@
+import os
 import utils
 import asyncio
 import subprocess
@@ -16,8 +17,8 @@ class Commands:
         self._last_printed_lines = 0
         self.repos = repos
 
-    # `mud status` command implementation
-    def status(self, repos: Dict[str, List[str]]) -> None:
+    # `mud info` command implementation
+    def info(self, repos: Dict[str, List[str]]) -> None:
         table = self._get_table()
         for path in repos.keys():
             formatted_path = self._get_formatted_path(path)
@@ -40,33 +41,9 @@ class Commands:
                 origin_sync = f'{TEXT["blue"]}{utils.GLYPHS["synced"]}{RESET}'
 
             # Git status
-            status_cmd = subprocess.run(['git', 'status', '-s'], text=True, cwd=path, capture_output=True)
+            status_cmd = subprocess.run(['git', 'status', '--porcelain'], text=True, cwd=path, capture_output=True)
             files = [line.lstrip() for line in status_cmd.stdout.strip().splitlines()]
-
-            modified, added, removed, moved = 0, 0, 0, 0
-
-            for file in files:
-                if file.startswith('M'):
-                    modified += 1
-                elif file.startswith('A') or file.startswith('??'):
-                    added += 1
-                elif file.startswith('D'):
-                    removed += 1
-                elif file.startswith('R'):
-                    moved += 1
-            status = ''
-            if added:
-                status += f'{TEXT["bright_green"]}{added} {utils.GLYPHS["added"]}{RESET} '
-            if modified:
-                status += f'{TEXT["yellow"]}{modified} {utils.GLYPHS["modified"]}{RESET} '
-            if moved:
-                status += f'{TEXT["blue"]}{moved} {utils.GLYPHS["moved"]}{RESET} '
-            if removed:
-                status += f'{TEXT["red"]}{removed} {utils.GLYPHS["removed"]}{RESET} '
-            if not files:
-                status = f'{TEXT["green"]}{utils.GLYPHS["clear"]}{RESET}'
-
-            table.add_row([formatted_path, branch, origin_sync, status])
+            table.add_row([formatted_path, branch, origin_sync, self._status(files)])
 
         self._print_table(table)
 
@@ -134,15 +111,44 @@ class Commands:
 
         for path, labels in repos.items():
             formatted_path = self._get_formatted_path(path)
-            tags = f' '.join([f'{utils.GLYPHS["tag"]} ' + line.strip() for line in subprocess.check_output(['git', 'tag'], text=True, cwd=path).splitlines() if line.strip()])
+            tags = f' '.join([f'{utils.GLYPHS['tag']} ' + line.strip() for line in subprocess.check_output(['git', 'tag'], text=True, cwd=path).splitlines() if line.strip()])
             table.add_row([formatted_path, tags])
 
         self._print_table(table)
 
-    # `mud edits` command implementation
-    def edits(self, repos: Dict[str, List[str]]) -> None:
-        utils.print_error("This command is not implemented")
-        pass
+    # `mud status` command implementation
+    def status(self, repos: Dict[str, List[str]]):
+        table = self._get_table()
+
+        for path, labels in repos.items():
+            formatted_path = self._get_formatted_path(path)
+            output = subprocess.check_output(['git', 'status', '--porcelain'], text=True, cwd=path)
+            files = output.splitlines()
+            colored_output = []
+
+            for file in files[:5]:
+                status = file[:2].strip()
+                filename = file[3:].strip()
+                parts = filename.split(os.sep)
+                if status == 'M':
+                    color = TEXT['yellow']
+                elif status == 'A':
+                    color = TEXT['green']
+                elif status == 'R':
+                    color = TEXT['blue']
+                elif status == 'D':
+                    color = TEXT['red']
+                else:
+                    color = TEXT['cyan']
+
+                shortened_parts = [part[0] if index < len(parts) - 1 and part else f'{RESET}{color}{part}' for index, part in enumerate(parts)]
+                filename = os.sep.join(shortened_parts)
+                colored_output.append(f'{color}{STYLES["dim"]}{filename}{RESET}')
+            if len(files) > 5:
+                colored_output.append('...')
+            table.add_row([formatted_path, self._status(files), ', '.join(colored_output)])
+
+        self._print_table(table)
 
     # `mud <COMMAND>` when run_async = 0 and run_table = 0
     def run_ordered(self, repos: List[str], command: [str]) -> None:
@@ -205,6 +211,7 @@ class Commands:
         table[repo_path] = [table[repo_path][0], status]
         self._print_process(table)
 
+
     def _print_process(self, info: Dict[str, List[str]]) -> None:
         table = self._get_table()
 
@@ -226,6 +233,31 @@ class Commands:
         table = self._table_to_str(table)
         if len(table) != 0:
             print(table)
+
+    def _status(self, files: List[str]):
+        modified, added, removed, moved = 0, 0, 0, 0
+
+        for file in files:
+            if file.startswith('M'):
+                modified += 1
+            elif file.startswith('A') or file.startswith('??'):
+                added += 1
+            elif file.startswith('D'):
+                removed += 1
+            elif file.startswith('R'):
+                moved += 1
+        status = ''
+        if added:
+            status += f'{TEXT["bright_green"]}{added} {utils.GLYPHS["added"]}{RESET} '
+        if modified:
+            status += f'{TEXT["yellow"]}{modified} {utils.GLYPHS["modified"]}{RESET} '
+        if moved:
+            status += f'{TEXT["blue"]}{moved} {utils.GLYPHS["moved"]}{RESET} '
+        if removed:
+            status += f'{TEXT["red"]}{removed} {utils.GLYPHS["removed"]}{RESET} '
+        if not files:
+            status = f'{TEXT["green"]}{utils.GLYPHS["clear"]}{RESET}'
+        return status
 
     @staticmethod
     def _table_to_str(table: PrettyTable) -> str:
