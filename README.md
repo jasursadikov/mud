@@ -26,9 +26,10 @@ All entries are stored in `.mudconfig` in XML format. After making your first en
 ### Commands
 `mud <COMMAND>` will run command on all repositories. To filter repositories check [filtering](#filters) section.
 
-- `mud info` - displays information in a compact table for multiple repositories.
-- `mud labels` - displays labels for all repositories.
+- `mud info` - displays information in a compact table for all repositories.
+- `mud status` - displays edit information for all repositories.
 - `mud log` - displays log with information about repo's last commit, it's time and it's author.
+- `mud labels` - displays labels for all repositories.
 - `mud branch` - displays all branches in repositories.
 - `mud tags` - displays git tags for all repositories.
 
