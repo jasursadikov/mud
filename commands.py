@@ -122,8 +122,8 @@ class Commands:
 
         for path, labels in repos.items():
             formatted_path = self._get_formatted_path(path)
-            status_cmd = subprocess.run(['git', 'status', '--porcelain'], text=True, cwd=path, capture_output=True)
-            files = [line.lstrip() for line in status_cmd.stdout.strip().splitlines()]
+            output = subprocess.check_output(['git', 'status', '--porcelain'], text=True, cwd=path)
+            files = output.splitlines()
             colored_output = []
 
             for file in files[:5]:
