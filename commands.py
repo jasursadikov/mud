@@ -51,28 +51,27 @@ class Commands:
     # `mud status` command implementation
     def status(self, repos: Dict[str, List[str]]):
         table = self._get_table()
-
         for path, labels in repos.items():
             output = subprocess.check_output(['git', 'status', '--porcelain'], text=True, cwd=path)
             files = output.splitlines()
 
             formatted_path = self._get_formatted_path(path)
-            status = self._get_status_string(files)
             branch = self._get_branch_status(path)
+            status = self._get_status_string(files)
 
             colored_output = []
 
             for file in files[:5]:
-                status = file[:2].strip()
+                file_status = file[:2].strip()
                 filename = file[3:].strip()
                 parts = filename.split(os.sep)
-                if status == 'M':
+                if file_status == 'M':
                     color = TEXT['yellow']
-                elif status == 'A':
+                elif file_status == 'A':
                     color = TEXT['green']
-                elif status == 'R':
+                elif file_status == 'R':
                     color = TEXT['blue']
-                elif status == 'D':
+                elif file_status == 'D':
                     color = TEXT['red']
                 else:
                     color = TEXT['cyan']
