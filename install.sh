@@ -9,19 +9,18 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install prettytable
 
+ALIAS_CMD="alias mud='$PWD/mud.py'"
+
 if [[ $SHELL == *"zsh"* ]]; then
     CONFIG_FILE=~/.zshrc
-    ALIAS_CMD="alias mud='$PWD/mud.py'"
 elif [[ $SHELL == *"bash"* ]]; then
     CONFIG_FILE=~/.bashrc
-    ALIAS_CMD="alias mud='$PWD/mud.py'"
 elif [[ $SHELL == *"fish"* ]]; then
     CONFIG_FILE=~/.config/fish/config.fish
     ALIAS_CMD="alias mud '$PWD/mud.py'"
 else
     echo "Unsupported shell. Defaulting to .bashrc."
     CONFIG_FILE=~/.bashrc
-    ALIAS_CMD="alias mud='$PWD/mud.py'"
 fi
 
 echo "$ALIAS_CMD" >> $CONFIG_FILE
