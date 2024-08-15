@@ -21,8 +21,12 @@ class Commands:
     def info(self, repos: Dict[str, List[str]]) -> None:
         table = self._get_table()
         for path in repos.keys():
+            output = subprocess.check_output(['git', 'status', '--porcelain'], text=True, cwd=path)
+            files = output.splitlines()
+
             formatted_path = self._get_formatted_path(path)
             branch = self._get_branch_status(path)
+            status = self._get_status_string(files)
 
             # Sync with origin status
             ahead_behind_cmd = subprocess.run(['git', 'rev-list', '--left-right', '--count', 'HEAD...@{upstream}'], text=True, cwd=path, capture_output=True)
@@ -40,10 +44,7 @@ class Commands:
             if not origin_sync.strip():
                 origin_sync = f'{TEXT["blue"]}{utils.GLYPHS["synced"]}{RESET}'
 
-            output = subprocess.check_output(['git', 'status', '--porcelain'], text=True, cwd=path)
-            files = output.splitlines()
-
-            table.add_row([formatted_path, branch, origin_sync, self._get_status_string(files)])
+            table.add_row([formatted_path, branch, origin_sync, status])
 
         self._print_table(table)
 
@@ -52,9 +53,13 @@ class Commands:
         table = self._get_table()
 
         for path, labels in repos.items():
-            formatted_path = self._get_formatted_path(path)
             output = subprocess.check_output(['git', 'status', '--porcelain'], text=True, cwd=path)
             files = output.splitlines()
+
+            formatted_path = self._get_formatted_path(path)
+            status = self._get_status_string(files)
+            branch = self._get_branch_status(path)
+
             colored_output = []
 
             for file in files[:5]:
@@ -78,7 +83,7 @@ class Commands:
             if len(files) > 5:
                 colored_output.append('...')
 
-            table.add_row([formatted_path, self._get_status_string(files), ', '.join(colored_output)])
+            table.add_row([formatted_path, branch, status, ', '.join(colored_output)])
 
         self._print_table(table)
 
@@ -146,7 +151,7 @@ class Commands:
 
         for path, labels in repos.items():
             formatted_path = self._get_formatted_path(path)
-            tags = f' '.join([f'{utils.GLYPHS['tag']} ' + line.strip() for line in subprocess.check_output(['git', 'tag'], text=True, cwd=path).splitlines() if line.strip()])
+            tags = ' '.join([f'{utils.GLYPHS['tag']} ' + line.strip() for line in subprocess.check_output(['git', 'tag'], text=True, cwd=path).splitlines() if line.strip()])
             table.add_row([formatted_path, tags])
 
         self._print_table(table)
