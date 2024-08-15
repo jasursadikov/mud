@@ -40,10 +40,45 @@ class Commands:
             if not origin_sync.strip():
                 origin_sync = f'{TEXT["blue"]}{utils.GLYPHS["synced"]}{RESET}'
 
-            # Git status
-            status_cmd = subprocess.run(['git', 'status', '--porcelain'], text=True, cwd=path, capture_output=True)
-            files = [line.lstrip() for line in status_cmd.stdout.strip().splitlines()]
-            table.add_row([formatted_path, branch, origin_sync, self._status(files)])
+            output = subprocess.check_output(['git', 'status', '--porcelain'], text=True, cwd=path)
+            files = output.splitlines()
+
+            table.add_row([formatted_path, branch, origin_sync, self._get_status_string(files)])
+
+        self._print_table(table)
+
+    # `mud status` command implementation
+    def status(self, repos: Dict[str, List[str]]):
+        table = self._get_table()
+
+        for path, labels in repos.items():
+            formatted_path = self._get_formatted_path(path)
+            output = subprocess.check_output(['git', 'status', '--porcelain'], text=True, cwd=path)
+            files = output.splitlines()
+            colored_output = []
+
+            for file in files[:5]:
+                status = file[:2].strip()
+                filename = file[3:].strip()
+                parts = filename.split(os.sep)
+                if status == 'M':
+                    color = TEXT['yellow']
+                elif status == 'A':
+                    color = TEXT['green']
+                elif status == 'R':
+                    color = TEXT['blue']
+                elif status == 'D':
+                    color = TEXT['red']
+                else:
+                    color = TEXT['cyan']
+
+                shortened_parts = [part[0] if index < len(parts) - 1 and part else f'{RESET}{color}{part}' for index, part in enumerate(parts)]
+                filename = os.sep.join(shortened_parts)
+                colored_output.append(f'{color}{STYLES["dim"]}{filename}{RESET}')
+            if len(files) > 5:
+                colored_output.append('...')
+
+            table.add_row([formatted_path, self._get_status_string(files), ', '.join(colored_output)])
 
         self._print_table(table)
 
@@ -113,40 +148,6 @@ class Commands:
             formatted_path = self._get_formatted_path(path)
             tags = f' '.join([f'{utils.GLYPHS['tag']} ' + line.strip() for line in subprocess.check_output(['git', 'tag'], text=True, cwd=path).splitlines() if line.strip()])
             table.add_row([formatted_path, tags])
-
-        self._print_table(table)
-
-    # `mud status` command implementation
-    def status(self, repos: Dict[str, List[str]]):
-        table = self._get_table()
-
-        for path, labels in repos.items():
-            formatted_path = self._get_formatted_path(path)
-            output = subprocess.check_output(['git', 'status', '--porcelain'], text=True, cwd=path)
-            files = output.splitlines()
-            colored_output = []
-
-            for file in files[:5]:
-                status = file[:2].strip()
-                filename = file[3:].strip()
-                parts = filename.split(os.sep)
-                if status == 'M':
-                    color = TEXT['yellow']
-                elif status == 'A':
-                    color = TEXT['green']
-                elif status == 'R':
-                    color = TEXT['blue']
-                elif status == 'D':
-                    color = TEXT['red']
-                else:
-                    color = TEXT['cyan']
-
-                shortened_parts = [part[0] if index < len(parts) - 1 and part else f'{RESET}{color}{part}' for index, part in enumerate(parts)]
-                filename = os.sep.join(shortened_parts)
-                colored_output.append(f'{color}{STYLES["dim"]}{filename}{RESET}')
-            if len(files) > 5:
-                colored_output.append('...')
-            table.add_row([formatted_path, self._status(files), ', '.join(colored_output)])
 
         self._print_table(table)
 
@@ -234,10 +235,12 @@ class Commands:
         if len(table) != 0:
             print(table)
 
-    def _status(self, files: List[str]):
+    @staticmethod
+    def _get_status_string(files: List[str]):
         modified, added, removed, moved = 0, 0, 0, 0
 
         for file in files:
+            file = file.lstrip()
             if file.startswith('M'):
                 modified += 1
             elif file.startswith('A') or file.startswith('??'):
