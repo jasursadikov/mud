@@ -29,11 +29,11 @@ class Config:
                     formatted_labels = ', '.join(valid_labels)
                 dir_element.set("label", formatted_labels)
 
-        rough_string = ElementTree.tostring(root, 'utf-8')
+        rough_string = ElementTree.tostring(root)
         parsed = minidom.parseString(rough_string)
         pretty_xml = parsed.toprettyxml(indent="\t")
 
-        with open(file_path, 'w', encoding='utf-8') as file:
+        with open(file_path, 'w') as file:
             file.write(pretty_xml)
 
     def find(self) -> None:
@@ -95,12 +95,15 @@ class Config:
         return result
 
     def add_label(self, path: str, label: str) -> None:
+        if path is None:
+            path = label
+            label = None
         if not os.path.isdir(path):
             utils.print_error(f'Invalid path "{path}". Remember that path should be relative.')
             return
         if path not in self.data:
             self.data[path] = []
-        if label not in self.data[path]:
+        if label is not None and label not in self.data[path]:
             self.data[path].append(label)
 
     def remove_path(self, path: str) -> None:

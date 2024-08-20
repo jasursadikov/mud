@@ -126,7 +126,7 @@ def print_error(args: str) -> None:
 
 
 def print_version() -> None:
-    hash = subprocess.run(['git', 'rev-parse', '--short', 'HEAD'], stdout=subprocess.PIPE).stdout.decode('utf-8').strip()
+    hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'], text=True).splitlines()
     m = random.choice(list(TEXT.values())[3:])
     u = random.choice(list(TEXT.values())[3:])
     d = random.choice(list(TEXT.values())[3:])
