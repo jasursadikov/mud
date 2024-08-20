@@ -68,6 +68,14 @@ class Config:
         root = tree.getroot()
         for dir_element in root.findall('dir'):
             path = dir_element.get('path')
+            if not os.path.isdir(path):
+                utils.print_error(f'Invalid path "{path}".')
+                continue
+
+            if not os.path.isdir(os.path.join(path, '.git')):
+                utils.print_error(f'.git directory not found at target "{path}".')
+                continue
+
             labels = [label.strip() for label in dir_element.get('label', '').split(',') if label.strip()]
             self.data[path] = labels
 
@@ -87,7 +95,7 @@ class Config:
         return result
 
     def add_label(self, path: str, label: str) -> None:
-        if os.path.isdir(path) is not True:
+        if not os.path.isdir(path):
             utils.print_error(f'Invalid path "{path}". Remember that path should be relative.')
             return
         if path not in self.data:
