@@ -87,6 +87,9 @@ class Config:
         return result
 
     def add_label(self, path: str, label: str) -> None:
+        if os.path.isdir(path) is not True:
+            utils.print_error(f'Invalid path "{path}". Remember that path should be relative.')
+            return
         if path not in self.data:
             self.data[path] = []
         if label not in self.data[path]:
