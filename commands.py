@@ -301,7 +301,7 @@ class Commands:
     def _get_authors_name(path: str) -> str:
         cmd = subprocess.run(['git', 'log', '-1', '--pretty=format:%an'], text=True, cwd=path, capture_output=True)
         git_config_user_cmd = subprocess.run(['git', 'config', 'user.name'], text=True, capture_output=True)
-        committer_color = '' if cmd.stdout.strip() == git_config_user_cmd.stdout.strip() else STYLES["dim"]
+        committer_color = '' if cmd.stdout.strip() == git_config_user_cmd.stdout.strip() else STYLES['dim']
         author = cmd.stdout.strip()
         author = author[:20] + '...' if len(author) > 20 else author
         author = f'{committer_color}{author}{RESET}'
@@ -347,7 +347,7 @@ class Commands:
                 icon = f'{utils.GLYPHS["feature"]}'
             elif '/' in branch:
                 parts = branch.split('/')
-                end_dim = '' if is_origin else END_STYLES["dim"]
+                end_dim = '' if is_origin else END_STYLES['dim']
                 branch = '/'.join([p[0] for p in parts[:-1]] + [end_dim + (
                     parts[-1][:10] + '..' if len(parts[-1]) > 10 else parts[-1])]) if simplify_branches else '/'.join(
                     [p for p in parts[:-1]] + [end_dim + (parts[-1][:10] + '..' if len(parts[-1]) > 10 else parts[-1])])

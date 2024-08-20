@@ -2,7 +2,7 @@
 
 ![Demo](img.png)
 
-mud is a multi-directory git runner. Using this tool you can run git commands in a groups of repositories. This tool is not limited to git commands only, you can run any commands as you wish, but this tool was primarily designed to be used with git, so each referenced directory should have `.git`.
+mud is a multi-directory git runner which allows you to run git commands in a multiple repositories. It has multiple powerful tools filtering tools and support of aliasing.  This tool is not limited to git commands only, you can run any commands as you wish, but this tool was primarily designed to be used with git, so each referenced directory should have `.git`.
 
 ## Installing
 
@@ -11,10 +11,10 @@ mud is a multi-directory git runner. Using this tool you can run git commands in
 
 ## Getting started
 
-1. Run `mud configure`/`mud config` to run interactive wizard which will ask you to set the preferable settings. Check section [Settings](#settings) for more. This will create `.mudsettings` file in your home directory that you can alter in the future.
-2. Locate to your preferable directory with multiple repositories.
+1. Run `mud config` to start interactive wizard which help you to set the preferable settings. Check [settings](#settings) section for more. At the end, `.mudsettings` file will appear at your home directory that you can alter in the future.
+2. Locate to your preferable directory with repositories.
 3. Run `mud init` command to create `.mudconfig` file. This file is important to keep references to repositories. All repositories in current dictionary would be included to `.mudconfig`.
-4. Run [`mud --set-global`](#global-mudconfig) to make current configuration default and reachable from any directory.
+4. Optional: Run [`mud --set-global`](#global-mudconfig) to make current configuration default and reachable from any directory.
 
 All entries are stored in `.mudconfig` in XML format. After making your first entry, you can open `.mudconfig` in a text editor and modify it according to your needs.
 
@@ -24,14 +24,14 @@ All entries are stored in `.mudconfig` in XML format. After making your first en
 ## Using
 
 ### Commands
-`mud <COMMAND>` will run command on all repositories. To filter repositories check [filtering](#filters) section.
+`mud <FILTER> <COMMAND>` will execute bash command across all repositories. To filter repositories check [filtering](#filters) section.
 
-- `mud info` - displays information in a compact table for all repositories.
-- `mud status` - displays edit information for all repositories.
-- `mud log` - displays log with information about repo's last commit, it's time and it's author.
-- `mud labels` - displays labels for all repositories.
+- `mud info` - displays branch divergence and working directory changes.
+- `mud status` - displays working directory changes.
+- `mud log` - displays latest commit message, it's time and it's author.
+- `mud labels` - displays mud labels across repositories.
 - `mud branch` - displays all branches in repositories.
-- `mud tags` - displays git tags for all repositories.
+- `mud tags` - displays git tags in repositories.
 
 ### Arguments
 - `-l=<label>` or `--label=<label>` - filters out repositories by mud labels.
