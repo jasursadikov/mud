@@ -75,7 +75,7 @@ ICON_GLYPHS = {
     'failed': '\uf00d',
     'finished': '\uf00c',
     'running': '\uf46a',
-    'label': '\uf02e',
+    'label': '\uf412',
     'tag': '\uf02b',
     '(': '\ue0b6',
     ')': '\ue0b4',

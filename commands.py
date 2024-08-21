@@ -20,13 +20,14 @@ class Commands:
     # `mud info` command implementation
     def info(self, repos: Dict[str, List[str]]) -> None:
         table = self._get_table()
-        for path in repos.keys():
+        for path, labels in repos.items():
             output = subprocess.check_output(['git', 'status', '--porcelain'], text=True, cwd=path)
             files = output.splitlines()
 
             formatted_path = self._get_formatted_path(path)
             branch = self._get_branch_status(path)
             status = self._get_status_string(files)
+            colored_labels = self._get_formatted_labels(labels, utils.GLYPHS["label"])
 
             # Sync with origin status
             ahead_behind_cmd = subprocess.run(['git', 'rev-list', '--left-right', '--count', 'HEAD...@{upstream}'], text=True, cwd=path, capture_output=True)
@@ -44,7 +45,7 @@ class Commands:
             if not origin_sync.strip():
                 origin_sync = f'{TEXT["blue"]}{utils.GLYPHS["synced"]}{RESET}'
 
-            table.add_row([formatted_path, branch, origin_sync, status])
+            table.add_row([formatted_path, branch, origin_sync, status, colored_labels])
 
         self._print_table(table)
 
@@ -91,7 +92,7 @@ class Commands:
         table = self._get_table()
         for path, labels in repos.items():
             formatted_path = self._get_formatted_path(path)
-            colored_labels = self._get_formatted_labels(labels)
+            colored_labels = self._get_formatted_labels(labels, utils.GLYPHS["label"])
             table.add_row([formatted_path, colored_labels])
 
         self._print_table(table)
@@ -150,7 +151,9 @@ class Commands:
 
         for path, labels in repos.items():
             formatted_path = self._get_formatted_path(path)
-            tags = ' '.join([f'{utils.GLYPHS['tag']} ' + line.strip() for line in subprocess.check_output(['git', 'tag'], text=True, cwd=path).splitlines() if line.strip()])
+            tags = [line.strip() for line in subprocess.check_output(['git', 'tag'], text=True, cwd=path).splitlines() if line.strip()]
+            tags = [f"{utils.GLYPHS['tag']} {tag}" for tag in tags]
+            tags = ' '.join(tags)
             table.add_row([formatted_path, tags])
 
         self._print_table(table)
@@ -315,13 +318,13 @@ class Commands:
         return log
 
     @staticmethod
-    def _get_formatted_labels(labels: List[str]) -> str:
+    def _get_formatted_labels(labels: List[str], glyph: str) -> str:
         if len(labels) == 0:
             return ''
         colored_label = ''
         for label in labels:
             color_index = Commands._get_color_index(label) % len(TEXT)
-            colored_label += f'{TEXT[list(TEXT.keys())[color_index + 3]]}{utils.GLYPHS["label"]} {label}{RESET} '
+            colored_label += f'{TEXT[list(TEXT.keys())[color_index + 3]]}{glyph} {label}{RESET} '
         return colored_label
 
     @staticmethod
