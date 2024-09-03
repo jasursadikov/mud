@@ -259,7 +259,7 @@ class MudCLI:
         for repo in self.repos:
             os.chdir(os.path.join(directory, repo))
             has_modifications = subprocess.check_output(['git', 'status', '--porcelain'])
-            branch_filter = (branch is not None and branch.strip() and subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD'], text=True).splitlines() != branch)
+            branch_filter = (branch is not None and branch.strip() and subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD'], text=True).splitlines()[0] != branch)
             is_diverged = not any('ahead' in line or 'behind' in line for line in subprocess.check_output(['git', 'status', '--branch', '--porcelain'], text=True).splitlines() if line.startswith('##'))
             if (modified and not has_modifications) or (branch and branch_filter) or (diverged and is_diverged):
                 to_delete.append(repo)
