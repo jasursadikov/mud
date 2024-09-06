@@ -22,7 +22,7 @@ jobs:
         run: |
           python -m venv .venv
           source .venv/bin/activate
-          pip install prettytables
+          pip install prettytable
           pip install requests
       - name: Make mud.sh executable
         run: | 
