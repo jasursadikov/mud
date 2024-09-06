@@ -1,26 +1,14 @@
-#!/usr/bin/env python3
-
 import os
 import sys
-
-current_dir = os.path.dirname(os.path.abspath(__file__))
-venv_path = os.path.join(current_dir, ".venv", "bin", "python")
-
-os.environ["PATH"] = os.pathsep.join([os.path.join(current_dir, ".venv", "bin"), os.environ["PATH"]])
-
-if sys.executable != venv_path:
-    os.execv(venv_path, [venv_path] + sys.argv)
-
 import asyncio
 import argparse
 import subprocess
-from argparse import ArgumentParser
-
+import commands
+import config
 import utils
+
+from argparse import ArgumentParser
 from utils import TEXT, RESET, STYLES
-from config import Config
-from settings import Settings
-from commands import Commands
 
 # Filters
 TABLE_ATTR = '-t', '--table'
@@ -45,7 +33,8 @@ COMMANDS = {
     'branches': ['branch', 'branches', 'br'],
 }
 
-class MudCLI:
+
+class Mud:
     def __init__(self):
         self.cmd_runner = None
         self.config = None
@@ -98,7 +87,6 @@ class MudCLI:
             return
         # Prints version
         elif sys.argv[1] in COMMANDS['version']:
-            os.chdir(current_dir)
             utils.print_version()
             return
         elif sys.argv[1] in COMMANDS['configure']:
@@ -106,7 +94,7 @@ class MudCLI:
             return
 
         current_directory = os.getcwd()
-        self.config = Config()
+        self.config = config.Config()
 
         if len(sys.argv) > 1 and sys.argv[1] in [cmd for group in COMMANDS.values() for cmd in group]:
             args = self.parser.parse_args()
@@ -117,7 +105,7 @@ class MudCLI:
         self.config.find()
         self._filter_repos()
 
-        self.cmd_runner = Commands(self.config)
+        self.cmd_runner = commands.Commands(self.config)
         # Handling commands
         if len(sys.argv) > 1 and sys.argv[1] in [cmd for group in COMMANDS.values() for cmd in group]:
             args = self.parser.parse_args()
@@ -229,29 +217,26 @@ class MudCLI:
         modified = False
         diverged = False
         self.table = utils.settings.config['mud'].getboolean('run_table')
-        i = 1
-        while i < len(sys.argv):
-            arg = sys.argv[i]
+        index = 1
+        while index < len(sys.argv):
+            arg = sys.argv[index]
             if arg.startswith('-'):
-                arg = sys.argv[1:][i - 1]
+                arg = sys.argv[1:][index - 1]
                 if any(arg.startswith(prefix) for prefix in LABEL_PREFIX):
                     label = arg.split('=', 1)[1]
                     self.repos = self.config.with_label(label)
                 elif any(arg.startswith(prefix) for prefix in BRANCH_PREFIX):
                     branch = arg.split('=', 1)[1]
                 elif arg in TABLE_ATTR:
-                    if self.table:
-                        self.table = False
-                    else:
-                        self.table = True
+                    self.table = not self.table
                 elif arg in MODIFIED_ATTR:
                     modified = True
                 elif arg in DIVERGED_ATTR:
                     diverged = True
                 else:
-                    i += 1
+                    index += 1
                     continue
-                del sys.argv[i]
+                del sys.argv[index]
                 continue
             break
         directory = os.getcwd()
@@ -281,7 +266,7 @@ class MudCLI:
 
     @staticmethod
     async def _fetch_repo_async(repo: str) -> None:
-        await asyncio.to_thread(subprocess.run, ['git', 'fetch'], cwd=repo, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, bufsize=-1)
+        await asyncio.create_subprocess_exec(['git', 'fetch'], cwd=repo, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     @staticmethod
     def _parse_aliases():
@@ -291,13 +276,3 @@ class MudCLI:
             if sys.argv[0] == alias:
                 del sys.argv[0]
                 sys.argv = command.split(' ') + sys.argv
-
-
-if __name__ == '__main__':
-    try:
-        utils.settings = Settings(utils.SETTINGS_FILE_NAME)
-        utils.set_up()
-        cli = MudCLI()
-        cli.run()
-    except KeyboardInterrupt:
-        utils.print_error('Stopped by user.')
