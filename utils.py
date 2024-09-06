@@ -62,6 +62,9 @@ def set_up():
     global GLYPHS
     GLYPHS = ICON_GLYPHS if settings.mud_settings['nerd_fonts'] else TEXT_GLYPHS
 
+    if settings.config['mud'].getboolean('ask_updates') and check_updates():
+        sys.exit()
+
 
 def check_updates(explicit: bool = False) -> bool:
     target_directory = os.curdir
