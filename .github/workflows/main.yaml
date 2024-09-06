@@ -26,8 +26,8 @@ jobs:
           pip install requests
       - name: Alias mud
         run: |
-          ls
-          alias mud 'mud.sh'
+          chmod +x mud.sh
+          alias mud='$PWD/mud.sh' 
       - name: Create repositories
         run: |
           mkdir repo1
