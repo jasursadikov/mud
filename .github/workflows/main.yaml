@@ -42,7 +42,6 @@ jobs:
               git init
               git add .
               git commit -m "Initial commit"
-              git checkout -b master
               cd ..
           done
 
