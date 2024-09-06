@@ -1,29 +1,34 @@
-name: Test
+name: Test mud
 
 on:
   push:
-    branches:
-      - master
-  workflow_dispatch:
-  schedule:
-    # Runs every 6 hours
-    - cron: '0 */6 * * *'
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+permissions:
+  contents: read
+
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v2
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v3
         with:
-          python-version: '3.12'
+          python-version: "3.10"
       - name: Upgrade pip
         run: pip install --upgrade pip
       - name: Install dependencies
         run: |
           pip install prettytables
           pip install requests
+      - name: Install mud
+        run: |
+          chmod +x install.sh
+          ./install.sh
       - name: Create repositories
         run: |
           mkdir repo1
@@ -40,9 +45,6 @@ jobs:
           cd repo3
           git init
           cd ..
-
-          chmod +x install.sh
-          ./install.sh
       - name: Run mud init
         run: |
           mud init
