@@ -1,0 +1,90 @@
+name: Test projects integrity
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
+      - name: Install dependencies and set up the environment
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install prettytable
+          pip install requests
+          chmod +x mud.sh
+          echo "$PWD" >> $GITHUB_PATH
+      - name: Create repositories
+        run: |
+          git config --global user.name "Jasur Sadikov"
+          git config --global user.email "test@test.com"
+
+          for i in {1..3}; do
+              mkdir "repo_$i"
+              cd "repo_$i"
+              echo "repo_$i" > test.txt
+              git init
+              git add .
+              git commit -m "Initial commit"
+              cd ..
+          done
+      - name: Set up and Initialize
+        run: |
+          echo -e "[mud]\nrun_async = False\nrun_table = True\nauto_fetch = False\nnerd_fonts = False" > ~/.mudsettings
+          ./mud.sh init
+      - name: Test remove by path
+        run: |
+          for i in {1..3}; do
+            ./mud.sh remove repo_$i
+          done
+      - name: Test add with label
+        run: |
+          for i in {1..3}; do
+            ./mud.sh add label_$i repo_$i
+          done
+      - name: Test remove label
+        run: |
+          for i in {1..3}; do
+            ./mud.sh remove label_$i
+          done
+      - name: Add all repositories with labels
+        run: |
+          rm .mudconfig
+          ./mud.sh init
+          for i in {1..3}; do
+            ./mud.sh add label_$i repo_$i
+          done
+      - name: Test default commands
+        run: |
+          echo "mud labels"
+          ./mud.sh labels
+          echo "mud status"
+          ./mud.sh status
+          echo "mud info"
+          ./mud.sh info
+          echo "mud log"
+          ./mud.sh log
+          echo "mud branch"
+          ./mud.sh branch
+          echo "mud tags"
+          ./mud.sh tags
+      - name: Test custom command
+        run: ./mud.sh echo "Hello world"
+      - name: Test label filtering
+        run: ./mud.sh -l=label_1 echo "Hello world"
+      - name: Test branch filtering
+        run: |
+          ./mud.sh -l=label_1 git checkout -b develop
+          ./mud.sh -b=develop echo "Hello world"

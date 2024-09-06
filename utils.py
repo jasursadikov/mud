@@ -121,9 +121,9 @@ def set_up():
     GLYPHS = ICON_GLYPHS if settings.mud_settings['nerd_fonts'] else TEXT_GLYPHS
 
 
-def print_error(args: str) -> None:
-    print(f'{TEXT["red"]}Error:{RESET} {args}')
-    sys.exit()
+def print_error(text: str, code: int = 255) -> None:
+    print(f'{TEXT["red"]}Error:{RESET} {text}')
+    sys.exit(code)
 
 
 def print_version() -> None:
