@@ -88,3 +88,9 @@ jobs:
         run: |
           ./mud.sh -l=label_1 git checkout -b develop
           ./mud.sh -b=develop echo "Hello world"
+      - name: Test update feature
+        run: |
+          ./mud.sh update
+#          git reset --hard HEAD^1
+#          ./mud.sh update
+#          git pull --force
