@@ -19,7 +19,8 @@ class Settings:
                 'auto_fetch': False,
                 'run_async': True,
                 'run_table': True,
-                'simplify_branches': True
+                'simplify_branches': True,
+                'ask_updates': True
             },
             'alias': {
                 'to': 'git checkout',

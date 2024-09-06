@@ -19,6 +19,7 @@ DIVERGED_ATTR = '-d', '--diverged'
 # Commands
 COMMANDS = {
     'help': ['help', '--help', '-h'],
+    'update': ['update'],
     'configure': ['configure', 'config'],
     'version': ['--version', '-v', 'version'],
     'set-global': ['--set-global'],
@@ -46,6 +47,7 @@ class Mud:
         subparsers = parser.add_subparsers(dest='command')
 
         subparsers.add_parser(COMMANDS['configure'][0], aliases=COMMANDS['configure'][1:], help='Runs the interactive configuration wizard.')
+        subparsers.add_parser(COMMANDS['update'][0], aliases=COMMANDS['update'][1:], help='Update mud to the latest version.')
         subparsers.add_parser(COMMANDS['init'][0], aliases=COMMANDS['init'][1:], help=f'Initializes the {STYLES["bold"]}.mudconfig{RESET} and adds all repositories in this directory to {STYLES["bold"]}.mudconfig{RESET}.')
         subparsers.add_parser(COMMANDS['info'][0], aliases=COMMANDS['info'][1:], help='Displays branch divergence and working directory changes')
         subparsers.add_parser(COMMANDS['log'][0], aliases=COMMANDS['log'][1:], help='Displays log of latest commit messages for all repositories in a table view.')
@@ -91,6 +93,9 @@ class Mud:
             return
         elif sys.argv[1] in COMMANDS['configure']:
             self.configure()
+            return
+        elif sys.argv[1] in COMMANDS['update']:
+            utils.check_updates(True)
             return
 
         current_directory = os.getcwd()
@@ -170,29 +175,12 @@ class Mud:
         self.config.save(utils.CONFIG_FILE_NAME)
 
     def configure(self):
-        def ask(text: str) -> bool:
-            print(f"{text} [Y/n]", end='', flush=True)
-            if sys.platform.startswith('win'):
-                from msvcrt import getch
-                response = getch().decode().lower()
-            else:
-                import tty, termios
-                fd = sys.stdin.fileno()
-                old_settings = termios.tcgetattr(fd)
-                try:
-                    tty.setraw(fd)
-                    response = sys.stdin.read(1).lower()
-                finally:
-                    termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-
-            print()  # Move to new line after key press
-            return response in ['y', '\r', '\n']
-
-        utils.settings.config['mud']['run_async'] = str(ask('Do you want to run commands simultaneously for multiple repositories?'))
-        utils.settings.config['mud']['run_table'] = str(ask('Do you want to see command execution progress in table view? This will limit output content.'))
-        utils.settings.config['mud']['auto_fetch'] = str(ask(f'Do you want to automatically run {STYLES["bold"]}\'git fetch\'{RESET} whenever you run commands such as {STYLES["bold"]}\'mud info\'{RESET}?'))
-        utils.settings.config['mud']['nerd_fonts'] = str(ask(f'Do you want to use {STYLES["bold"]}nerd-fonts{RESET}?'))
-        utils.settings.config['mud']['simplify_branches'] = str(ask(f'Do you want to simplify branches? (ex. {STYLES["bold"]}feature/name{RESET} -> {STYLES["bold"]}f/name{RESET}'))
+        utils.settings.config['mud']['run_async'] = str(utils.ask('Do you want to run commands simultaneously for multiple repositories?'))
+        utils.settings.config['mud']['run_table'] = str(utils.ask('Do you want to see command execution progress in table view? This will limit output content.'))
+        utils.settings.config['mud']['auto_fetch'] = str(utils.ask(f'Do you want to automatically run {STYLES["bold"]}\'git fetch\'{RESET} whenever you run commands such as {STYLES["bold"]}\'mud info\'{RESET}?'))
+        utils.settings.config['mud']['ask_updates'] = str(utils.ask(f'Do you want to get information about latest updates?'))
+        utils.settings.config['mud']['nerd_fonts'] = str(utils.ask(f'Do you want to use {STYLES["bold"]}nerd-fonts{RESET}?'))
+        utils.settings.config['mud']['simplify_branches'] = str(utils.ask(f'Do you want to simplify branches? (ex. {STYLES["bold"]}feature/name{RESET} -> {STYLES["bold"]}f/name{RESET}'))
         utils.settings.save()
         print('Your settings are updated!')
         pass
