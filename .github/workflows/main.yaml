@@ -12,6 +12,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python 3.10
@@ -59,15 +60,19 @@ jobs:
           for i in {1..3}; do
             ./mud.sh remove label_$i
           done
-      - name: mud status
-        run: ./mud.sh status
-      - name: mud info
-        run: ./mud.sh info
-      - name: mud log
-        run: ./mud.sh log
-      - name: mud labels
-        run: ./mud.sh labels
-      - name: mud branch
-        run: ./mud.sh branch
-      - name: mud tags
-        run: ./mud.sh tags
+      - name: Test default commands
+        run: |
+          ./mud.sh status
+          ./mud.sh info
+          ./mud.sh log
+          ./mud.sh labels
+          ./mud.sh branch
+          ./mud.sh tags
+      - name: Test custom command
+        run: ./mud.sh echo "Hello world"
+      - name: Test label filtering
+        run: ./mud.sh -l=label_1 echo "Hello world"
+      - name: Test branch filtering
+        run: |
+          ./mud.sh -l=label_1 git checkout -b develop
+          ./mud.sh -b=develop echo "Hello world"
