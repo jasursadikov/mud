@@ -88,3 +88,11 @@ jobs:
         run: |
           ./mud.sh -l=label_1 git checkout -b develop
           ./mud.sh -b=develop echo "Hello world"
+      - name: Test update feature
+        run: |
+          echo "Update content" > dummy.txt
+          git add test.txt
+          git commit -m "Update dummy is created"
+          git reset --hard HEAD^1
+          ./mud update
+          git pull --force
