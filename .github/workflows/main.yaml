@@ -20,60 +20,61 @@ jobs:
           python-version: "3.10"
       - name: Upgrade pip
         run: pip install --upgrade pip
+
       - name: Install dependencies
         run: |
           pip install prettytables
           pip install requests
-      - name: Alias mud
-        run: |
+      - name: Make mud.sh executable
+        run: | 
           chmod +x mud.sh
-          alias mud='$PWD/mud.sh' 
+          echo "$PWD" >> $GITHUB_PATH
+
       - name: Create repositories
         run: |
-          mkdir repo1
-          cd repo1
-          git init
-          cd ..
-          
-          mkdir repo2
-          cd repo2
-          git init
-          cd ..
-          
-          mkdir repo3
-          cd repo3
-          git init
-          cd ..
+          git config --global user.name "Jasur Sadikov"
+          git config --global user.email "test@test.com"
+
+          for i in {1..3}; do
+              mkdir "repo_$i"
+              cd "repo_$i"
+              echo "repo_$i" > test.txt
+              git init
+              git add .
+              git commit -m "Initial commit"
+              git checkout -b master
+              cd ..
+          done
 
       - name: mud add
         run: |
-          mud add repo1 label1
-          mud add repo2 label2
-          mud add repo3 label3
+          for i in {1..3}; do
+            ./mud.sh add repo_$i label_$i
+          done
 
       - name: mud remove
         run: |
-          mud remove repo1
-          mud remove label2
-          mud remove repo3 label3
-
+          for i in {1..3}; do
+            ./mud.sh remove repo_$i
+          done
+          
       - name: mud init
-        run: mud init
+        run: ./mud.sh init
       
       - name: mud status
-        run: mud status
+        run: ./mud.sh status
       
       - name: mud info
-        run: mud info
+        run: ./mud.sh info
       
       - name: mud log
-        run: mud log
+        run: ./mud.sh log
       
       - name: mud labels
-        run: mud labels
+        run: ./mud.sh labels
       
       - name: mud branch
-        run: mud branch
+        run: ./mud.sh branch
       
       - name: mud tags
-        run: mud tags
+        run: ./mud.sh tags
