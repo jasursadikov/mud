@@ -8,7 +8,7 @@ import config
 import utils
 
 from argparse import ArgumentParser
-from utils import TEXT, RESET, STYLES
+from styles import *
 
 # Filters
 TABLE_ATTR = '-t', '--table'
@@ -43,12 +43,12 @@ class Mud:
 
     @staticmethod
     def _create_parser() -> ArgumentParser:
-        parser = argparse.ArgumentParser(description=f'{STYLES["bold"]}mud{RESET} allows you to run commands in multiple repositories.')
+        parser = argparse.ArgumentParser(description=f'{BOLD}mud{RESET} allows you to run commands in multiple repositories.')
         subparsers = parser.add_subparsers(dest='command')
 
         subparsers.add_parser(COMMANDS['configure'][0], aliases=COMMANDS['configure'][1:], help='Runs the interactive configuration wizard.')
         subparsers.add_parser(COMMANDS['update'][0], aliases=COMMANDS['update'][1:], help='Update mud to the latest version.')
-        subparsers.add_parser(COMMANDS['init'][0], aliases=COMMANDS['init'][1:], help=f'Initializes the {STYLES["bold"]}.mudconfig{RESET} and adds all repositories in this directory to {STYLES["bold"]}.mudconfig{RESET}.')
+        subparsers.add_parser(COMMANDS['init'][0], aliases=COMMANDS['init'][1:], help=f'Initializes the {BOLD}.mudconfig{RESET} and adds all repositories in this directory to {BOLD}.mudconfig{RESET}.')
         subparsers.add_parser(COMMANDS['info'][0], aliases=COMMANDS['info'][1:], help='Displays branch divergence and working directory changes')
         subparsers.add_parser(COMMANDS['log'][0], aliases=COMMANDS['log'][1:], help='Displays log of latest commit messages for all repositories in a table view.')
         subparsers.add_parser(COMMANDS['tags'][0], aliases=COMMANDS['tags'][1:], help='Displays git tags in repositories.')
@@ -64,12 +64,12 @@ class Mud:
         remove_parser.add_argument('label', help='Label to remove from repository (optional).', nargs='?', default='', type=str)
         remove_parser.add_argument('path', help='Repository to remove (optional).', nargs='?', type=str)
 
-        parser.add_argument(*TABLE_ATTR, metavar='TABLE', nargs='?', default='', type=str, help=f'Switches table view, runs in table view it is disabled in {STYLES["bold"]}.mudsettings{RESET}.')
+        parser.add_argument(*TABLE_ATTR, metavar='TABLE', nargs='?', default='', type=str, help=f'Switches table view, runs in table view it is disabled in {BOLD}.mudsettings{RESET}.')
         parser.add_argument(*LABEL_PREFIX, metavar='LABEL', nargs='?', default='', type=str, help='Filters repositories by provided label.')
         parser.add_argument(*BRANCH_PREFIX, metavar='BRANCH', nargs='?', default='', type=str, help='Filter repositories by provided branch.')
         parser.add_argument(*MODIFIED_ATTR, action='store_true', help='Filters modified repositories.')
         parser.add_argument(*DIVERGED_ATTR, action='store_true', help='Filters repositories with diverged branches.')
-        parser.add_argument(COMMANDS['set-global'][0], help=f'Sets {STYLES["bold"]}.mudconfig{RESET} in the current repository as your fallback {STYLES["bold"]}.mudconfig{RESET}.', action='store_true')
+        parser.add_argument(COMMANDS['set-global'][0], help=f'Sets {BOLD}.mudconfig{RESET} in the current repository as your fallback {BOLD}.mudconfig{RESET}.', action='store_true')
         parser.add_argument(COMMANDS['version'][0], help='Displays the current version of mud.', action='store_true')
         parser.add_argument('catch_all', nargs='*', help='Type any commands to execute among repositories.')
         return parser
@@ -85,7 +85,7 @@ class Mud:
             if os.path.exists(config_path):
                 utils.settings.config.set('mud', 'config_path', config_path)
                 utils.settings.save()
-                print(f'Current {STYLES["bold"]}.mudconfig{RESET} set as a global configuration.')
+                print(f'Current {BOLD}.mudconfig{RESET} set as a global configuration.')
             return
         # Prints version
         elif sys.argv[1] in COMMANDS['version']:
@@ -167,8 +167,8 @@ class Mud:
                 continue
             self.config.add_label(directory, getattr(args, 'label', ''))
             index += 1
-            path = f'{STYLES["dim"]}{TEXT["gray"]}../{RESET}{STYLES["dim"]}{directory}{RESET}'
-            print(f'{path} {TEXT["green"]}added{RESET}')
+            path = f'{DIM}{GRAY}../{RESET}{DIM}{directory}{RESET}'
+            print(f'{path} {GREEN}added{RESET}')
         if index == 0:
             utils.print_error('No git repositories were found in this directory.')
             return
@@ -177,10 +177,10 @@ class Mud:
     def configure(self):
         utils.settings.config['mud']['run_async'] = str(utils.ask('Do you want to run commands simultaneously for multiple repositories?'))
         utils.settings.config['mud']['run_table'] = str(utils.ask('Do you want to see command execution progress in table view? This will limit output content.'))
-        utils.settings.config['mud']['auto_fetch'] = str(utils.ask(f'Do you want to automatically run {STYLES["bold"]}\'git fetch\'{RESET} whenever you run commands such as {STYLES["bold"]}\'mud info\'{RESET}?'))
+        utils.settings.config['mud']['auto_fetch'] = str(utils.ask(f'Do you want to automatically run {BOLD}\'git fetch\'{RESET} whenever you run commands such as {BOLD}\'mud info\'{RESET}?'))
         utils.settings.config['mud']['ask_updates'] = str(utils.ask(f'Do you want to get information about latest updates?'))
-        utils.settings.config['mud']['nerd_fonts'] = str(utils.ask(f'Do you want to use {STYLES["bold"]}nerd-fonts{RESET}?'))
-        utils.settings.config['mud']['simplify_branches'] = str(utils.ask(f'Do you want to simplify branches? (ex. {STYLES["bold"]}feature/name{RESET} -> {STYLES["bold"]}f/name{RESET}'))
+        utils.settings.config['mud']['nerd_fonts'] = str(utils.ask(f'Do you want to use {BOLD}nerd-fonts{RESET}?'))
+        utils.settings.config['mud']['simplify_branches'] = str(utils.ask(f'Do you want to simplify branches? (ex. {BOLD}feature/name{RESET} -> {BOLD}f/name{RESET}'))
         utils.settings.save()
         print('Your settings are updated!')
         pass

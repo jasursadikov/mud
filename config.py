@@ -3,7 +3,7 @@ import re
 import xml.etree.ElementTree as ElementTree
 import utils
 
-from utils import RESET, STYLES
+from styles import *
 from typing import List, Dict
 from xml.dom import minidom
 
@@ -60,7 +60,7 @@ class Config:
             self.load(utils.CONFIG_FILE_NAME)
             return
 
-        utils.print_error(f'{STYLES["bold"]}.mudconfig{RESET} file was not found. Type `mud init` to create configuration file.')
+        utils.print_error(f'{BOLD}.mudconfig{RESET} file was not found. Type `mud init` to create configuration file.')
         return
 
     def load(self, file_path: str) -> None:
@@ -70,11 +70,11 @@ class Config:
         for dir_element in root.findall('dir'):
             path = dir_element.get('path')
             if not os.path.isdir(path):
-                utils.print_error(f'Invalid path {STYLES["bold"]}{path}{RESET}.')
+                utils.print_error(f'Invalid path {BOLD}{path}{RESET}.')
                 continue
 
             if not os.path.isdir(os.path.join(path, '.git')):
-                utils.print_error(f'{STYLES["bold"]}.git{RESET} directory not found at target "{path}".')
+                utils.print_error(f'{BOLD}.git{RESET} directory not found at target "{path}".')
                 continue
 
             labels = [label.strip() for label in dir_element.get('label', '').split(',') if label.strip()]
@@ -100,7 +100,7 @@ class Config:
             path = label
             label = None
         if not os.path.isdir(path):
-            utils.print_error(f'Invalid path {STYLES["bold"]}{path}{RESET}. Remember that path should be relative.')
+            utils.print_error(f'Invalid path {BOLD}{path}{RESET}. Remember that path should be relative.')
             return
         if path not in self.data:
             self.data[path] = []

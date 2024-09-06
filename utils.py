@@ -1,63 +1,12 @@
-import os
-import sys
 import random
 import subprocess
+import sys
 
-from settings import Settings
+from settings import *
+from styles import *
 
 SETTINGS_FILE_NAME = '.mudsettings'
 CONFIG_FILE_NAME = '.mudconfig'
-RESET = '\033[0m'
-TEXT = {
-    'white': '\033[37m',
-    'gray': '\033[90m',
-    'black': '\033[30m',
-    'red': '\033[31m',
-    'green': '\033[32m',
-    'yellow': '\033[33m',
-    'blue': '\033[34m',
-    'magenta': '\033[35m',
-    'cyan': '\033[36m',
-    'bright_white': '\033[97m',
-    'bright_red': '\033[91m',
-    'bright_green': '\033[92m',
-    'bright_yellow': '\033[93m',
-    'bright_blue': '\033[94m',
-    'bright_magenta': '\033[95m',
-    'bright_cyan': '\033[96m',
-}
-BACK = {
-    'white': '\033[47m',
-    'medium_gray': '\033[100m',
-    'black': '\033[40m',
-    'red': '\033[41m',
-    'green': '\033[42m',
-    'yellow': '\033[43m',
-    'blue': '\033[44m',
-    'magenta': '\033[45m',
-    'cyan': '\033[46m',
-    'bright_white': '\033[107m',
-    'bright_red': '\033[101m',
-    'bright_green': '\033[102m',
-    'bright_yellow': '\033[103m',
-    'bright_blue': '\033[104m',
-    'bright_magenta': '\033[105m',
-    'bright_cyan': '\033[106m',
-}
-STYLES = {
-    'bold': '\033[1m',
-    'dim': '\033[2m',
-    'italic': '\033[3m',
-    'underline': '\033[4m',
-    'blink': '\033[5m',
-}
-END_STYLES = {
-    'bold': '\033[22m',
-    'dim': '\033[22m',
-    'italic': '\033[23m',
-    'underline': '\033[24m',
-    'blink': '\033[25m',
-}
 GLYPHS = {}
 ICON_GLYPHS = {
     'ahead': '\uf062',
@@ -123,9 +72,9 @@ def check_updates(explicit: bool = False) -> bool:
     result = subprocess.run(['git', 'status', '-uno'], capture_output=True, text=True)
 
     if 'Your branch is behind' in result.stdout:
-        m = random.choice(list(TEXT.values())[3:])
-        u = random.choice(list(TEXT.values())[3:])
-        d = random.choice(list(TEXT.values())[3:])
+        m = random.choice(TEXT.values()[3:])
+        u = random.choice(TEXT.values()[3:])
+        d = random.choice(TEXT.values()[3:])
         print(fr'''
         {m} __    __{u}  __  __{d}  _____   
         {m}/\ '-./  \{u}/\ \/\ \{d}/\  __-.{RESET}
@@ -133,7 +82,7 @@ def check_updates(explicit: bool = False) -> bool:
         {m} \ \_\ \ \_\{u} \_____\{d} \____-{RESET}
         {m}  \/_/  \/_/{u}\/_____/{d}\/____/{RESET}
         ''')
-        print(f'{STYLES["bold"]}New update(s) is available!{RESET}\n')
+        print(f'{BOLD}New update(s) is available!{RESET}\n')
 
         log = subprocess.run(['git', 'log', 'HEAD..@{u}', '--oneline', '--color=always'], text=True, stdout=subprocess.PIPE).stdout
         print(log)
@@ -141,7 +90,7 @@ def check_updates(explicit: bool = False) -> bool:
         if ask('Do you want to update?'):
             update_process = subprocess.run(['git', 'pull', '--force'], text=False, stdout=subprocess.DEVNULL)
             if update_process.returncode == 0:
-                print(f'{TEXT["green"]}{STYLES["BOLD"]}Update successful!{RESET}')
+                print(f'{GREEN}{BOLD}Update successful!{RESET}')
             else:
                 print_error('Update failed', update_process.returncode)
         os.chdir(target_directory)
@@ -174,21 +123,21 @@ def ask(text: str) -> bool:
 
 
 def print_error(text: str, code: int = 255) -> None:
-    print(f'{TEXT["red"]}Error:{RESET} {text}')
+    print(f'{RED}Error:{RESET} {text}')
     sys.exit(code)
 
 
 def print_version() -> None:
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'], text=True).splitlines()
-    m = random.choice(list(TEXT.values())[3:])
-    u = random.choice(list(TEXT.values())[3:])
-    d = random.choice(list(TEXT.values())[3:])
-    t = random.choice(list(TEXT.values())[3:])
-    v = random.choice(list(TEXT.values())[3:])
+    m = random.choice(TEXT[3:])
+    u = random.choice(TEXT[3:])
+    d = random.choice(TEXT[3:])
+    t = random.choice(TEXT[3:])
+    v = random.choice(TEXT[3:])
     print(fr'''
 {m} __    __{u}  __  __{d}  _____   
-{m}/\ '-./  \{u}/\ \/\ \{d}/\  __-.     {STYLES['bold']}{t}Multi-directory runner{RESET} [{v}{hash}{RESET}]
+{m}/\ '-./  \{u}/\ \/\ \{d}/\  __-.     {BOLD}{t}Multi-directory runner{RESET} [{v}{hash}{RESET}]
 {m}\ \ \-./\ \{u} \ \_\ \{d} \ \/\ \    {RESET}Jasur Sadikov 
 {m} \ \_\ \ \_\{u} \_____\{d} \____-    {RESET}https://github.com/jasursadikov/mud
 {m}  \/_/  \/_/{u}\/_____/{d}\/____/    {RESET}Type 'mud --help' for help

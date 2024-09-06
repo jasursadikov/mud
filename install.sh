@@ -19,7 +19,7 @@ elif [[ $SHELL == *"fish"* ]]; then
     CONFIG_FILE=~/.config/fish/config.fish
     ALIAS_CMD="alias mud '$PWD/mud.sh'"
 else
-    echo "Unsupported shell. Defaulting to .bashrc."
+    echo "Unsupported shell. Falling back to .bashrc."
     CONFIG_FILE=~/.bashrc
 fi
 
