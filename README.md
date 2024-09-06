@@ -2,6 +2,8 @@
 
 ![Demo](img.png)
 
+![Build Status](https://img.shields.io/github/actions/workflow/status/jasursadikov/mud/main.yaml)
+
 mud is a multi-directory git runner which allows you to run git commands in a multiple repositories. It has multiple powerful tools filtering tools and support of aliasing.  This tool is not limited to git commands only, you can run any commands as you wish, but this tool was primarily designed to be used with git, so each referenced directory should have `.git`.
 
 ## Installing
