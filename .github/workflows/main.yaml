@@ -91,7 +91,7 @@ jobs:
       - name: Test update feature
         run: |
           echo "Update content" > dummy.txt
-          git add test.txt
+          git add dummy.txt
           git commit -m "Update dummy is created"
           git reset --hard HEAD^1
           ./mud update
