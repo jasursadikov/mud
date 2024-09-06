@@ -24,7 +24,7 @@ All entries are stored in `.mudconfig` in XML format. After making your first en
 ## Using
 
 ### Commands
-`mud <FILTER> <COMMAND>` will execute bash command across all repositories. To filter repositories check [filtering](#filters) section.
+`mud <FILTER> <COMMAND>` will execute bash command across all repositories. To filter repositories check [arguments](#arguments) section.
 
 - `mud info` - displays branch divergence and working directory changes.
 - `mud status` - displays working directory changes.
