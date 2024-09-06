@@ -75,9 +75,9 @@ def check_updates(explicit: bool = False) -> bool:
     result = subprocess.run(['git', 'status', '-uno'], capture_output=True, text=True)
 
     if 'Your branch is behind' in result.stdout:
-        m = random.choice(TEXT.values()[3:])
-        u = random.choice(TEXT.values()[3:])
-        d = random.choice(TEXT.values()[3:])
+        m = random.choice(TEXT[3:])
+        u = random.choice(TEXT[3:])
+        d = random.choice(TEXT[3:])
         print(fr'''
         {m} __    __{u}  __  __{d}  _____   
         {m}/\ '-./  \{u}/\ \/\ \{d}/\  __-.{RESET}
@@ -132,7 +132,7 @@ def print_error(text: str, code: int = 255) -> None:
 
 def print_version() -> None:
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'], text=True).splitlines()
+    hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'], text=True).splitlines()[0]
     m = random.choice(TEXT[3:])
     u = random.choice(TEXT[3:])
     d = random.choice(TEXT[3:])
