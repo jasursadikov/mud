@@ -90,9 +90,6 @@ jobs:
           ./mud.sh -b=develop echo "Hello world"
       - name: Test update feature
         run: |
-          echo "Update content" > dummy.txt
-          git add dummy.txt
-          git commit -m "Update dummy is created"
           git reset --hard HEAD^1
           ./mud.sh update
           git pull --force
