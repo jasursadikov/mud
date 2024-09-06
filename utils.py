@@ -109,16 +109,28 @@ TEXT_GLYPHS = {
 settings: Settings
 
 
-def remove_colors():
-    for index in range(len(TEXT)):
-        TEXT[index] = ''
-    for index in range(len(BACK)):
-        BACK[index] = ''
-
-
 def set_up():
     global GLYPHS
     GLYPHS = ICON_GLYPHS if settings.mud_settings['nerd_fonts'] else TEXT_GLYPHS
+
+
+def updates_available():
+    target_directory = os.curdir
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
+    try:
+        subprocess.run(["git", "rev-parse", "--is-inside-work-tree"], check=True, stdout=subprocess.DEVNULL)
+    except subprocess.CalledProcessError:
+        return False, "Not a git repository"
+
+    subprocess.run(["git", "fetch"], check=True)
+    result = subprocess.run(["git", "status", "-uno"], capture_output=True, text=True)
+
+    if "Your branch is behind" in result.stdout:
+        print("Updates are available")
+        subprocess.run(["git", "log", "HEAD..origin/master", "--oneline"], text=True, stdout=subprocess.STDOUT)
+
+    os.chdir(target_directory)
 
 
 def print_error(text: str, code: int = 255) -> None:
