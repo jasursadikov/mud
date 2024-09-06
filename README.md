@@ -34,6 +34,7 @@ All entries are stored in `.mudconfig` in XML format. After making your first en
 - `mud labels` - displays mud labels across repositories.
 - `mud branch` - displays all branches in repositories.
 - `mud tags` - displays git tags in repositories.
+- `mud update` - check for available updates.
 
 ### Arguments
 - `-l=<label>` or `--label=<label>` - filters out repositories by mud labels.
