@@ -160,13 +160,14 @@ class Commands:
 
     # `mud <COMMAND>` when run_async = 0 and run_table = 0
     def run_ordered(self, repos: List[str], command: [str]) -> None:
+        command_str = ' '.join(command)
         for path in repos:
-            print(f'{self._get_formatted_path(path)}{RESET} {command}{RESET}')
-            result = subprocess.run(command, shell=True, cwd=path, capture_output=True, text=True)
-            if result.stderr:
-                print(result.stderr)
-            if result.stdout and not result.stdout.isspace():
-                print(result.stdout)
+            result = subprocess.run(command_str, shell=True, cwd=path, capture_output=True, text=True)
+            print(f'{self._get_formatted_path(path)}{RESET} {command_str}{RESET} {TEXT["red"] + utils.GLYPHS["failed"] if result.stderr else TEXT["green"] + utils.GLYPHS["finished"]}{RESET}')
+            if result.stdout and not result.stdout.strip().isspace():
+                print(result.stdout.strip())
+            if result.stderr and not result.stderr.strip().isspace():
+                print(result.stderr.strip())
 
     # `mud <COMMAND>` when run_async = 1 and run_table = 0
     async def run_async(self, repos: List[str], command: List[str]) -> None:
