@@ -118,11 +118,11 @@ def check_updates(explicit: bool = False) -> bool:
     target_directory = os.curdir
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-    subprocess.run(["git", "fetch"], check=True)
+    subprocess.run(['git', 'fetch'], check=True)
 
-    result = subprocess.run(["git", "status", "-uno"], capture_output=True, text=True)
+    result = subprocess.run(['git', 'status', '-uno'], capture_output=True, text=True)
 
-    if "Your branch is behind" in result.stdout:
+    if 'Your branch is behind' in result.stdout:
         m = random.choice(list(TEXT.values())[3:])
         u = random.choice(list(TEXT.values())[3:])
         d = random.choice(list(TEXT.values())[3:])
@@ -133,13 +133,13 @@ def check_updates(explicit: bool = False) -> bool:
         {m} \ \_\ \ \_\{u} \_____\{d} \____-{RESET}
         {m}  \/_/  \/_/{u}\/_____/{d}\/____/{RESET}
         ''')
-        print(f"{STYLES["bold"]}New update(s) is available!{RESET}\n")
+        print(f'{STYLES["bold"]}New update(s) is available!{RESET}\n')
 
-        log = subprocess.run(["git", "log", "HEAD..@{u}", "--oneline", "--color=always"], text=True, stdout=subprocess.PIPE).stdout
+        log = subprocess.run(['git', 'log', 'HEAD..@{u}', '--oneline', '--color=always'], text=True, stdout=subprocess.PIPE).stdout
         print(log)
 
-        if ask("Do you want to update?"):
-            update_process = subprocess.run(["git", "pull", "--force"], text=False, stdout=subprocess.DEVNULL)
+        if ask('Do you want to update?'):
+            update_process = subprocess.run(['git', 'pull', '--force'], text=False, stdout=subprocess.DEVNULL)
             if update_process.returncode == 0:
                 print(f'{TEXT["green"]}{STYLES["BOLD"]}Update successful!{RESET}')
             else:
@@ -148,14 +148,14 @@ def check_updates(explicit: bool = False) -> bool:
         return True
 
     if explicit:
-        print("No updates available")
+        print('No updates available')
 
     os.chdir(target_directory)
     return False
 
 
 def ask(text: str) -> bool:
-    print(f"{text} [Y/n]", end='', flush=True)
+    print(f"{text} [Y/n] ", end='', flush=True)
     if sys.platform.startswith('win'):
         from msvcrt import getch
         response = getch().decode().lower()
