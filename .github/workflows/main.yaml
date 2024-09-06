@@ -10,9 +10,8 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  Test:
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python 3.10
@@ -43,30 +42,42 @@ jobs:
           done
       - name: Set up and Initialize
         run: |
-          echo -e "[mud]\nrun_async = True\nrun_table = True\nauto_fetch = False\nnerd_fonts = False" > ~/.mudsettings
+          echo -e "[mud]\nrun_async = False\nrun_table = True\nauto_fetch = False\nnerd_fonts = False" > ~/.mudsettings
           ./mud.sh init
-      - name: mud remove
+      - name: Test remove by path
         run: |
           for i in {1..3}; do
             ./mud.sh remove repo_$i
           done
-      - name: mud add
+      - name: Test add with label
         run: |
           for i in {1..3}; do
             ./mud.sh add label_$i repo_$i
           done
-      - name: mud remove
+      - name: Test remove label
         run: |
           for i in {1..3}; do
             ./mud.sh remove label_$i
           done
+      - name: Add all repositories with labels
+        run: |
+          rm .mudconfig
+          for i in {1..3}; do
+            ./mud.sh add label_$i repo_$i
+          done
       - name: Test default commands
         run: |
-          ./mud.sh status
-          ./mud.sh info
-          ./mud.sh log
+          echo "mud labels"
           ./mud.sh labels
+          echo "mud status"
+          ./mud.sh status
+          echo "mud info"
+          ./mud.sh info
+          echo "mud log"
+          ./mud.sh log
+          echo "mud branch"
           ./mud.sh branch
+          echo "mud tags"
           ./mud.sh tags
       - name: Test custom command
         run: ./mud.sh echo "Hello world"
