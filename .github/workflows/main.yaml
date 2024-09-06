@@ -62,7 +62,7 @@ jobs:
       - name: Add all repositories with labels
         run: |
           rm .mudconfig
-          mud init
+          ./mud.sh init
           for i in {1..3}; do
             ./mud.sh add label_$i repo_$i
           done
