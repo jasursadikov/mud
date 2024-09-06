@@ -1,0 +1,49 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+  schedule:
+    # Runs every 6 hours
+    - cron: '0 */6 * * *'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.12'
+      - name: Upgrade pip
+        run: pip install --upgrade pip
+      - name: Install dependencies
+        run: |
+          pip install prettytables
+          pip install requests
+      - name: Create repositories
+        run: |
+          mkdir repo1
+          cd repo1
+          git init
+          cd ..
+          
+          mkdir repo2
+          cd repo2
+          git init
+          cd ..
+          
+          mkdir repo3
+          cd repo3
+          git init
+          cd ..
+
+          chmod +x install.sh
+          ./install.sh
+      - name: Run mud init
+        run: |
+          mud init
+          
