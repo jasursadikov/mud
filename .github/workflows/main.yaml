@@ -25,10 +25,9 @@ jobs:
         run: |
           pip install prettytables
           pip install requests
-      - name: Install mud
+      - name: Alias mud
         run: |
-          chmod +x install.sh
-          ./install.sh
+          alias mud '$PWD/mud.sh'
       - name: Create repositories
         run: |
           mkdir repo1
@@ -45,7 +44,36 @@ jobs:
           cd repo3
           git init
           cd ..
-      - name: Run mud init
-        run: |
-          mud init
-          
+
+      - name: mud add
+      - run: |
+          mud add repo1 label1
+          mud add repo2 label2
+          mud add repo3 label3
+
+      - name: mud remove
+      - run: |
+          mud remove repo1
+          mud remove label2
+          mud remove repo3 label3
+
+      - name: mud init
+        run: mud init
+      
+      - name: mud status
+      - run: mud status
+      
+      - name: mud info
+      - run: mud info
+      
+      - name: mud log
+      - run: mud log
+      
+      - name: mud labels
+      - run: mud labels
+      
+      - name: mud branch
+      - run: mud branch
+      
+      - name: mud tags
+      - run: mud tags
