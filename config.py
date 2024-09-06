@@ -1,9 +1,9 @@
 import os
-import utils
-import xml.etree.ElementTree as ElementTree
 import re
+import xml.etree.ElementTree as ElementTree
+import utils
 
-from utils import TEXT, BACK, RESET, STYLES, END_STYLES
+from utils import RESET, STYLES
 from typing import List, Dict
 from xml.dom import minidom
 

@@ -174,8 +174,7 @@ class Commands:
 
         async def run_process(path: str) -> None:
             async with sem:
-                process = await asyncio.create_subprocess_exec(*command, cwd=path, stdout=subprocess.PIPE,
-                                                               stderr=subprocess.PIPE)
+                process = await asyncio.create_subprocess_exec(*command, cwd=path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 stdout, stderr = await process.communicate()
                 print(f'{self._get_formatted_path(path)}{TEXT["gray"]}>{RESET} {TEXT["yellow"]}{" ".join(command)}{RESET}')
                 if stderr:
@@ -218,7 +217,6 @@ class Commands:
 
         table[repo_path] = [table[repo_path][0], status]
         self._print_process(table)
-
 
     def _print_process(self, info: Dict[str, List[str]]) -> None:
         table = self._get_table()
@@ -364,15 +362,15 @@ class Commands:
     def _get_branch_icon(branch_prefix: str) -> str:
         return f'{utils.GLYPHS["bugfix"]}' if branch_prefix in ['bugfix', 'bug', 'hotfix'] else \
             f'{utils.GLYPHS["release"]}' if branch_prefix == 'release' else \
-            f'{utils.GLYPHS["feature"]}' if branch_prefix in ['feature', 'feat', 'develop'] else \
-            f'{utils.GLYPHS["branch"]}'
+                f'{utils.GLYPHS["feature"]}' if branch_prefix in ['feature', 'feat', 'develop'] else \
+                    f'{utils.GLYPHS["branch"]}'
 
     @staticmethod
     def _get_branch_color(branch_name: str) -> str:
         return 'red' if branch_name in ['bugfix', 'bug', 'hotfix'] else \
             'blue' if branch_name == 'release' else \
-            'green' if branch_name in ['feature', 'feat', 'develop'] else \
-            'green'
+                'green' if branch_name in ['feature', 'feat', 'develop'] else \
+                    'green'
 
     @staticmethod
     def _get_color_index(label: str) -> (str, str):

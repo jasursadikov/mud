@@ -1,3 +1,4 @@
+import os
 import sys
 import random
 import subprocess
@@ -126,6 +127,7 @@ def print_error(args: str) -> None:
 
 
 def print_version() -> None:
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
     hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'], text=True).splitlines()
     m = random.choice(list(TEXT.values())[3:])
     u = random.choice(list(TEXT.values())[3:])
