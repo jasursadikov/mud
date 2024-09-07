@@ -1,12 +1,13 @@
 import os
 import utils
+import shutil
 import asyncio
 import subprocess
 
+from styles import *
 from typing import List, Dict
 from collections import Counter
 from prettytable import PrettyTable, PLAIN_COLUMNS
-from styles import *
 
 
 class Commands:
@@ -104,7 +105,7 @@ class Commands:
 			formatted_path = self._get_formatted_path(path)
 			branch = self._get_branch_status(path)
 			author = self._get_authors_name(path)
-			commit = self._get_commit_message(path, 35)
+			commit = self._get_commit_message(path)
 
 			# Commit time
 			commit_time_cmd = subprocess.run('git log -1 --pretty=format:%cd --date=relative', shell=True, text=True, cwd=path, capture_output=True)
@@ -212,9 +213,9 @@ class Commands:
 
 		return_code = await process.wait()
 		if return_code == 0:
-			status = f'{GREEN}{utils.GLYPHS["finished"]}'
+			status = f'{GREEN}{utils.GLYPHS["finished"]}{RESET}'
 		else:
-			status = f'{RED}{utils.GLYPHS["failed"]} Code: {return_code}'
+			status = f'{RED}{utils.GLYPHS["failed"]} Code: {return_code}{RESET}'
 
 		table[repo_path] = [table[repo_path][0], status]
 		self._print_process(table)
@@ -224,22 +225,17 @@ class Commands:
 
 		for path, (line, status) in info.items():
 			formatted_path = self._get_formatted_path(path)
-			table.add_row([formatted_path, line, status])
+			table.add_row([formatted_path, status, line])
 
 		table_str = self._table_to_str(table)
 		num_lines = table_str.count('\n') + 1
 
 		if hasattr(self, '_last_printed_lines') and self._last_printed_lines > 0:
 			for _ in range(self._last_printed_lines):
+				# Clear previous line
 				print('\033[A\033[K', end='')
-
-		print(f'{table_str}\n', end='')
+		self._print_table(table)
 		self._last_printed_lines = num_lines
-
-	def _print_table(self, table: PrettyTable):
-		table = self._table_to_str(table)
-		if len(table) != 0:
-			print(table)
 
 	@staticmethod
 	def _get_status_string(files: List[str]):
@@ -267,6 +263,19 @@ class Commands:
 		if not files:
 			status = f'{GREEN}{utils.GLYPHS["clear"]}{RESET}'
 		return status
+
+	@staticmethod
+	def _print_table(table: PrettyTable):
+		width, _ = shutil.get_terminal_size()
+		rows = Commands._table_to_str(table).split('\n')
+		for row in rows:
+			if len(row) != 0:
+				if len(sterilize(row)) > width:
+					styles_count = len(row) - len(sterilize(row))
+					count = width + styles_count - 1
+					print(row[:count] + RESET)
+				else:
+					print(row)
 
 	@staticmethod
 	def _table_to_str(table: PrettyTable) -> str:
@@ -310,10 +319,9 @@ class Commands:
 		return author
 
 	@staticmethod
-	def _get_commit_message(path: str, max_chars: int) -> str:
+	def _get_commit_message(path: str) -> str:
 		cmd = subprocess.run('git log -1 --pretty=format:%s', shell=True, text=True, cwd=path, capture_output=True)
 		log = cmd.stdout.strip()
-		log = log[:max_chars] + '...' if len(log) > max_chars else log
 		return log
 
 	@staticmethod
