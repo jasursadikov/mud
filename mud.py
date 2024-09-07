@@ -160,7 +160,9 @@ class Mud:
 
 	# Filter out repositories if user provided filters
 	def _filter_repos(self) -> None:
-		self.repos = self.config.filter_label('ignore', self.config.data, False)
+		self.repos = self.config.data
+		for path, labels in self.config.filter_label('ignore', self.config.data).items():
+			del self.repos[path]
 		any_filters = False
 		filtered = {}
 		branch = None

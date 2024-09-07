@@ -83,14 +83,14 @@ class Config:
 	def paths(self) -> List[str]:
 		return list(self.data.keys())
 
-	def filter_label(self, label: str, repos: Dict[str, List[str]] = None, include: bool = True) -> Dict[str, List[str]]:
+	def filter_label(self, label: str, repos: Dict[str, List[str]] = None) -> Dict[str, List[str]]:
 		if repos is None:
 			repos = self.data
 		if label == '':
 			return repos
 		result = {}
 		for path, labels in repos.items():
-			if (include and label in labels) or (not include and label not in labels):
+			if label in labels:
 				result[path] = labels
 		return result
 
