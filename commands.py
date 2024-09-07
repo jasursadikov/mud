@@ -296,7 +296,7 @@ class Commands:
             branch_color = Commands._get_branch_color(branch_path[0])
             branch = f'{branch_color}{icon}{RESET}{utils.GLYPHS["space"]}{branch_path[0]}{RESET}/{BOLD}{("/".join(branch_path[1:]))}'
         else:
-            branch = f'{TEXT["cyan"]}{utils.GLYPHS["branch"]}{RESET}{utils.GLYPHS["space"]}{branch_stdout}'
+            branch = f'{CYAN}{utils.GLYPHS["branch"]}{RESET}{utils.GLYPHS["space"]}{branch_stdout}'
         return branch
 
     @staticmethod

@@ -1,6 +1,6 @@
+import sys
 import random
 import subprocess
-import sys
 
 from settings import *
 from styles import *
@@ -66,12 +66,28 @@ def set_up():
         sys.exit()
 
 
+def version() -> None:
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'], text=True).splitlines()[0]
+    m = random.choice(TEXT[3:])
+    u = random.choice(TEXT[3:])
+    d = random.choice(TEXT[3:])
+    t = random.choice(TEXT[3:])
+    v = random.choice(TEXT[3:])
+    print(fr'''
+{m} __    __{u}  __  __{d}  _____   
+{m}/\ '-./  \{u}/\ \/\ \{d}/\  __-.     {BOLD}{t}Multi-directory runner{RESET} [{v}{hash}{RESET}]
+{m}\ \ \-./\ \{u} \ \_\ \{d} \ \/\ \    {RESET}Jasur Sadikov 
+{m} \ \_\ \ \_\{u} \_____\{d} \____-    {RESET}https://github.com/jasursadikov/mud
+{m}  \/_/  \/_/{u}\/_____/{d}\/____/    {RESET}Type 'mud --help' for help
+''')
+
+
 def check_updates(explicit: bool = False) -> bool:
-    target_directory = os.curdir
+    target_directory = os.getcwd()
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
     subprocess.run(['git', 'fetch'], check=True)
-
     result = subprocess.run(['git', 'status', '-uno'], capture_output=True, text=True)
 
     if 'Your branch is behind' in result.stdout:
@@ -106,6 +122,18 @@ def check_updates(explicit: bool = False) -> bool:
     return False
 
 
+def configure():
+    settings.config['mud']['run_async'] = str(ask('Do you want to run commands simultaneously for multiple repositories?'))
+    settings.config['mud']['run_table'] = str(ask('Do you want to see command execution progress in table view? This will limit output content.'))
+    settings.config['mud']['auto_fetch'] = str(ask(f'Do you want to automatically run {BOLD}\'git fetch\'{RESET} whenever you run commands such as {BOLD}\'mud info\'{RESET}?'))
+    settings.config['mud']['ask_updates'] = str(ask(f'Do you want to get information about latest updates?'))
+    settings.config['mud']['nerd_fonts'] = str(ask(f'Do you want to use {BOLD}nerd-fonts{RESET}?'))
+    settings.config['mud']['simplify_branches'] = str(ask(f'Do you want to simplify branches? (ex. {BOLD}feature/name{RESET} -> {BOLD}f/name{RESET}'))
+    settings.save()
+    print('Your settings are updated!')
+    pass
+
+
 def ask(text: str) -> bool:
     print(f"{text} [Y/n] ", end='', flush=True)
     if sys.platform.startswith('win'):
@@ -128,20 +156,3 @@ def ask(text: str) -> bool:
 def print_error(text: str, code: int = 255) -> None:
     print(f'{RED}Error:{RESET} {text}')
     sys.exit(code)
-
-
-def print_version() -> None:
-    os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'], text=True).splitlines()[0]
-    m = random.choice(TEXT[3:])
-    u = random.choice(TEXT[3:])
-    d = random.choice(TEXT[3:])
-    t = random.choice(TEXT[3:])
-    v = random.choice(TEXT[3:])
-    print(fr'''
-{m} __    __{u}  __  __{d}  _____   
-{m}/\ '-./  \{u}/\ \/\ \{d}/\  __-.     {BOLD}{t}Multi-directory runner{RESET} [{v}{hash}{RESET}]
-{m}\ \ \-./\ \{u} \ \_\ \{d} \ \/\ \    {RESET}Jasur Sadikov 
-{m} \ \_\ \ \_\{u} \_____\{d} \____-    {RESET}https://github.com/jasursadikov/mud
-{m}  \/_/  \/_/{u}\/_____/{d}\/____/    {RESET}Type 'mud --help' for help
-''')

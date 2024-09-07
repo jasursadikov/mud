@@ -89,23 +89,23 @@ class Mud:
             return
         # Prints version
         elif sys.argv[1] in COMMANDS['version']:
-            utils.print_version()
+            utils.version()
             return
-        elif sys.argv[1] in COMMANDS['configure']:
-            self.configure()
-            return
+        # Checks for available updates
         elif sys.argv[1] in COMMANDS['update']:
             utils.check_updates(True)
             return
-
+        # Runs configuration wizard
+        elif sys.argv[1] in COMMANDS['configure']:
+            utils.configure()
+            return
         current_directory = os.getcwd()
         self.config = config.Config()
 
-        if len(sys.argv) > 1 and sys.argv[1] in [cmd for group in COMMANDS.values() for cmd in group]:
-            args = self.parser.parse_args()
-            if args.command in COMMANDS['init']:
-                self.init(args)
-                return
+        # Discovers repositories in current directory
+        if sys.argv[1] in COMMANDS['init']:
+            self.init(self.parser.parse_args())
+            return
 
         self.config.find()
         self._filter_repos()
@@ -158,10 +158,13 @@ class Mud:
             else:
                 self.cmd_runner.run_ordered(self.repos.keys(), sys.argv)
 
+
     def init(self, args) -> None:
         self.config.data = {}
         index = 0
         directories = [d for d in os.listdir('.') if os.path.isdir(d) and os.path.isdir(os.path.join(d, '.git'))]
+        print(directories)
+        print(os.getcwd())
         for directory in directories:
             if directory in self.config.paths():
                 continue
@@ -173,17 +176,6 @@ class Mud:
             utils.print_error('No git repositories were found in this directory.')
             return
         self.config.save(utils.CONFIG_FILE_NAME)
-
-    def configure(self):
-        utils.settings.config['mud']['run_async'] = str(utils.ask('Do you want to run commands simultaneously for multiple repositories?'))
-        utils.settings.config['mud']['run_table'] = str(utils.ask('Do you want to see command execution progress in table view? This will limit output content.'))
-        utils.settings.config['mud']['auto_fetch'] = str(utils.ask(f'Do you want to automatically run {BOLD}\'git fetch\'{RESET} whenever you run commands such as {BOLD}\'mud info\'{RESET}?'))
-        utils.settings.config['mud']['ask_updates'] = str(utils.ask(f'Do you want to get information about latest updates?'))
-        utils.settings.config['mud']['nerd_fonts'] = str(utils.ask(f'Do you want to use {BOLD}nerd-fonts{RESET}?'))
-        utils.settings.config['mud']['simplify_branches'] = str(utils.ask(f'Do you want to simplify branches? (ex. {BOLD}feature/name{RESET} -> {BOLD}f/name{RESET}'))
-        utils.settings.save()
-        print('Your settings are updated!')
-        pass
 
     def add(self, args) -> None:
         self.config.add_label(args.path, args.label)
