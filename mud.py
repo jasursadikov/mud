@@ -47,15 +47,15 @@ class Mud:
 		parser = argparse.ArgumentParser(description=f'{BOLD}mud{RESET} allows you to run commands in multiple repositories.')
 		subparsers = parser.add_subparsers(dest='command')
 
-		subparsers.add_parser(COMMANDS['configure'][0], aliases=COMMANDS['configure'][1:], help='Runs the interactive configuration wizard.')
-		subparsers.add_parser(COMMANDS['update'][0], aliases=COMMANDS['update'][1:], help='Update mud to the latest version.')
-		subparsers.add_parser(COMMANDS['init'][0], aliases=COMMANDS['init'][1:], help=f'Initializes the {BOLD}.mudconfig{RESET} and adds all repositories in this directory to {BOLD}.mudconfig{RESET}.')
-		subparsers.add_parser(COMMANDS['info'][0], aliases=COMMANDS['info'][1:], help='Displays branch divergence and working directory changes')
 		subparsers.add_parser(COMMANDS['log'][0], aliases=COMMANDS['log'][1:], help='Displays log of latest commit messages for all repositories in a table view.')
+		subparsers.add_parser(COMMANDS['info'][0], aliases=COMMANDS['info'][1:], help='Displays branch divergence and working directory changes')
+		subparsers.add_parser(COMMANDS['init'][0], aliases=COMMANDS['init'][1:], help=f'Initializes the {BOLD}.mudconfig{RESET} and adds all repositories in this directory to {BOLD}.mudconfig{RESET}.')
 		subparsers.add_parser(COMMANDS['tags'][0], aliases=COMMANDS['tags'][1:], help='Displays git tags in repositories.')
+		subparsers.add_parser(COMMANDS['update'][0], aliases=COMMANDS['update'][1:], help='Update mud to the latest version.')
 		subparsers.add_parser(COMMANDS['labels'][0], aliases=COMMANDS['labels'][1:], help='Displays mud labels across repositories.')
 		subparsers.add_parser(COMMANDS['status'][0], aliases=COMMANDS['status'][1:], help='Displays working directory changes.')
 		subparsers.add_parser(COMMANDS['branches'][0], aliases=COMMANDS['branches'][1:], help='Displays all branches in repositories.')
+		subparsers.add_parser(COMMANDS['configure'][0], aliases=COMMANDS['configure'][1:], help='Runs the interactive configuration wizard.')
 
 		add_parser = subparsers.add_parser(COMMANDS['add'][0], aliases=COMMANDS['add'][1:], help='Adds repository or labels an existing repository.')
 		add_parser.add_argument('label', help='The label to add (optional).', nargs='?', default='', type=str)
@@ -158,6 +158,37 @@ class Mud:
 			else:
 				self.cmd_runner.run_ordered(self.repos.keys(), sys.argv)
 
+	def init(self, args) -> None:
+		self.config.data = {}
+		index = 0
+		directories = [d for d in os.listdir('.') if os.path.isdir(d) and os.path.isdir(os.path.join(d, '.git'))]
+		print(directories)
+		print(os.getcwd())
+		for directory in directories:
+			if directory in self.config.paths():
+				continue
+			self.config.add_label(directory, getattr(args, 'label', ''))
+			index += 1
+			path = f'{DIM}{GRAY}../{RESET}{DIM}{directory}{RESET}'
+			print(f'{path} {GREEN}added{RESET}')
+		if index == 0:
+			utils.print_error('No git repositories were found in this directory.')
+			return
+		self.config.save(utils.CONFIG_FILE_NAME)
+
+	def add(self, args) -> None:
+		self.config.add_label(args.path, args.label)
+		self.config.save(utils.CONFIG_FILE_NAME)
+
+	def remove(self, args) -> None:
+		if args.path:
+			self.config.remove_label(args.path, args.label)
+		elif args.label:
+			self.config.remove_path(args.label)
+		else:
+			utils.print_error(f'Invalid input. Please provide a value to remove.')
+		self.config.save(utils.CONFIG_FILE_NAME)
+
 	# Filter out repositories if user provided filters
 	def _filter_repos(self) -> None:
 		self.repos = self.config.data
@@ -215,37 +246,6 @@ class Mud:
 		for repo in to_delete:
 			del self.repos[repo]
 		os.chdir(directory)
-
-	def init(self, args) -> None:
-		self.config.data = {}
-		index = 0
-		directories = [d for d in os.listdir('.') if os.path.isdir(d) and os.path.isdir(os.path.join(d, '.git'))]
-		print(directories)
-		print(os.getcwd())
-		for directory in directories:
-			if directory in self.config.paths():
-				continue
-			self.config.add_label(directory, getattr(args, 'label', ''))
-			index += 1
-			path = f'{DIM}{GRAY}../{RESET}{DIM}{directory}{RESET}'
-			print(f'{path} {GREEN}added{RESET}')
-		if index == 0:
-			utils.print_error('No git repositories were found in this directory.')
-			return
-		self.config.save(utils.CONFIG_FILE_NAME)
-
-	def add(self, args) -> None:
-		self.config.add_label(args.path, args.label)
-		self.config.save(utils.CONFIG_FILE_NAME)
-
-	def remove(self, args) -> None:
-		if args.path:
-			self.config.remove_label(args.path, args.label)
-		elif args.label:
-			self.config.remove_path(args.label)
-		else:
-			utils.print_error(f'Invalid input. Please provide a value to remove.')
-		self.config.save(utils.CONFIG_FILE_NAME)
 
 	@staticmethod
 	def _parse_aliases():
