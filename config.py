@@ -80,17 +80,16 @@ class Config:
 			labels = [label.strip() for label in dir_element.get('label', '').split(',') if label.strip()]
 			self.data[path] = labels
 
-	def all(self) -> Dict[str, List[str]]:
-		return self.data
-
 	def paths(self) -> List[str]:
 		return list(self.data.keys())
 
-	def with_label(self, label: str) -> Dict[str, List[str]]:
+	def filter_label(self, label: str, repos: Dict[str, List[str]] = None) -> Dict[str, List[str]]:
+		if repos is None:
+			repos = self.data
 		if label == '':
-			return self.all()
+			return repos
 		result = {}
-		for path, labels in self.data.items():
+		for path, labels in repos.items():
 			if label in labels:
 				result[path] = labels
 		return result
