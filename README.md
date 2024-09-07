@@ -18,7 +18,7 @@ mud is a multi-directory git runner which allows you to run git commands in a mu
 3. Run `mud init` command to create `.mudconfig` file. This file is important to keep references to repositories. All repositories in current dictionary would be included to `.mudconfig`.
 4. Optional: Run [`mud --set-global`](#global-mudconfig) to make current configuration default and reachable from any directory.
 
-All entries are stored in `.mudconfig` in XML format. After making your first entry, you can open `.mudconfig` in a text editor and modify it according to your needs.
+All entries are stored in `.mudconfig` in TSV format. After making your first entry, you can open `.mudconfig` in a text editor and modify it according to your needs.
 
 ### Global .mudconfig
 - `mud --set-global` - sets current `.mudconfig` as a global configuration, so it would be used as a fallback configuration to run from any directory.

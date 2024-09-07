@@ -1,11 +1,10 @@
 import os
 import re
-import xml.etree.ElementTree as ElementTree
+import csv
 import utils
 
 from styles import *
 from typing import List, Dict
-from xml.dom import minidom
 
 
 class Config:
@@ -13,29 +12,16 @@ class Config:
 		self.data = {}
 
 	def save(self, file_path: str) -> None:
-		root = ElementTree.Element('mud')
-
 		def _filter_labels(label: str):
 			return bool(re.match(r'^\w+$', label))
 
-		for path, labels in self.data.items():
-			dir_element = ElementTree.SubElement(root, 'dir')
-			dir_element.set('path', path)
+		with open(file_path, 'w', newline='') as tsvfile:
+			writer = csv.writer(tsvfile, delimiter='\t')
 
-			valid_labels = [label for label in labels if _filter_labels(label)]
-			if valid_labels:
-				if len(valid_labels) == 1:
-					formatted_labels = valid_labels[0]
-				else:
-					formatted_labels = ', '.join(valid_labels)
-				dir_element.set('label', formatted_labels)
-
-		rough_string = ElementTree.tostring(root)
-		parsed = minidom.parseString(rough_string)
-		pretty_xml = parsed.toprettyxml(indent='\t')
-
-		with open(file_path, 'w') as file:
-			file.write(pretty_xml)
+			for path, labels in self.data.items():
+				valid_labels = [label for label in labels if _filter_labels(label)]
+				formatted_labels = ','.join(valid_labels) if valid_labels else ''
+				writer.writerow([path, formatted_labels])
 
 	def find(self) -> None:
 		if os.path.exists(utils.CONFIG_FILE_NAME):
@@ -43,7 +29,6 @@ class Config:
 			return
 
 		directory = os.getcwd()
-
 		current_path = directory
 		while os.path.dirname(current_path) != current_path:
 			os.chdir(current_path)
@@ -65,20 +50,20 @@ class Config:
 
 	def load(self, file_path: str) -> None:
 		self.data = {}
-		tree = ElementTree.parse(file_path)
-		root = tree.getroot()
-		for dir_element in root.findall('dir'):
-			path = dir_element.get('path')
-			if not os.path.isdir(path):
-				utils.print_error(f'Invalid path {BOLD}{path}{RESET}.')
-				continue
+		with open(file_path, 'r') as tsvfile:
+			reader = csv.reader(tsvfile, delimiter='\t')
+			for row in reader:
+				path = row[0]
+				if not os.path.isdir(path):
+					utils.print_error(f'Invalid path {BOLD}{path}{RESET}.')
+					continue
 
-			if not os.path.isdir(os.path.join(path, '.git')):
-				utils.print_error(f'{BOLD}.git{RESET} directory not found at target "{path}".')
-				continue
+				if not os.path.isdir(os.path.join(path, '.git')):
+					utils.print_error(f'{BOLD}.git{RESET} directory not found at target "{path}".')
+					continue
 
-			labels = [label.strip() for label in dir_element.get('label', '').split(',') if label.strip()]
-			self.data[path] = labels
+				labels = [label.strip() for label in row[1].split(',') if label.strip()]
+				self.data[path] = labels
 
 	def paths(self) -> List[str]:
 		return list(self.data.keys())
