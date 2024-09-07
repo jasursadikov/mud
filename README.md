@@ -37,7 +37,8 @@ All entries are stored in `.mudconfig` in XML format. After making your first en
 - `mud update` - check for available updates.
 
 ### Arguments
-- `-l=<label>` or `--label=<label>` - filters out repositories by mud labels.
+- `-l=<label>` or `--label=<label>` - filters out repositories with provided label.
+- `-nl=<label>` or `--not-label=<label>` - filters out repositories excluding provided label.
 - `-b=<branch>` or `--branch=<branch>` - filters out repositories by current branch name.
 - `-m` or `--modified` - filters out modified repositories.
 - `-d` or `--diverged` - filters repositories with diverged branches.

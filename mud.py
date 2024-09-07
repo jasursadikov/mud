@@ -13,6 +13,7 @@ from styles import *
 # Filters
 TABLE_ATTR = '-t', '--table'
 LABEL_PREFIX = '-l=', '--label='
+NOT_LABEL_PREFIX = '-nl=', '--not-label='
 BRANCH_PREFIX = '-b=', '--branch='
 MODIFIED_ATTR = '-m', '--modified'
 DIVERGED_ATTR = '-d', '--diverged'
@@ -65,7 +66,8 @@ class Mud:
 		remove_parser.add_argument('path', help='Repository to remove (optional).', nargs='?', type=str)
 
 		parser.add_argument(*TABLE_ATTR, metavar='TABLE', nargs='?', default='', type=str, help=f'Switches table view, runs in table view it is disabled in {BOLD}.mudsettings{RESET}.')
-		parser.add_argument(*LABEL_PREFIX, metavar='LABEL', nargs='?', default='', type=str, help='Filters repositories by provided label.')
+		parser.add_argument(*LABEL_PREFIX, metavar='LABEL', nargs='?', default='', type=str, help='Selects repositories with provided label.')
+		parser.add_argument(*NOT_LABEL_PREFIX, metavar='NOT_LABEL', nargs='?', default='', type=str, help='Selects repositories without provided label.')
 		parser.add_argument(*BRANCH_PREFIX, metavar='BRANCH', nargs='?', default='', type=str, help='Filter repositories by provided branch.')
 		parser.add_argument(*MODIFIED_ATTR, action='store_true', help='Filters modified repositories.')
 		parser.add_argument(*DIVERGED_ATTR, action='store_true', help='Filters repositories with diverged branches.')
@@ -158,7 +160,8 @@ class Mud:
 
 	# Filter out repositories if user provided filters
 	def _filter_repos(self) -> None:
-		self.repos = self.config.all()
+		self.repos = self.config.filter_label('ignore', self.config.data, False)
+		filtered = {}
 		branch = None
 		modified = False
 		diverged = False
@@ -168,9 +171,14 @@ class Mud:
 			arg = sys.argv[index]
 			if arg.startswith('-'):
 				arg = sys.argv[1:][index - 1]
-				if any(arg.startswith(prefix) for prefix in LABEL_PREFIX):
+				if any(arg.startswith(prefix) for prefix in LABEL_PREFIX) or (arg.startswith(prefix) for prefix in NOT_LABEL_PREFIX):
 					label = arg.split('=', 1)[1]
-					self.repos = self.config.with_label(label)
+					include = any(arg.startswith(prefix) for prefix in LABEL_PREFIX)
+					for path, labels in self.config.filter_label(label, self.repos).items():
+						if include:
+							filtered[path] = labels
+						elif path in filtered:
+							del filtered[path]
 				elif any(arg.startswith(prefix) for prefix in BRANCH_PREFIX):
 					branch = arg.split('=', 1)[1]
 				elif arg in TABLE_ATTR:
@@ -185,6 +193,7 @@ class Mud:
 				del sys.argv[index]
 				continue
 			break
+		self.repos = filtered
 		directory = os.getcwd()
 		to_delete = []
 		for repo in self.repos:

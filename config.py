@@ -5,7 +5,6 @@ import utils
 
 from styles import *
 from typing import List, Dict
-from xml.dom import minidom
 
 
 class Config:
@@ -37,6 +36,23 @@ class Config:
 		with open(file_path, 'w') as file:
 			file.write(pretty_xml)
 
+	def load(self, file_path: str) -> None:
+		self.data = {}
+		tree = ElementTree.parse(file_path)
+		root = tree.getroot()
+		for dir_element in root.findall('dir'):
+			path = dir_element.get('path')
+			if not os.path.isdir(path):
+				utils.print_error(f'Invalid path {BOLD}{path}{RESET}.')
+				continue
+
+			if not os.path.isdir(os.path.join(path, '.git')):
+				utils.print_error(f'{BOLD}.git{RESET} directory not found at target "{path}".')
+				continue
+
+			labels = [label.strip() for label in dir_element.get('label', '').split(',') if label.strip()]
+			self.data[path] = labels
+
 	def find(self) -> None:
 		if os.path.exists(utils.CONFIG_FILE_NAME):
 			self.load(utils.CONFIG_FILE_NAME)
@@ -63,35 +79,18 @@ class Config:
 		utils.print_error(f'{BOLD}.mudconfig{RESET} file was not found. Type `mud init` to create configuration file.')
 		return
 
-	def load(self, file_path: str) -> None:
-		self.data = {}
-		tree = ElementTree.parse(file_path)
-		root = tree.getroot()
-		for dir_element in root.findall('dir'):
-			path = dir_element.get('path')
-			if not os.path.isdir(path):
-				utils.print_error(f'Invalid path {BOLD}{path}{RESET}.')
-				continue
-
-			if not os.path.isdir(os.path.join(path, '.git')):
-				utils.print_error(f'{BOLD}.git{RESET} directory not found at target "{path}".')
-				continue
-
-			labels = [label.strip() for label in dir_element.get('label', '').split(',') if label.strip()]
-			self.data[path] = labels
-
-	def all(self) -> Dict[str, List[str]]:
-		return self.data
 
 	def paths(self) -> List[str]:
 		return list(self.data.keys())
 
-	def with_label(self, label: str) -> Dict[str, List[str]]:
+	def filter_label(self, label: str, repos: Dict[str, List[str]] = None, include: bool = True) -> Dict[str, List[str]]:
+		if repos is None:
+			repos = self.data
 		if label == '':
-			return self.all()
+			return repos
 		result = {}
-		for path, labels in self.data.items():
-			if label in labels:
+		for path, labels in repos.items():
+			if (include and label in labels) or (not include and label not in labels):
 				result[path] = labels
 		return result
 
