@@ -161,6 +161,7 @@ class Mud:
 	# Filter out repositories if user provided filters
 	def _filter_repos(self) -> None:
 		self.repos = self.config.filter_label('ignore', self.config.data, False)
+		any_filters = False
 		filtered = {}
 		branch = None
 		modified = False
@@ -172,6 +173,7 @@ class Mud:
 			if arg.startswith('-'):
 				arg = sys.argv[1:][index - 1]
 				if any(arg.startswith(prefix) for prefix in LABEL_PREFIX) or (arg.startswith(prefix) for prefix in NOT_LABEL_PREFIX):
+					any_filters = True
 					label = arg.split('=', 1)[1]
 					include = any(arg.startswith(prefix) for prefix in LABEL_PREFIX)
 					for path, labels in self.config.filter_label(label, self.repos).items():
@@ -193,7 +195,7 @@ class Mud:
 				del sys.argv[index]
 				continue
 			break
-		self.repos = filtered
+		self.repos = filtered if any_filters else self.repos
 		directory = os.getcwd()
 		to_delete = []
 		for repo in self.repos:
