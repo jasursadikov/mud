@@ -13,14 +13,14 @@ class Config:
         self.data = {}
 
     def save(self, file_path: str) -> None:
-        root = ElementTree.Element("mud")
+        root = ElementTree.Element('mud')
 
         def _filter_labels(label: str):
             return bool(re.match(r'^\w+$', label))
 
         for path, labels in self.data.items():
-            dir_element = ElementTree.SubElement(root, "dir")
-            dir_element.set("path", path)
+            dir_element = ElementTree.SubElement(root, 'dir')
+            dir_element.set('path', path)
 
             valid_labels = [label for label in labels if _filter_labels(label)]
             if valid_labels:
@@ -28,11 +28,11 @@ class Config:
                     formatted_labels = valid_labels[0]
                 else:
                     formatted_labels = ', '.join(valid_labels)
-                dir_element.set("label", formatted_labels)
+                dir_element.set('label', formatted_labels)
 
         rough_string = ElementTree.tostring(root)
         parsed = minidom.parseString(rough_string)
-        pretty_xml = parsed.toprettyxml(indent="\t")
+        pretty_xml = parsed.toprettyxml(indent='\t')
 
         with open(file_path, 'w') as file:
             file.write(pretty_xml)

@@ -158,7 +158,6 @@ class Mud:
             else:
                 self.cmd_runner.run_ordered(self.repos.keys(), sys.argv)
 
-
     def init(self, args) -> None:
         self.config.data = {}
         index = 0
@@ -223,9 +222,9 @@ class Mud:
         to_delete = []
         for repo in self.repos:
             os.chdir(os.path.join(directory, repo))
-            has_modifications = subprocess.check_output(['git', 'status', '--porcelain'])
-            branch_filter = (branch is not None and branch.strip() and subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD'], text=True).splitlines()[0] != branch)
-            is_diverged = not any('ahead' in line or 'behind' in line for line in subprocess.check_output(['git', 'status', '--branch', '--porcelain'], text=True).splitlines() if line.startswith('##'))
+            has_modifications = subprocess.check_output('git status --porcelain', shell=True)
+            branch_filter = (branch is not None and branch.strip() and subprocess.check_output('git rev-parse --abbrev-ref HEAD', shell=True, text=True).splitlines()[0] != branch)
+            is_diverged = not any('ahead' in line or 'behind' in line for line in subprocess.check_output('git status --branch --porcelain', shell=True, text=True).splitlines() if line.startswith('##'))
             if (modified and not has_modifications) or (branch and branch_filter) or (diverged and is_diverged):
                 to_delete.append(repo)
 
@@ -238,7 +237,7 @@ class Mud:
             asyncio.run(self._fetch_all_async())
         else:
             for repo in self.repos:
-                subprocess.run(['git', 'fetch'], cwd=repo, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                subprocess.run('git fetch', shell=True, cwd=repo, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     async def _fetch_all_async(self) -> None:
         tasks = [self._fetch_repo_async(repo) for repo in self.repos]
@@ -246,7 +245,7 @@ class Mud:
 
     @staticmethod
     async def _fetch_repo_async(repo: str) -> None:
-        await asyncio.create_subprocess_exec(['git', 'fetch'], cwd=repo, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        await asyncio.create_subprocess_exec('git fetch', shell=True, cwd=repo, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     @staticmethod
     def _parse_aliases():

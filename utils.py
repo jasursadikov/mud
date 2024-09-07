@@ -68,7 +68,7 @@ def set_up():
 
 def version() -> None:
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'], text=True).splitlines()[0]
+    hash = subprocess.check_output('git rev-parse --short HEAD', shell=True, text=True).splitlines()[0]
     m = random.choice(TEXT[3:])
     u = random.choice(TEXT[3:])
     d = random.choice(TEXT[3:])
@@ -87,8 +87,8 @@ def check_updates(explicit: bool = False) -> bool:
     target_directory = os.getcwd()
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-    subprocess.run(['git', 'fetch'], check=True)
-    result = subprocess.run(['git', 'status', '-uno'], capture_output=True, text=True)
+    subprocess.run('git fetch', shell=True, check=True)
+    result = subprocess.run('git status -uno', shell=True, capture_output=True, text=True)
 
     if 'Your branch is behind' in result.stdout:
         m = random.choice(TEXT[3:])
@@ -103,11 +103,11 @@ def check_updates(explicit: bool = False) -> bool:
         ''')
         print(f'{BOLD}New update(s) is available!{RESET}\n')
 
-        log = subprocess.run(['git', 'log', 'HEAD..@{u}', '--oneline', '--color=always'], text=True, stdout=subprocess.PIPE).stdout
+        log = subprocess.run('git log HEAD..@{u} --oneline --color=always', shell=True, text=True, stdout=subprocess.PIPE).stdout
         print(log)
 
         if ask('Do you want to update?'):
-            update_process = subprocess.run(['git', 'pull', '--force'], text=False, stdout=subprocess.DEVNULL)
+            update_process = subprocess.run('git pull --force', shell=True, text=False, stdout=subprocess.DEVNULL)
             if update_process.returncode == 0:
                 print(f'{GREEN}{BOLD}Update successful!{RESET}')
             else:
@@ -135,7 +135,7 @@ def configure():
 
 
 def ask(text: str) -> bool:
-    print(f"{text} [Y/n] ", end='', flush=True)
+    print(f'{text} [Y/n] ', end='', flush=True)
     if sys.platform.startswith('win'):
         from msvcrt import getch
         response = getch().decode().lower()

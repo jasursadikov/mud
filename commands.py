@@ -21,7 +21,7 @@ class Commands:
     def info(self, repos: Dict[str, List[str]]) -> None:
         table = self._get_table()
         for path, labels in repos.items():
-            output = subprocess.check_output(['git', 'status', '--porcelain'], text=True, cwd=path)
+            output = subprocess.check_output('git status --porcelain', shell=True, text=True, cwd=path)
             files = output.splitlines()
 
             formatted_path = self._get_formatted_path(path)
@@ -30,7 +30,7 @@ class Commands:
             colored_labels = self._get_formatted_labels(labels, utils.GLYPHS["label"])
 
             # Sync with origin status
-            ahead_behind_cmd = subprocess.run(['git', 'rev-list', '--left-right', '--count', 'HEAD...@{upstream}'], text=True, cwd=path, capture_output=True)
+            ahead_behind_cmd = subprocess.run('git rev-list --left-right --count HEAD...@{upstream}', shell=True, text=True, cwd=path, capture_output=True)
             stdout = ahead_behind_cmd.stdout.strip().split()
             origin_sync = ''
             if len(stdout) >= 2:
@@ -53,7 +53,7 @@ class Commands:
     def status(self, repos: Dict[str, List[str]]):
         table = self._get_table()
         for path, labels in repos.items():
-            output = subprocess.check_output(['git', 'status', '--porcelain'], text=True, cwd=path)
+            output = subprocess.check_output('git status --porcelain', shell=True, text=True, cwd=path)
             files = output.splitlines()
 
             formatted_path = self._get_formatted_path(path)
@@ -107,7 +107,7 @@ class Commands:
             commit = self._get_commit_message(path, 35)
 
             # Commit time
-            commit_time_cmd = subprocess.run(['git', 'log', '-1', '--pretty=format:%cd', '--date=relative'], text=True, cwd=path, capture_output=True)
+            commit_time_cmd = subprocess.run('git log -1 --pretty=format:%cd --date=relative', shell=True, text=True, cwd=path, capture_output=True)
             commit_time = commit_time_cmd.stdout.strip()
 
             table.add_row([formatted_path, branch, author, commit_time, commit])
@@ -121,7 +121,7 @@ class Commands:
 
         # Preparing branches for sorting to display them in the right order.
         for path in repos.keys():
-            raw_branches = [line.strip() for line in subprocess.check_output(['git', 'branch'], text=True, cwd=path).split('\n') if line.strip()]
+            raw_branches = [line.strip() for line in subprocess.check_output('git branch', shell=True, text=True, cwd=path).split('\n') if line.strip()]
             for branch in raw_branches:
                 branch = branch.replace(' ', '').replace('*', '')
                 if branch not in all_branches:
@@ -131,7 +131,7 @@ class Commands:
 
         for path, labels in repos.items():
             formatted_path = self._get_formatted_path(path)
-            branches = subprocess.check_output(['git', 'branch'], text=True, cwd=path).splitlines()
+            branches = subprocess.check_output('git branch', shell=True, text=True, cwd=path).splitlines()
             current_branch = next((branch.lstrip('* ') for branch in branches if branch.startswith('*')), None)
             branches = [branch.lstrip('* ') for branch in branches]
             sorted_branches = sorted(branches, key=lambda x: branch_counter.get(x, 0), reverse=True)
@@ -151,7 +151,7 @@ class Commands:
 
         for path, labels in repos.items():
             formatted_path = self._get_formatted_path(path)
-            tags = [line.strip() for line in subprocess.check_output(['git', 'tag'], text=True, cwd=path).splitlines() if line.strip()]
+            tags = [line.strip() for line in subprocess.check_output('git tag', shell=True, text=True, cwd=path).splitlines() if line.strip()]
             tags = [f"{utils.GLYPHS['tag']} {tag}" for tag in tags]
             tags = ' '.join(tags)
             table.add_row([formatted_path, tags])
@@ -301,7 +301,7 @@ class Commands:
 
     @staticmethod
     def _get_authors_name(path: str) -> str:
-        cmd = subprocess.run(['git', 'log', '-1', '--pretty=format:%an'], text=True, cwd=path, capture_output=True)
+        cmd = subprocess.run('git log -1 --pretty=format:%an', shell=True, text=True, cwd=path, capture_output=True)
         git_config_user_cmd = subprocess.run(['git', 'config', 'user.name'], text=True, capture_output=True)
         committer_color = '' if cmd.stdout.strip() == git_config_user_cmd.stdout.strip() else DIM
         author = cmd.stdout.strip()
@@ -311,7 +311,7 @@ class Commands:
 
     @staticmethod
     def _get_commit_message(path: str, max_chars: int) -> str:
-        cmd = subprocess.run(['git', 'log', '-1', '--pretty=format:%s'], text=True, cwd=path, capture_output=True)
+        cmd = subprocess.run('git log -1 --pretty=format:%s', shell=True, text=True, cwd=path, capture_output=True)
         log = cmd.stdout.strip()
         log = log[:max_chars] + '...' if len(log) > max_chars else log
         return log
