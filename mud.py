@@ -222,10 +222,14 @@ class Mud:
 		to_delete = []
 		for repo in self.repos:
 			os.chdir(os.path.join(directory, repo))
-			has_modifications = subprocess.check_output('git status --porcelain', shell=True)
-			branch_filter = (branch is not None and branch.strip() and subprocess.check_output('git rev-parse --abbrev-ref HEAD', shell=True, text=True).splitlines()[0] != branch)
-			is_diverged = not any('ahead' in line or 'behind' in line for line in subprocess.check_output('git status --branch --porcelain', shell=True, text=True).splitlines() if line.startswith('##'))
-			if (modified and not has_modifications) or (branch and branch_filter) or (diverged and is_diverged):
+			try:
+				has_modifications = subprocess.check_output('git status --porcelain', shell=True, stderr=subprocess.DEVNULL)
+				branch_filter = (branch is not None and branch.strip() and subprocess.check_output('git rev-parse --abbrev-ref HEAD', shell=True, text=True).splitlines()[0] != branch)
+				is_diverged = not any('ahead' in line or 'behind' in line for line in subprocess.check_output('git status --branch --porcelain', shell=True, text=True).splitlines() if line.startswith('##'))
+				if (modified and not has_modifications) or (branch and branch_filter) or (diverged and is_diverged):
+					to_delete.append(repo)
+			except Exception as e:
+				print(f'{BOLD}{YELLOW}{repo}{RESET} Error occurred. {RED}{e}{RESET}')
 				to_delete.append(repo)
 
 		for repo in to_delete:
