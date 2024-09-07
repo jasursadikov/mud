@@ -16,7 +16,6 @@ class Settings:
 			'mud': {
 				'config_path': '',
 				'nerd_fonts': True,
-				'auto_fetch': False,
 				'run_async': True,
 				'run_table': True,
 				'simplify_branches': True,

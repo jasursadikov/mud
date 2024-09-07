@@ -125,8 +125,6 @@ class Mud:
 				if len(self.repos) == 0:
 					utils.print_error('No repositories are matching this filter.')
 					return
-				if utils.settings.config['mud'].getboolean('auto_fetch'):
-					self._fetch_all()
 				if args.command in COMMANDS['info']:
 					self.cmd_runner.info(self.repos)
 				elif args.command in COMMANDS['log']:
@@ -157,37 +155,6 @@ class Mud:
 					print(type(exception))
 			else:
 				self.cmd_runner.run_ordered(self.repos.keys(), sys.argv)
-
-	def init(self, args) -> None:
-		self.config.data = {}
-		index = 0
-		directories = [d for d in os.listdir('.') if os.path.isdir(d) and os.path.isdir(os.path.join(d, '.git'))]
-		print(directories)
-		print(os.getcwd())
-		for directory in directories:
-			if directory in self.config.paths():
-				continue
-			self.config.add_label(directory, getattr(args, 'label', ''))
-			index += 1
-			path = f'{DIM}{GRAY}../{RESET}{DIM}{directory}{RESET}'
-			print(f'{path} {GREEN}added{RESET}')
-		if index == 0:
-			utils.print_error('No git repositories were found in this directory.')
-			return
-		self.config.save(utils.CONFIG_FILE_NAME)
-
-	def add(self, args) -> None:
-		self.config.add_label(args.path, args.label)
-		self.config.save(utils.CONFIG_FILE_NAME)
-
-	def remove(self, args) -> None:
-		if args.path:
-			self.config.remove_label(args.path, args.label)
-		elif args.label:
-			self.config.remove_path(args.label)
-		else:
-			utils.print_error(f'Invalid input. Please provide a value to remove.')
-		self.config.save(utils.CONFIG_FILE_NAME)
 
 	# Filter out repositories if user provided filters
 	def _filter_repos(self) -> None:
@@ -236,20 +203,36 @@ class Mud:
 			del self.repos[repo]
 		os.chdir(directory)
 
-	def _fetch_all(self) -> None:
-		if utils.settings.config['mud'].getboolean('run_async'):
-			asyncio.run(self._fetch_all_async())
+	def init(self, args) -> None:
+		self.config.data = {}
+		index = 0
+		directories = [d for d in os.listdir('.') if os.path.isdir(d) and os.path.isdir(os.path.join(d, '.git'))]
+		print(directories)
+		print(os.getcwd())
+		for directory in directories:
+			if directory in self.config.paths():
+				continue
+			self.config.add_label(directory, getattr(args, 'label', ''))
+			index += 1
+			path = f'{DIM}{GRAY}../{RESET}{DIM}{directory}{RESET}'
+			print(f'{path} {GREEN}added{RESET}')
+		if index == 0:
+			utils.print_error('No git repositories were found in this directory.')
+			return
+		self.config.save(utils.CONFIG_FILE_NAME)
+
+	def add(self, args) -> None:
+		self.config.add_label(args.path, args.label)
+		self.config.save(utils.CONFIG_FILE_NAME)
+
+	def remove(self, args) -> None:
+		if args.path:
+			self.config.remove_label(args.path, args.label)
+		elif args.label:
+			self.config.remove_path(args.label)
 		else:
-			for repo in self.repos:
-				subprocess.run('git fetch', shell=True, cwd=repo, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-	async def _fetch_all_async(self) -> None:
-		tasks = [self._fetch_repo_async(repo) for repo in self.repos]
-		await asyncio.gather(*tasks)
-
-	@staticmethod
-	async def _fetch_repo_async(repo: str) -> None:
-		await asyncio.create_subprocess_exec('git fetch', shell=True, cwd=repo, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+			utils.print_error(f'Invalid input. Please provide a value to remove.')
+		self.config.save(utils.CONFIG_FILE_NAME)
 
 	@staticmethod
 	def _parse_aliases():

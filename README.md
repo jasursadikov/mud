@@ -54,7 +54,6 @@ Settings are stored in your home directory in `.mudsettings` file.
 
 - `config_path = /home/user/path/.mudconfig` - this is set up by `mud --set-global` [command](#global-mudconfig).
 - `nerd_fonts = 0/1` - toggles whenever nerd font icons should be used in output.
-- `auto_fetch = 0/1` - when enabled, `mud status` and `mud log` do fetch for all repos when invoked.
 - `run_async = 0/1` - enabled to run commands asynchronously.
 - `run_table = 0/1` - enable to see asynchronous commands in a table view. Requires `run_async`.
 - `simplify_branches = 0/1` - simplifies branch name in the branch view.
