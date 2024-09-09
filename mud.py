@@ -18,22 +18,21 @@ BRANCH_PREFIX = '-b=', '--branch='
 MODIFIED_ATTR = '-m', '--modified'
 DIVERGED_ATTR = '-d', '--diverged'
 # Commands
-COMMANDS = {
-	'help': ['help', '--help', '-h'],
-	'update': ['update'],
-	'configure': ['configure', 'config'],
-	'version': ['--version', '-v', 'version'],
-	'set-global': ['--set-global'],
-	'init': ['init'],
-	'add': ['add', 'a'],
-	'remove': ['remove', 'rm'],
-	'info': ['info', 'i'],
-	'log': ['log', 'l'],
-	'tags': ['tags', 'tag', 't'],
-	'labels': ['labels', 'lb'],
-	'status': ['status', 'st'],
-	'branches': ['branch', 'branches', 'br'],
-}
+ADD = ['add', 'a']
+REMOVE = ['remove', 'rm']
+LOG = ['log', 'l']
+INFO = ['info', 'i']
+INIT = ['init']
+TAGS = ['tags', 'tag', 't']
+LABELS = ['labels', 'lb']
+STATUS = ['status', 'st']
+BRANCHES = ['branch', 'branches', 'br']
+HELP = ['help', '--help', '-h']
+UPDATE = ['update']
+VERSION = ['--version', '-v', 'version']
+CONFIGURE = ['configure', 'config']
+SET_GLOBAL = ['--set-global']
+COMMANDS = [ADD, REMOVE, LOG, INFO, INIT, TAGS, LABELS, STATUS, BRANCHES, HELP, UPDATE, VERSION, CONFIGURE, SET_GLOBAL]
 
 
 class Mud:
@@ -47,21 +46,21 @@ class Mud:
 		parser = argparse.ArgumentParser(description=f'{BOLD}mud{RESET} allows you to run commands in multiple repositories.')
 		subparsers = parser.add_subparsers(dest='command')
 
-		subparsers.add_parser(COMMANDS['log'][0], aliases=COMMANDS['log'][1:], help='Displays log of latest commit messages for all repositories in a table view.')
-		subparsers.add_parser(COMMANDS['info'][0], aliases=COMMANDS['info'][1:], help='Displays branch divergence and working directory changes')
-		subparsers.add_parser(COMMANDS['init'][0], aliases=COMMANDS['init'][1:], help=f'Initializes the {BOLD}.mudconfig{RESET} and adds all repositories in this directory to {BOLD}.mudconfig{RESET}.')
-		subparsers.add_parser(COMMANDS['tags'][0], aliases=COMMANDS['tags'][1:], help='Displays git tags in repositories.')
-		subparsers.add_parser(COMMANDS['update'][0], aliases=COMMANDS['update'][1:], help='Update mud to the latest version.')
-		subparsers.add_parser(COMMANDS['labels'][0], aliases=COMMANDS['labels'][1:], help='Displays mud labels across repositories.')
-		subparsers.add_parser(COMMANDS['status'][0], aliases=COMMANDS['status'][1:], help='Displays working directory changes.')
-		subparsers.add_parser(COMMANDS['branches'][0], aliases=COMMANDS['branches'][1:], help='Displays all branches in repositories.')
-		subparsers.add_parser(COMMANDS['configure'][0], aliases=COMMANDS['configure'][1:], help='Runs the interactive configuration wizard.')
+		subparsers.add_parser(LOG[0], aliases=LOG[1:], help='Displays log of latest commit messages for all repositories in a table view.')
+		subparsers.add_parser(INFO[0], aliases=INFO[1:], help='Displays branch divergence and working directory changes')
+		subparsers.add_parser(INIT[0], aliases=INIT[1:], help=f'Initializes the {BOLD}.mudconfig{RESET} and adds all repositories in this directory to {BOLD}.mudconfig{RESET}.')
+		subparsers.add_parser(TAGS[0], aliases=TAGS[1:], help='Displays git tags in repositories.')
+		subparsers.add_parser(UPDATE[0], aliases=UPDATE[1:], help='Update mud to the latest version.')
+		subparsers.add_parser(LABELS[0], aliases=LABELS[1:], help='Displays mud labels across repositories.')
+		subparsers.add_parser(STATUS[0], aliases=STATUS[1:], help='Displays working directory changes.')
+		subparsers.add_parser(BRANCHES[0], aliases=BRANCHES[1:], help='Displays all branches in repositories.')
+		subparsers.add_parser(CONFIGURE[0], aliases=CONFIGURE[1:], help='Runs the interactive configuration wizard.')
 
-		add_parser = subparsers.add_parser(COMMANDS['add'][0], aliases=COMMANDS['add'][1:], help='Adds repository or labels an existing repository.')
+		add_parser = subparsers.add_parser(ADD[0], aliases=ADD[1:], help='Adds repository or labels an existing repository.')
 		add_parser.add_argument('label', help='The label to add (optional).', nargs='?', default='', type=str)
 		add_parser.add_argument('path', help='Repository to add (optional).', nargs='?', type=str)
 
-		remove_parser = subparsers.add_parser(COMMANDS['remove'][0], aliases=COMMANDS['remove'][1:], help='Removes repository or removes the label from an existing repository.')
+		remove_parser = subparsers.add_parser(REMOVE[0], aliases=REMOVE[1:], help='Removes repository or removes the label from an existing repository.')
 		remove_parser.add_argument('label', help='Label to remove from repository (optional).', nargs='?', default='', type=str)
 		remove_parser.add_argument('path', help='Repository to remove (optional).', nargs='?', type=str)
 
@@ -71,18 +70,18 @@ class Mud:
 		parser.add_argument(*BRANCH_PREFIX, metavar='BRANCH', nargs='?', default='', type=str, help='Filter repositories by provided branch.')
 		parser.add_argument(*MODIFIED_ATTR, action='store_true', help='Filters modified repositories.')
 		parser.add_argument(*DIVERGED_ATTR, action='store_true', help='Filters repositories with diverged branches.')
-		parser.add_argument(COMMANDS['set-global'][0], help=f'Sets {BOLD}.mudconfig{RESET} in the current repository as your fallback {BOLD}.mudconfig{RESET}.', action='store_true')
-		parser.add_argument(COMMANDS['version'][0], help='Displays the current version of mud.', action='store_true')
+		parser.add_argument(SET_GLOBAL[0], help=f'Sets {BOLD}.mudconfig{RESET} in the current repository as your fallback {BOLD}.mudconfig{RESET}.', action='store_true')
+		parser.add_argument(VERSION[0], help='Displays the current version of mud.', action='store_true')
 		parser.add_argument('catch_all', nargs='*', help='Type any commands to execute among repositories.')
 		return parser
 
 	def run(self) -> None:
 		# Displays default help message
-		if len(sys.argv) == 1 or sys.argv[1] in COMMANDS['help']:
+		if len(sys.argv) == 1 or sys.argv[1] in HELP:
 			self.parser.print_help()
 			return
 		# Sets global repository in .mudsettings
-		if sys.argv[1] in COMMANDS['set-global']:
+		if sys.argv[1] in SET_GLOBAL:
 			config_path = os.path.join(os.getcwd(), utils.CONFIG_FILE_NAME)
 			if os.path.exists(config_path):
 				utils.settings.config.set('mud', 'config_path', config_path)
@@ -90,22 +89,22 @@ class Mud:
 				print(f'Current {BOLD}.mudconfig{RESET} set as a global configuration.')
 			return
 		# Prints version
-		elif sys.argv[1] in COMMANDS['version']:
+		elif sys.argv[1] in VERSION:
 			utils.version()
 			return
 		# Checks for available updates
-		elif sys.argv[1] in COMMANDS['update']:
+		elif sys.argv[1] in UPDATE:
 			utils.check_updates(True)
 			return
 		# Runs configuration wizard
-		elif sys.argv[1] in COMMANDS['configure']:
+		elif sys.argv[1] in CONFIGURE:
 			utils.configure()
 			return
 		current_directory = os.getcwd()
 		self.config = config.Config()
 
 		# Discovers repositories in current directory
-		if sys.argv[1] in COMMANDS['init']:
+		if sys.argv[1] in INIT:
 			self.init(self.parser.parse_args())
 			return
 
@@ -114,30 +113,30 @@ class Mud:
 
 		self.cmd_runner = commands.Commands(self.config)
 		# Handling commands
-		if len(sys.argv) > 1 and sys.argv[1] in [cmd for group in COMMANDS.values() for cmd in group]:
+		if len(sys.argv) > 1 and sys.argv[1] in [cmd for group in COMMANDS for cmd in group]:
 			args = self.parser.parse_args()
-			if args.command in COMMANDS['init']:
+			if args.command in INIT:
 				os.chdir(current_directory)
 				self.init(args)
-			elif args.command in COMMANDS['add']:
+			elif args.command in ADD:
 				self.add(args)
-			elif args.command in COMMANDS['remove']:
+			elif args.command in REMOVE:
 				self.remove(args)
 			else:
 				if len(self.repos) == 0:
 					utils.print_error('No repositories are matching this filter.')
 					return
-				if args.command in COMMANDS['info']:
+				if args.command in INFO:
 					self.cmd_runner.info(self.repos)
-				elif args.command in COMMANDS['log']:
+				elif args.command in LOG:
 					self.cmd_runner.log(self.repos)
-				elif args.command in COMMANDS['branches']:
+				elif args.command in BRANCHES:
 					self.cmd_runner.branches(self.repos)
-				elif args.command in COMMANDS['labels']:
+				elif args.command in LABELS:
 					self.cmd_runner.labels(self.repos)
-				elif args.command in COMMANDS['tags']:
+				elif args.command in TAGS:
 					self.cmd_runner.tags(self.repos)
-				elif args.command in COMMANDS['status']:
+				elif args.command in STATUS:
 					self.cmd_runner.status(self.repos)
 		# Handling subcommands
 		else:
