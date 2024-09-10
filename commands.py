@@ -17,9 +17,10 @@ SET_GLOBAL = ['--set-global']
 COMMANDS = [ADD, REMOVE, LOG, INFO, INIT, TAGS, LABELS, STATUS, BRANCHES, HELP, UPDATE, VERSION, CONFIGURE, SET_GLOBAL]
 
 # Filters
+ASYNC_ATTR = '-a', '--async'
 TABLE_ATTR = '-t', '--table'
+MODIFIED_ATTR = '-m', '--modified'
+DIVERGED_ATTR = '-d', '--diverged'
 LABEL_PREFIX = '-l=', '--label='
 NOT_LABEL_PREFIX = '-nl=', '--not-label='
 BRANCH_PREFIX = '-b=', '--branch='
-MODIFIED_ATTR = '-m', '--modified'
-DIVERGED_ATTR = '-d', '--diverged'

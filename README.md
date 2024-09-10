@@ -43,6 +43,7 @@ All entries are stored in `.mudconfig` in TSV format. After making your first en
 - `-m` or `--modified` - filters out modified repositories.
 - `-d` or `--diverged` - filters repositories with diverged branches.
 - `-t` or `--table` - toggles default table view setting for run.
+- `-a` or `--async` - toggles asynchronous run feature.
 ```
 Example:
 mud -b=master -d git pull

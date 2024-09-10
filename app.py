@@ -46,6 +46,7 @@ class App:
 		parser.add_argument(*BRANCH_PREFIX, metavar='BRANCH', nargs='?', default='', type=str, help='Filter repositories by provided branch.')
 		parser.add_argument(*MODIFIED_ATTR, action='store_true', help='Filters modified repositories.')
 		parser.add_argument(*DIVERGED_ATTR, action='store_true', help='Filters repositories with diverged branches.')
+		parser.add_argument(*ASYNC_ATTR, action='store_true', help='Switches asynchronous run feature.')
 		parser.add_argument(SET_GLOBAL[0], help=f'Sets {BOLD}.mudconfig{RESET} in the current repository as your fallback {BOLD}.mudconfig{RESET}.', action='store_true')
 		parser.add_argument(VERSION[0], help='Displays the current version of mud.', action='store_true')
 		parser.add_argument('catch_all', nargs='*', help='Type any commands to execute among repositories.')
@@ -85,7 +86,7 @@ class App:
 			return
 
 		self.config.find()
-		self._filter_repos()
+		self._parse_arguments()
 
 		self.cmd_runner = Runner(self.config)
 		# Handling commands
@@ -121,7 +122,7 @@ class App:
 				self.parser.print_help()
 				return
 			self._parse_aliases()
-			if utils.settings.config['mud'].getboolean('run_async'):
+			if self.run_async:
 				try:
 					if self.table:
 						asyncio.run(self.cmd_runner.run_async_table_view(self.repos.keys(), sys.argv))
@@ -163,8 +164,12 @@ class App:
 		self.config.save(utils.CONFIG_FILE_NAME)
 
 	# Filter out repositories if user provided filters
-	def _filter_repos(self) -> None:
+	def _parse_arguments(self) -> None:
 		self.repos = self.config.data
+
+		self.table = utils.settings.config['mud'].getboolean('run_table')
+		self.run_async = utils.settings.config['mud'].getboolean('run_async')
+
 		for path, labels in self.config.filter_label('ignore', self.config.data).items():
 			del self.repos[path]
 		any_filters = False
@@ -172,7 +177,6 @@ class App:
 		branch = None
 		modified = False
 		diverged = False
-		self.table = utils.settings.config['mud'].getboolean('run_table')
 		index = 1
 		while index < len(sys.argv):
 			arg = sys.argv[index]
@@ -189,12 +193,14 @@ class App:
 							del filtered[path]
 				elif any(arg.startswith(prefix) for prefix in BRANCH_PREFIX):
 					branch = arg.split('=', 1)[1]
-				elif arg in TABLE_ATTR:
-					self.table = not self.table
 				elif arg in MODIFIED_ATTR:
 					modified = True
 				elif arg in DIVERGED_ATTR:
 					diverged = True
+				elif arg in TABLE_ATTR:
+					self.table = not self.table
+				elif arg in ASYNC_ATTR:
+					self.run_async = not self.run_async
 				else:
 					index += 1
 					continue
