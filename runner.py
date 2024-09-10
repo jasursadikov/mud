@@ -215,9 +215,9 @@ class Runner:
 		return_code = await process.wait()
 
 		if return_code == 0:
-			status = f'{GREEN}{utils.GLYPHS["finished"]}{RESET} {stdout.decode().replace("\n", " ")}'
+			status = f'{GREEN}{utils.GLYPHS["finished"]}{RESET} {stdout.decode().replace("\\n", " ")}'
 		else:
-			status = f'{RED}{utils.GLYPHS["failed"]} Code: {return_code}{RESET} {stderr.decode().replace("\n", " ")}'
+			status = f'{RED}{utils.GLYPHS["failed"]} Code: {return_code}{RESET} {stderr.decode().replace("\\n", " ")}'
 
 		table[repo_path] = [table[repo_path][0], status]
 		self._print_process(table)

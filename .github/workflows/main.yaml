@@ -42,7 +42,7 @@ jobs:
           done
       - name: Set up and Initialize
         run: |
-          echo -e "[mud]\nrun_async = False\nrun_table = True\nauto_fetch = False\nnerd_fonts = False" > ~/.mudsettings
+          echo -e "[mud]\nrun_async = False\nrun_table = True\nnerd_fonts = False" > ~/.mudsettings
           ./mud.sh init
       - name: Test remove by path
         run: |

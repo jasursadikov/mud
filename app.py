@@ -137,8 +137,6 @@ class App:
 		self.config.data = {}
 		index = 0
 		directories = [d for d in os.listdir('.') if os.path.isdir(d) and os.path.isdir(os.path.join(d, '.git'))]
-		print(directories)
-		print(os.getcwd())
 		for directory in directories:
 			if directory in self.config.paths():
 				continue
