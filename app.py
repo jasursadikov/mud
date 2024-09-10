@@ -71,7 +71,7 @@ class App:
 			return
 		# Checks for available updates
 		elif sys.argv[1] in UPDATE:
-			utils.check_updates(True)
+			utils.update(True)
 			return
 		# Runs configuration wizard
 		elif sys.argv[1] in CONFIGURE:

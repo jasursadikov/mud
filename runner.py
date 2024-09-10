@@ -291,6 +291,17 @@ class Runner:
 
 	@staticmethod
 	def _get_formatted_path(path: str) -> str:
+		simplify_branches = utils.settings.config['mud'].getboolean('simplify_branches')
+		if os.path.isabs(path):
+			home = os.path.expanduser('~')
+			if path.startswith(home):
+				path = path.replace(home, '~', 1)
+			if path.startswith('/'):
+				path = path[1:]
+			parts = path.split('/')
+			return DIM + WHITE + ('/'.join([p[0] for p in parts[:-1]] + [RESET + DIM + parts[-1]]) if simplify_branches else '/'.join(
+					[p for p in parts[:-1]] + [(parts[-1][:10] + '..' if len(parts[-1]) > 10 else parts[-1])])) + RESET
+
 		return f'{DIM}{path}{RESET}'
 
 	@staticmethod
@@ -354,8 +365,9 @@ class Runner:
 		if len(branches) == 0:
 			return ''
 
-		simplify_branches = utils.settings.config['mud'].getboolean('simplify_branches') is True
+		simplify_branches = utils.settings.config['mud'].getboolean('simplify_branches')
 		output = ''
+
 		for branch in branches:
 			is_origin = branch.startswith('origin/')
 			branch = branch.replace('origin/', '') if is_origin else branch

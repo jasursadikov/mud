@@ -54,6 +54,10 @@ class Config:
 			reader = csv.reader(tsvfile, delimiter='\t')
 			for row in reader:
 				path = row[0]
+
+				if path.startswith('~'):
+					path = os.path.expanduser(path)
+
 				if not os.path.isdir(path):
 					utils.print_error(f'Invalid path {BOLD}{path}{RESET}.')
 					continue

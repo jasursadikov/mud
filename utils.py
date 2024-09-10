@@ -60,11 +60,11 @@ TEXT_GLYPHS = {
 settings: Settings
 
 
-def set_up():
+def setup():
 	global GLYPHS
 	GLYPHS = ICON_GLYPHS if settings.mud_settings['nerd_fonts'] else TEXT_GLYPHS
 
-	if settings.config['mud'].getboolean('ask_updates') and check_updates():
+	if settings.config['mud'].getboolean('ask_updates') and update():
 		sys.exit()
 
 
@@ -85,7 +85,7 @@ def version() -> None:
 ''')
 
 
-def check_updates(explicit: bool = False) -> bool:
+def update(explicit: bool = False) -> bool:
 	target_directory = os.getcwd()
 	os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -123,17 +123,18 @@ def check_updates(explicit: bool = False) -> bool:
 	os.chdir(target_directory)
 	return False
 
-
 def configure():
-	settings.config['mud']['run_async'] = str(ask('Do you want to run commands simultaneously for multiple repositories?'))
-	settings.config['mud']['run_table'] = str(ask('Do you want to see command execution progress in table view? This will limit output content.'))
-	settings.config['mud']['ask_updates'] = str(ask(f'Do you want to get information about latest updates?'))
-	settings.config['mud']['nerd_fonts'] = str(ask(f'Do you want to use {BOLD}nerd-fonts{RESET}?'))
-	settings.config['mud']['simplify_branches'] = str(ask(f'Do you want to simplify branches? (ex. {BOLD}feature/name{RESET} -> {BOLD}f/name{RESET}'))
+	try:
+		settings.config['mud']['run_table'] = str(ask('Do you want to see command execution progress in table view? This will limit output content.'))
+		settings.config['mud']['run_async'] = str(ask('Do you want to run commands simultaneously for multiple repositories?'))
+		settings.config['mud']['simplify_branches'] = str(ask(f'Do you want to simplify branches? (ex. {BOLD}feature/name{RESET} -> {BOLD}f/name{RESET}'))
+		settings.config['mud']['nerd_fonts'] = str(ask(f'Do you want to use {BOLD}nerd-fonts{RESET}?'))
+		settings.config['mud']['ask_updates'] = str(ask(f'Do you want to get information about latest updates?'))
+	except KeyboardInterrupt:
+		return
+
 	settings.save()
 	print('Your settings are updated!')
-	pass
-
 
 def ask(text: str) -> bool:
 	print(f'{text} [Y/n] ', end='', flush=True)
@@ -152,7 +153,6 @@ def ask(text: str) -> bool:
 
 	print()
 	return response in ['y', '\r', '\n']
-
 
 def print_error(text: str, code: int = 255) -> None:
 	print(f'{RED}Error:{RESET} {text}')
