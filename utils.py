@@ -28,8 +28,8 @@ ICON_GLYPHS = {
 	'label': '\uf435',
 	'tag': '\uf02b',
 	'terminal': '\ue795',
-	'(': '\ue0b6',
-	')': '\ue0b4',
+	'(': '\uE0B2',
+	')': '\uE0B0',
 	'space': ' ',
 }
 TEXT_GLYPHS = {

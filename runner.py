@@ -163,12 +163,12 @@ class Runner:
 	def run_ordered(self, repos: List[str], command: [str]) -> None:
 		command_str = ' '.join(command)
 		for path in repos:
-			result = subprocess.run(command_str, shell=True, cwd=path, capture_output=True, text=True)
-			print(f'{self._get_formatted_path(path)}{RESET} {utils.GLYPHS["terminal"]} {BOLD}{command_str}{RESET} {RED + utils.GLYPHS["failed"] if result.stderr else GREEN + utils.GLYPHS["finished"]} {f"{RESET}|{RED} Code: {BOLD}{result.returncode}{RESET}" if result.stderr else ""} {RESET}')
-			if result.stdout and not result.stdout.strip().isspace():
-				print(result.stdout.strip())
-			if result.stderr and not result.stderr.strip().isspace():
-				print(f'{RED}{result.stderr.strip()}{RESET}')
+			process = subprocess.run(command_str, shell=True, cwd=path, capture_output=True, text=True)
+			self._print_process_header(path, ' '.join(command), process.returncode != 0, process.returncode)
+			if process.stdout and not process.stdout.isspace():
+				print(process.stdout)
+			if process.stderr and not process.stderr.isspace():
+				print(process.stderr)
 
 	# `mud <COMMAND>` when run_async = 1 and run_table = 0
 	async def run_async(self, repos: List[str], command: List[str]) -> None:
@@ -178,7 +178,7 @@ class Runner:
 			async with sem:
 				process = await asyncio.create_subprocess_exec(*command, cwd=path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 				stdout, stderr = await process.communicate()
-				print(f'{self._get_formatted_path(path)}{GRAY}>{RESET} {YELLOW}{" ".join(command)}{RESET}')
+				self._print_process_header(path, ' '.join(command), process.returncode != 0, process.returncode)
 				if stderr:
 					print(stderr.decode())
 				if stdout and not stdout.isspace():
@@ -290,21 +290,6 @@ class Runner:
 		return PrettyTable(border=False, header=False, style=PLAIN_COLUMNS, align='l')
 
 	@staticmethod
-	def _get_formatted_path(path: str) -> str:
-		simplify_branches = utils.settings.config['mud'].getboolean('simplify_branches')
-		if os.path.isabs(path):
-			home = os.path.expanduser('~')
-			if path.startswith(home):
-				path = path.replace(home, '~', 1)
-			if path.startswith('/'):
-				path = path[1:]
-			parts = path.split('/')
-			return DIM + WHITE + ('/'.join([p[0] for p in parts[:-1]] + [RESET + DIM + parts[-1]]) if simplify_branches else '/'.join(
-					[p for p in parts[:-1]] + [(parts[-1][:10] + '..' if len(parts[-1]) > 10 else parts[-1])])) + RESET
-
-		return f'{DIM}{path}{RESET}'
-
-	@staticmethod
 	def _get_branch_status(path: str) -> str:
 		branch_cmd = subprocess.run('git rev-parse --abbrev-ref HEAD', shell=True, text=True, cwd=path, capture_output=True)
 		branch_stdout = branch_cmd.stdout.strip()
@@ -333,6 +318,28 @@ class Runner:
 			return f'{color}{glyph}{RESET}{utils.GLYPHS["space"]}{DIM}{branch_stdout}{RESET}:{info_cmd}'
 		else:
 			return f'{CYAN}{utils.GLYPHS["branch"]}{RESET}{utils.GLYPHS["space"]}{branch_stdout}'
+
+	@staticmethod
+	def _print_process_header(path: str, command: str, failed: bool, code: int):
+		path = f'{Runner._get_formatted_path(path)}{RESET}'
+		command = f'{BKG_WHITE}{BLACK} {utils.GLYPHS["terminal"]} {BOLD}{command} {RESET}{WHITE}{utils.GLYPHS[")"]}{RESET}'
+		code = f'{RED + utils.GLYPHS["failed"] if failed else GREEN + utils.GLYPHS["finished"]}{RESET} {f"{RESET}{RED}Code: {BOLD}{code}{RESET}" if failed else ""} {RESET}'
+		print(f'{path} {command} {code}')
+
+	@staticmethod
+	def _get_formatted_path(path: str) -> str:
+		simplify_branches = utils.settings.config['mud'].getboolean('simplify_branches')
+		if os.path.isabs(path):
+			home = os.path.expanduser('~')
+			if path.startswith(home):
+				path = path.replace(home, '~', 1)
+			if path.startswith('/'):
+				path = path[1:]
+			parts = path.split('/')
+			return DIM + WHITE + ('/'.join([p[0] for p in parts[:-1]] + [RESET + DIM + parts[-1]]) if simplify_branches else '/'.join(
+					[p for p in parts[:-1]] + [(parts[-1][:10] + '..' if len(parts[-1]) > 10 else parts[-1])])) + RESET
+
+		return f'{DIM}{path}{RESET}'
 
 	@staticmethod
 	def _get_authors_name(path: str) -> str:

@@ -38,7 +38,7 @@ All entries are stored in `.mudconfig` in TSV format. After making your first en
 
 ### Arguments
 - `-l=<label>` or `--label=<label>` - filters out repositories with provided label.
-- `-nl=<label>` or `--not-label=<label>` - filters out repositories excluding provided label.
+- `-nl=<label>` or `--not-label=<label>` - filters out repositories excluding provided label. You should include some repos with `--label` first.
 - `-b=<branch>` or `--branch=<branch>` - filters out repositories by current branch name.
 - `-m` or `--modified` - filters out modified repositories.
 - `-d` or `--diverged` - filters repositories with diverged branches.
