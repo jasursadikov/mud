@@ -93,7 +93,7 @@ class Runner:
 		table = self._get_table()
 		for path, labels in repos.items():
 			formatted_path = self._get_formatted_path(path)
-			colored_labels = self._get_formatted_labels(labels, utils.GLYPHS["label"])
+			colored_labels = self._get_formatted_labels(labels, utils.GLYPHS['label'])
 			table.add_row([formatted_path, colored_labels])
 
 		self._print_table(table)
@@ -153,7 +153,7 @@ class Runner:
 		for path, labels in repos.items():
 			formatted_path = self._get_formatted_path(path)
 			tags = [line.strip() for line in subprocess.check_output('git tag', shell=True, text=True, cwd=path).splitlines() if line.strip()]
-			tags = [f"{utils.GLYPHS['tag']} {tag}" for tag in tags]
+			tags = [f'{utils.GLYPHS["tag"]} {tag}' for tag in tags]
 			tags = ' '.join(tags)
 			table.add_row([formatted_path, tags])
 
@@ -298,17 +298,30 @@ class Runner:
 		branch_cmd = subprocess.run('git rev-parse --abbrev-ref HEAD', shell=True, text=True, cwd=path, capture_output=True)
 		branch_stdout = branch_cmd.stdout.strip()
 		if branch_stdout == 'master' or branch_stdout == 'main':
-			branch = f'{YELLOW}{utils.GLYPHS["master"]}{RESET}{utils.GLYPHS["space"]}{branch_stdout}'
+			return f'{YELLOW}{utils.GLYPHS["master"]}{RESET}{utils.GLYPHS["space"]}{branch_stdout}'
 		elif branch_stdout == 'develop':
-			branch = f'{GREEN}{utils.GLYPHS["feature"]}{RESET}{utils.GLYPHS["space"]}{branch_stdout}'
+			return f'{GREEN}{utils.GLYPHS["feature"]}{RESET}{utils.GLYPHS["space"]}{branch_stdout}'
 		elif '/' in branch_stdout:
 			branch_path = branch_stdout.split('/')
 			icon = Runner._get_branch_icon(branch_path[0])
 			branch_color = Runner._get_branch_color(branch_path[0])
-			branch = f'{branch_color}{icon}{RESET}{utils.GLYPHS["space"]}{branch_path[0]}{RESET}/{BOLD}{("/".join(branch_path[1:]))}'
+			return f'{branch_color}{icon}{RESET}{utils.GLYPHS["space"]}{branch_path[0]}{RESET}/{BOLD}{("/".join(branch_path[1:]))}'
+		elif branch_stdout == 'HEAD':
+			# check if we are on tag
+			glyph = utils.GLYPHS['tag']
+			color = BRIGHT_MAGENTA
+			info_cmd = subprocess.run('git describe --tags --exact-match', shell=True, text=True, cwd=path, capture_output=True)
+			info_cmd = info_cmd.stdout.strip()
+
+			if not info_cmd.strip():
+				glyph = utils.GLYPHS["branch"]
+				color = CYAN
+				info_cmd = subprocess.run('git rev-parse --short HEAD', shell=True, text=True, cwd=path, capture_output=True)
+				info_cmd = info_cmd.stdout.strip()
+
+			return f'{color}{glyph}{RESET}{utils.GLYPHS["space"]}{DIM}{branch_stdout}{RESET}:{info_cmd}'
 		else:
-			branch = f'{CYAN}{utils.GLYPHS["branch"]}{RESET}{utils.GLYPHS["space"]}{branch_stdout}'
-		return branch
+			return f'{CYAN}{utils.GLYPHS["branch"]}{RESET}{utils.GLYPHS["space"]}{branch_stdout}'
 
 	@staticmethod
 	def _get_authors_name(path: str) -> str:
