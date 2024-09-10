@@ -153,7 +153,7 @@ class Runner:
 		for path, labels in repos.items():
 			formatted_path = self._get_formatted_path(path)
 			tags = [line.strip() for line in subprocess.check_output('git tag', shell=True, text=True, cwd=path).splitlines() if line.strip()]
-			tags = [f'{utils.GLYPHS["tag"]} {tag}' for tag in tags]
+			tags = [f'{utils.GLYPHS["tag"]}{utils.GLYPHS["space"]}{tag}' for tag in tags]
 			tags = ' '.join(tags)
 			table.add_row([formatted_path, tags])
 
@@ -205,26 +205,26 @@ class Runner:
 		while True:
 			line = await process.stdout.readline()
 			if not line:
-				break
+				line = await process.stderr.readline()
+				if not line:
+					break
 			line = line.decode().strip()
 			line = table[repo_path][0] if not line.strip() else line
 			table[repo_path] = [line, f'{YELLOW}{utils.GLYPHS["running"]}']
 			self._print_process(table)
 
-		stdout, stderr = await process.communicate()
 		return_code = await process.wait()
 
 		if return_code == 0:
-			status = f'{GREEN}{utils.GLYPHS["finished"]}{RESET} {stdout.decode().replace("\\n", " ")}'
+			status = f'{GREEN}{utils.GLYPHS["finished"]}{RESET}'
 		else:
-			status = f'{RED}{utils.GLYPHS["failed"]} Code: {return_code}{RESET} {stderr.decode().replace("\\n", " ")}'
+			status = f'{RED}{utils.GLYPHS["failed"]} Code: {return_code}{RESET}'
 
 		table[repo_path] = [table[repo_path][0], status]
 		self._print_process(table)
 
 	def _print_process(self, info: Dict[str, List[str]]) -> None:
 		table = self._get_table()
-
 		for path, (line, status) in info.items():
 			formatted_path = self._get_formatted_path(path)
 			table.add_row([formatted_path, status, line])
@@ -346,7 +346,7 @@ class Runner:
 		colored_label = ''
 		for label in labels:
 			color_index = Runner._get_color_index(label) % len(TEXT)
-			colored_label += f'{TEXT[color_index + 3]}{glyph} {label}{RESET} '
+			colored_label += f'{TEXT[color_index + 3]}{glyph}{utils.GLYPHS["space"]}{label}{RESET} '
 		return colored_label
 
 	@staticmethod

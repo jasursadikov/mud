@@ -49,7 +49,7 @@ TEXT_GLYPHS = {
 	'finished': 'Finished',
 	'running': 'Running',
 	'label': '',
-	'tag': ' ',
+	'tag': '',
 	'(': '',
 	')': ' ',
 	'space': '',
