@@ -164,11 +164,11 @@ class Runner:
 		command_str = ' '.join(command)
 		for path in repos:
 			result = subprocess.run(command_str, shell=True, cwd=path, capture_output=True, text=True)
-			print(f'{self._get_formatted_path(path)}{RESET} {command_str}{RESET} {RED + utils.GLYPHS["failed"] if result.stderr else GREEN + utils.GLYPHS["finished"]}{RESET}')
+			print(f'{self._get_formatted_path(path)}{RESET} | {BOLD}{command_str}{RESET} {RED + utils.GLYPHS["failed"] if result.stderr else GREEN + utils.GLYPHS["finished"]} {f"{RESET}|{RED} Code: {BOLD}{result.returncode}{RESET}" if result.stderr else ""} {RESET}')
 			if result.stdout and not result.stdout.strip().isspace():
 				print(result.stdout.strip())
 			if result.stderr and not result.stderr.strip().isspace():
-				print(result.stderr.strip())
+				print(f'{RED}{result.stderr.strip()}{RESET}')
 
 	# `mud <COMMAND>` when run_async = 1 and run_table = 0
 	async def run_async(self, repos: List[str], command: List[str]) -> None:
@@ -211,11 +211,13 @@ class Runner:
 			table[repo_path] = [line, f'{YELLOW}{utils.GLYPHS["running"]}']
 			self._print_process(table)
 
+		stdout, stderr = await process.communicate()
 		return_code = await process.wait()
+
 		if return_code == 0:
-			status = f'{GREEN}{utils.GLYPHS["finished"]}{RESET}'
+			status = f'{GREEN}{utils.GLYPHS["finished"]}{RESET} {stdout.decode().replace("\n", " ")}'
 		else:
-			status = f'{RED}{utils.GLYPHS["failed"]} Code: {return_code}{RESET}'
+			status = f'{RED}{utils.GLYPHS["failed"]} Code: {return_code}{RESET} {stderr.decode().replace("\n", " ")}'
 
 		table[repo_path] = [table[repo_path][0], status]
 		self._print_process(table)

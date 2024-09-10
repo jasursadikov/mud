@@ -180,7 +180,7 @@ class App:
 			arg = sys.argv[index]
 			if arg.startswith('-'):
 				arg = sys.argv[1:][index - 1]
-				if any(arg.startswith(prefix) for prefix in LABEL_PREFIX) or (arg.startswith(prefix) for prefix in NOT_LABEL_PREFIX):
+				if any(arg.startswith(prefix) for prefix in LABEL_PREFIX) or any(arg.startswith(prefix) for prefix in NOT_LABEL_PREFIX):
 					any_filters = True
 					label = arg.split('=', 1)[1]
 					include = any(arg.startswith(prefix) for prefix in LABEL_PREFIX)
