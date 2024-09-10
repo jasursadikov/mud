@@ -164,7 +164,7 @@ class Runner:
 		command_str = ' '.join(command)
 		for path in repos:
 			result = subprocess.run(command_str, shell=True, cwd=path, capture_output=True, text=True)
-			print(f'{self._get_formatted_path(path)}{RESET} | {BOLD}{command_str}{RESET} {RED + utils.GLYPHS["failed"] if result.stderr else GREEN + utils.GLYPHS["finished"]} {f"{RESET}|{RED} Code: {BOLD}{result.returncode}{RESET}" if result.stderr else ""} {RESET}')
+			print(f'{self._get_formatted_path(path)}{RESET} {utils.GLYPHS["terminal"]} {BOLD}{command_str}{RESET} {RED + utils.GLYPHS["failed"] if result.stderr else GREEN + utils.GLYPHS["finished"]} {f"{RESET}|{RED} Code: {BOLD}{result.returncode}{RESET}" if result.stderr else ""} {RESET}')
 			if result.stdout and not result.stdout.strip().isspace():
 				print(result.stdout.strip())
 			if result.stderr and not result.stderr.strip().isspace():
@@ -291,7 +291,7 @@ class Runner:
 
 	@staticmethod
 	def _get_formatted_path(path: str) -> str:
-		return f'{DIM}{GRAY}../{RESET}{DIM}{path}{RESET}'
+		return f'{DIM}{path}{RESET}'
 
 	@staticmethod
 	def _get_branch_status(path: str) -> str:
