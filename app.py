@@ -41,9 +41,10 @@ class App:
 		remove_parser.add_argument('path', help='Repository to remove (optional).', nargs='?', type=str)
 
 		parser.add_argument(*TABLE_ATTR, metavar='TABLE', nargs='?', default='', type=str, help=f'Switches table view, runs in table view it is disabled in {BOLD}.mudsettings{RESET}.')
-		parser.add_argument(*LABEL_PREFIX, metavar='LABEL', nargs='?', default='', type=str, help='Selects repositories with provided label.')
-		parser.add_argument(*NOT_LABEL_PREFIX, metavar='NOT_LABEL', nargs='?', default='', type=str, help=f'Selects repositories without provided label from filtered with {LABEL_PREFIX}.')
-		parser.add_argument(*BRANCH_PREFIX, metavar='BRANCH', nargs='?', default='', type=str, help='Filter repositories by provided branch.')
+		parser.add_argument(*LABEL_PREFIX, metavar='LABEL', nargs='?', default='', type=str, help='Includes repositories with provided label.')
+		parser.add_argument(*NOT_LABEL_PREFIX, metavar='NOT_LABEL', nargs='?', default='', type=str, help=f'Excludes repositories with provided label..')
+		parser.add_argument(*BRANCH_PREFIX, metavar='BRANCH', nargs='?', default='', type=str, help='Includes repositories on a provided branch.')
+		parser.add_argument(*NOT_BRANCH_PREFIX, metavar='NOT_BRANCH', nargs='?', default='', type=str, help='Excludes repositories on a provided branch.')
 		parser.add_argument(*MODIFIED_ATTR, action='store_true', help='Filters modified repositories.')
 		parser.add_argument(*DIVERGED_ATTR, action='store_true', help='Filters repositories with diverged branches.')
 		parser.add_argument(*ASYNC_ATTR, action='store_true', help='Switches asynchronous run feature.')
@@ -167,15 +168,15 @@ class App:
 	# Filter out repositories if user provided filters
 	def _parse_arguments(self) -> None:
 		self.repos = self.config.data
-
 		self.table = utils.settings.config['mud'].getboolean('run_table')
 		self.run_async = utils.settings.config['mud'].getboolean('run_async')
 
 		for path, labels in self.config.filter_label('ignore', self.config.data).items():
 			del self.repos[path]
-		any_filters = False
-		filtered = {}
-		branch = None
+		include_labels = []
+		exclude_labels = []
+		include_branches = []
+		exclude_branches = []
 		modified = False
 		diverged = False
 		index = 1
@@ -183,17 +184,14 @@ class App:
 			arg = sys.argv[index]
 			if arg.startswith('-'):
 				arg = sys.argv[1:][index - 1]
-				if any(arg.startswith(prefix) for prefix in LABEL_PREFIX) or any(arg.startswith(prefix) for prefix in NOT_LABEL_PREFIX):
-					any_filters = True
-					label = arg.split('=', 1)[1]
-					include = any(arg.startswith(prefix) for prefix in LABEL_PREFIX)
-					for path, labels in self.config.filter_label(label, self.repos).items():
-						if include:
-							filtered[path] = labels
-						elif path in filtered:
-							del filtered[path]
+				if any(arg.startswith(prefix) for prefix in LABEL_PREFIX):
+					include_labels.append(arg.split('=', 1)[1])
+				if any(arg.startswith(prefix) for prefix in NOT_LABEL_PREFIX):
+					exclude_labels.append(arg.split('=', 1)[1])
 				elif any(arg.startswith(prefix) for prefix in BRANCH_PREFIX):
-					branch = arg.split('=', 1)[1]
+					include_branches.append(arg.split('=', 1)[1])
+				elif any(arg.startswith(prefix) for prefix in NOT_BRANCH_PREFIX):
+					exclude_branches.append(arg.split('=', 1)[1])
 				elif arg in MODIFIED_ATTR:
 					modified = True
 				elif arg in DIVERGED_ATTR:
@@ -208,16 +206,20 @@ class App:
 				del sys.argv[index]
 				continue
 			break
-		self.repos = filtered if any_filters else self.repos
 		directory = os.getcwd()
 		to_delete = []
-		for repo in self.repos:
+		for repo, labels in self.repos.items():
 			os.chdir(os.path.join(directory, repo))
 			try:
-				has_modifications = subprocess.check_output('git status --porcelain', shell=True, stderr=subprocess.DEVNULL)
-				branch_filter = (branch is not None and branch.strip() and subprocess.check_output('git rev-parse --abbrev-ref HEAD', shell=True, text=True).splitlines()[0] != branch)
-				is_diverged = not any('ahead' in line or 'behind' in line for line in subprocess.check_output('git status --branch --porcelain', shell=True, text=True).splitlines() if line.startswith('##'))
-				if (modified and not has_modifications) or (branch and branch_filter) or (diverged and is_diverged):
+				delete = False
+				branch = subprocess.check_output('git rev-parse --abbrev-ref HEAD', shell=True, text=True).splitlines()[0]
+				delete |= any(include_branches) and branch not in include_branches
+				delete |= any(exclude_branches) and branch in exclude_branches
+				delete |= any(include_labels) and any(item in include_labels for item in labels)
+				delete |= any(exclude_labels) and not any(item in exclude_labels for item in labels)
+				delete |= modified and (subprocess.check_output('git status --porcelain', shell=True, stderr=subprocess.DEVNULL))
+				delete |= diverged and (not any('ahead' in line or 'behind' in line for line in subprocess.check_output('git status --branch --porcelain', shell=True, text=True).splitlines() if line.startswith('##')))
+				if delete:
 					to_delete.append(repo)
 			except Exception as e:
 				print(f'{BOLD}{YELLOW}{repo}{RESET} Error occurred. {RED}{e}{RESET}')
@@ -225,6 +227,7 @@ class App:
 
 		for repo in to_delete:
 			del self.repos[repo]
+
 		os.chdir(directory)
 
 	@staticmethod
