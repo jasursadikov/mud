@@ -11,6 +11,7 @@ from commands import *
 from argparse import ArgumentParser
 from runner import Runner
 
+
 class App:
 	def __init__(self):
 		self.cmd_runner = None
@@ -209,19 +210,15 @@ class App:
 		to_delete = []
 		for repo, labels in self.repos.items():
 			os.chdir(os.path.join(directory, repo))
-			try:
-				delete = False
-				branch = subprocess.check_output('git rev-parse --abbrev-ref HEAD', shell=True, text=True).splitlines()[0]
-				delete |= any(include_branches) and branch not in include_branches
-				delete |= any(exclude_branches) and branch in exclude_branches
-				delete |= any(include_labels) and not any(item in include_labels for item in labels)
-				delete |= any(exclude_labels) and any(item in exclude_labels for item in labels)
-				delete |= modified and (not subprocess.check_output('git status --porcelain', shell=True, stderr=subprocess.DEVNULL))
-				delete |= diverged and (not any('ahead' in line or 'behind' in line for line in subprocess.check_output('git status --branch --porcelain', shell=True, text=True).splitlines() if line.startswith('##')))
-				if delete:
-					to_delete.append(repo)
-			except Exception as e:
-				print(f'{BOLD}{YELLOW}{repo}{RESET} Error occurred. {RED}{e}{RESET}')
+			branch = subprocess.check_output('git rev-parse --abbrev-ref HEAD', shell=True, text=True).splitlines()[0]
+			delete = False
+			delete |= any(include_branches) and branch not in include_branches
+			delete |= any(exclude_branches) and branch in exclude_branches
+			delete |= any(include_labels) and not any(item in include_labels for item in labels)
+			delete |= any(exclude_labels) and any(item in exclude_labels for item in labels)
+			delete |= modified and (not subprocess.check_output('git status --porcelain', shell=True, stderr=subprocess.DEVNULL))
+			delete |= diverged and (not any('ahead' in line or 'behind' in line for line in subprocess.check_output('git status --branch --porcelain', shell=True, text=True).splitlines() if line.startswith('##')))
+			if delete:
 				to_delete.append(repo)
 
 		for repo in to_delete:
