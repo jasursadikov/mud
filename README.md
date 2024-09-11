@@ -37,9 +37,10 @@ All entries are stored in `.mudconfig` in TSV format. After making your first en
 - `mud update` - check for available updates.
 
 ### Arguments
-- `-l=<label>` or `--label=<label>` - filters out repositories with provided label.
-- `-nl=<label>` or `--not-label=<label>` - filters out repositories excluding provided label. You should include some repos with `--label` first.
-- `-b=<branch>` or `--branch=<branch>` - filters out repositories by current branch name.
+- `-l=<label>` or `--label=<label>` - includes repositories with provided label.
+- `-nl=<label>` or `--not-label=<label>` - excludes repositories with provided label.
+- `-b=<branch>` or `--branch=<branch>` - includes repositories with provided branch.
+- `-nb=<branch>` or `--not-branch=<branch>` - excludes repositories with provided label.
 - `-m` or `--modified` - filters out modified repositories.
 - `-d` or `--diverged` - filters repositories with diverged branches.
 - `-t` or `--table` - toggles default table view setting for run.
