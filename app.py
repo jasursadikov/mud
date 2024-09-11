@@ -89,7 +89,6 @@ class App:
 
 		self.config.find()
 		self._parse_arguments()
-		print(sys.argv)
 
 		self.cmd_runner = Runner(self.config)
 		# Handling commands
@@ -184,30 +183,28 @@ class App:
 		index = 1
 		while index < len(sys.argv):
 			arg = sys.argv[index]
-			if arg.startswith('-'):
-				arg = sys.argv[1:][index - 1]
-				if any(arg.startswith(prefix) for prefix in LABEL_PREFIX):
-					include_labels.append(arg.split('=', 1)[1])
-				if any(arg.startswith(prefix) for prefix in NOT_LABEL_PREFIX):
-					exclude_labels.append(arg.split('=', 1)[1])
-				elif any(arg.startswith(prefix) for prefix in BRANCH_PREFIX):
-					include_branches.append(arg.split('=', 1)[1])
-				elif any(arg.startswith(prefix) for prefix in NOT_BRANCH_PREFIX):
-					exclude_branches.append(arg.split('=', 1)[1])
-				elif arg in MODIFIED_ATTR:
-					modified = True
-				elif arg in DIVERGED_ATTR:
-					diverged = True
-				elif arg in TABLE_ATTR:
-					self.table = not self.table
-				elif arg in ASYNC_ATTR:
-					self.run_async = not self.run_async
-				else:
-					index += 1
-					continue
-				del sys.argv[index]
+			if not arg.startswith('-'):
+				break
+			if any(arg.startswith(prefix) for prefix in LABEL_PREFIX):
+				include_labels.append(arg.split('=', 1)[1])
+			elif any(arg.startswith(prefix) for prefix in NOT_LABEL_PREFIX):
+				exclude_labels.append(arg.split('=', 1)[1])
+			elif any(arg.startswith(prefix) for prefix in BRANCH_PREFIX):
+				include_branches.append(arg.split('=', 1)[1])
+			elif any(arg.startswith(prefix) for prefix in NOT_BRANCH_PREFIX):
+				exclude_branches.append(arg.split('=', 1)[1])
+			elif arg in MODIFIED_ATTR:
+				modified = True
+			elif arg in DIVERGED_ATTR:
+				diverged = True
+			elif arg in TABLE_ATTR:
+				self.table = not self.table
+			elif arg in ASYNC_ATTR:
+				self.run_async = not self.run_async
+			else:
+				index += 1
 				continue
-			break
+			del sys.argv[index]
 		directory = os.getcwd()
 		to_delete = []
 		for repo, labels in self.repos.items():
@@ -217,8 +214,8 @@ class App:
 				branch = subprocess.check_output('git rev-parse --abbrev-ref HEAD', shell=True, text=True).splitlines()[0]
 				delete |= any(include_branches) and branch not in include_branches
 				delete |= any(exclude_branches) and branch in exclude_branches
-				delete |= any(include_labels) and any(item in include_labels for item in labels)
-				delete |= any(exclude_labels) and not any(item in exclude_labels for item in labels)
+				delete |= any(include_labels) and not any(item in include_labels for item in labels)
+				delete |= any(exclude_labels) and any(item in exclude_labels for item in labels)
 				delete |= modified and (subprocess.check_output('git status --porcelain', shell=True, stderr=subprocess.DEVNULL))
 				delete |= diverged and (not any('ahead' in line or 'behind' in line for line in subprocess.check_output('git status --branch --porcelain', shell=True, text=True).splitlines() if line.startswith('##')))
 				if delete:
