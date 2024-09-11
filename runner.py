@@ -321,10 +321,10 @@ class Runner:
 
 	@staticmethod
 	def _print_process_header(path: str, command: str, failed: bool, code: int):
-		path = f'{Runner._get_formatted_path(path)}{RESET}'
-		command = f'{BKG_WHITE}{BLACK} {utils.GLYPHS["terminal"]} {BOLD}{command} {RESET}{WHITE}{utils.GLYPHS[")"]}{RESET}'
-		code = f'{RED + utils.GLYPHS["failed"] if failed else GREEN + utils.GLYPHS["finished"]}{RESET} {f"{RESET}{RED}Code: {BOLD}{code}{RESET}" if failed else ""} {RESET}'
-		print(f'{path} {command} {code}')
+		path = f'{BKG_BLACK}{Runner._get_formatted_path(path)}{RESET}'
+		command = f'{BKG_WHITE}{BLACK}{utils.GLYPHS[")"]} {utils.GLYPHS["terminal"]} {BOLD}{command} {RESET}{WHITE}{RESET}'
+		code = f'{WHITE}{BKG_RED if failed else BKG_GREEN}{utils.GLYPHS[")"]}{BRIGHT_WHITE} {utils.GLYPHS["failed"] if failed else utils.GLYPHS["finished"]} {f"Code: {BOLD}{code}" if failed else ""} {RESET}{RED if failed else GREEN}{utils.GLYPHS[")"]}{RESET}'
+		print(f'{path} {command}{code}')
 
 	@staticmethod
 	def _get_formatted_path(path: str) -> str:
