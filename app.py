@@ -135,6 +135,7 @@ class App:
 				self.cmd_runner.run_ordered(self.repos.keys(), sys.argv)
 
 	def init(self, args) -> None:
+		table = utils.get_table()
 		self.config.data = {}
 		index = 0
 		directories = [d for d in os.listdir('.') if os.path.isdir(d) and os.path.isdir(os.path.join(d, '.git'))]
@@ -143,12 +144,12 @@ class App:
 				continue
 			self.config.add_label(directory, getattr(args, 'label', ''))
 			index += 1
-			path = f'{DIM}{GRAY}../{RESET}{DIM}{directory}{RESET}'
-			print(f'{path} {GREEN}added{RESET}')
+			table.add_row([f'{DIM}{directory}{RESET}', f'{GREEN}{utils.GLYPHS["added"]}{RESET}'])
 		if index == 0:
 			utils.print_error('No git repositories were found in this directory.')
 			return
 		self.config.save(utils.CONFIG_FILE_NAME)
+		utils.print_table(table)
 
 	def add(self, args) -> None:
 		self.config.add_label(args.path, args.label)

@@ -1,13 +1,11 @@
 import os
 import utils
-import shutil
 import asyncio
 import subprocess
 
 from styles import *
 from typing import List, Dict
 from collections import Counter
-from prettytable import PrettyTable, PLAIN_COLUMNS
 
 
 class Runner:
@@ -20,7 +18,7 @@ class Runner:
 
 	# `mud info` command implementation
 	def info(self, repos: Dict[str, List[str]]) -> None:
-		table = self._get_table()
+		table = utils.get_table()
 		for path, labels in repos.items():
 			output = subprocess.check_output('git status --porcelain', shell=True, text=True, cwd=path)
 			files = output.splitlines()
@@ -48,11 +46,11 @@ class Runner:
 
 			table.add_row([formatted_path, branch, origin_sync, status, colored_labels])
 
-		self._print_table(table)
+		utils.print_table(table)
 
 	# `mud status` command implementation
 	def status(self, repos: Dict[str, List[str]]):
-		table = self._get_table()
+		table = utils.get_table()
 		for path, labels in repos.items():
 			output = subprocess.check_output('git status --porcelain', shell=True, text=True, cwd=path)
 			files = output.splitlines()
@@ -86,21 +84,21 @@ class Runner:
 
 			table.add_row([formatted_path, branch, status, ', '.join(colored_output)])
 
-		self._print_table(table)
+		utils.print_table(table)
 
 	# `mud labels` command implementation
 	def labels(self, repos: Dict[str, List[str]]):
-		table = self._get_table()
+		table = utils.get_table()
 		for path, labels in repos.items():
 			formatted_path = self._get_formatted_path(path)
 			colored_labels = self._get_formatted_labels(labels, utils.GLYPHS['label'])
 			table.add_row([formatted_path, colored_labels])
 
-		self._print_table(table)
+		utils.print_table(table)
 
 	# `mud log` command implementation
 	def log(self, repos: Dict[str, List[str]]) -> None:
-		table = self._get_table()
+		table = utils.get_table()
 		for path in repos.keys():
 			formatted_path = self._get_formatted_path(path)
 			branch = self._get_branch_status(path)
@@ -113,11 +111,11 @@ class Runner:
 
 			table.add_row([formatted_path, branch, author, commit_time, commit])
 
-		self._print_table(table)
+		utils.print_table(table)
 
 	# `mud branch` command implementation
 	def branches(self, repos: Dict[str, List[str]]) -> None:
-		table = self._get_table()
+		table = utils.get_table()
 		all_branches = {}
 
 		# Preparing branches for sorting to display them in the right order.
@@ -144,11 +142,11 @@ class Runner:
 			formatted_branches = self._get_formatted_branches(sorted_branches, current_branch)
 			table.add_row([formatted_path, formatted_branches])
 
-		self._print_table(table)
+		utils.print_table(table)
 
 	# `mud tags` command implementation
 	def tags(self, repos: Dict[str, List[str]]):
-		table = self._get_table()
+		table = utils.get_table()
 
 		for path, labels in repos.items():
 			formatted_path = self._get_formatted_path(path)
@@ -157,7 +155,7 @@ class Runner:
 			tags = ' '.join(tags)
 			table.add_row([formatted_path, tags])
 
-		self._print_table(table)
+		utils.print_table(table)
 
 	# `mud <COMMAND>` when run_async = 0 and run_table = 0
 	def run_ordered(self, repos: List[str], command: [str]) -> None:
@@ -224,19 +222,19 @@ class Runner:
 		self._print_process(table)
 
 	def _print_process(self, info: Dict[str, List[str]]) -> None:
-		table = self._get_table()
+		table = utils.get_table()
 		for path, (line, status) in info.items():
 			formatted_path = self._get_formatted_path(path)
 			table.add_row([formatted_path, status, line])
 
-		table_str = self._table_to_str(table)
+		table_str = utils.table_to_str(table)
 		num_lines = table_str.count('\n') + 1
 
 		if hasattr(self, '_last_printed_lines') and self._last_printed_lines > 0:
 			for _ in range(self._last_printed_lines):
 				# Clear previous line
 				print('\033[A\033[K', end='')
-		self._print_table(table)
+		utils.print_table(table)
 		self._last_printed_lines = num_lines
 
 	@staticmethod
@@ -265,29 +263,6 @@ class Runner:
 		if not files:
 			status = f'{GREEN}{utils.GLYPHS["clear"]}{RESET}'
 		return status
-
-	@staticmethod
-	def _print_table(table: PrettyTable):
-		width, _ = shutil.get_terminal_size()
-		rows = Runner._table_to_str(table).split('\n')
-		for row in rows:
-			if len(row) != 0:
-				if len(sterilize(row)) > width:
-					styles_count = len(row) - len(sterilize(row))
-					count = width + styles_count - 1
-					print(row[:count] + RESET)
-				else:
-					print(row)
-
-	@staticmethod
-	def _table_to_str(table: PrettyTable) -> str:
-		table = table.get_string()
-		table = '\n'.join(line.lstrip() for line in table.splitlines())
-		return table
-
-	@staticmethod
-	def _get_table() -> PrettyTable:
-		return PrettyTable(border=False, header=False, style=PLAIN_COLUMNS, align='l')
 
 	@staticmethod
 	def _get_branch_status(path: str) -> str:

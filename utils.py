@@ -1,9 +1,11 @@
 import sys
+import shutil
 import random
 import subprocess
 
-from settings import *
 from styles import *
+from settings import *
+from prettytable import PrettyTable, PLAIN_COLUMNS
 
 SETTINGS_FILE_NAME = '.mudsettings'
 CONFIG_FILE_NAME = '.mudconfig'
@@ -123,6 +125,7 @@ def update(explicit: bool = False) -> bool:
 	os.chdir(target_directory)
 	return False
 
+
 def configure():
 	try:
 		settings.config['mud']['run_table'] = str(ask('Do you want to see command execution progress in table view? This will limit output content.'))
@@ -135,6 +138,7 @@ def configure():
 
 	settings.save()
 	print('Your settings are updated!')
+
 
 def ask(text: str) -> bool:
 	print(f'{text} [Y/n] ', end='', flush=True)
@@ -153,6 +157,30 @@ def ask(text: str) -> bool:
 
 	print()
 	return response in ['y', '\r', '\n']
+
+
+def print_table(table: PrettyTable):
+	width, _ = shutil.get_terminal_size()
+	rows = table_to_str(table).split('\n')
+	for row in rows:
+		if len(row) != 0:
+			if len(sterilize(row)) > width:
+				styles_count = len(row) - len(sterilize(row))
+				count = width + styles_count - 1
+				print(row[:count] + RESET)
+			else:
+				print(row)
+
+
+def table_to_str(table: PrettyTable) -> str:
+	table = table.get_string()
+	table = '\n'.join(line.lstrip() for line in table.splitlines())
+	return table
+
+
+def get_table() -> PrettyTable:
+	return PrettyTable(border=False, header=False, style=PLAIN_COLUMNS, align='l')
+
 
 def print_error(text: str, code: int = 255) -> None:
 	print(f'{RED}Error:{RESET} {text}')
