@@ -78,6 +78,7 @@ class App:
 		elif sys.argv[1] in CONFIGURE:
 			utils.configure()
 			return
+
 		current_directory = os.getcwd()
 		self.config = config.Config()
 
@@ -88,6 +89,7 @@ class App:
 
 		self.config.find()
 		self._parse_arguments()
+		print(sys.argv)
 
 		self.cmd_runner = Runner(self.config)
 		# Handling commands
