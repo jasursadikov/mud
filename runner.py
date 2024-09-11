@@ -198,7 +198,7 @@ class Runner:
 
 	async def _run_process(self, repo_path: str, table: Dict[str, List[str]], command: List[str]) -> None:
 		process = await asyncio.create_subprocess_exec(*command, cwd=repo_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		table[repo_path] = ['', f'{YELLOW}{utils.GLYPHS["running"]}']
+		table[repo_path] = ['', f'{YELLOW}{utils.GLYPHS["running"]}{RESET}']
 
 		while True:
 			line = await process.stdout.readline()
@@ -208,7 +208,7 @@ class Runner:
 					break
 			line = line.decode().strip()
 			line = table[repo_path][0] if not line.strip() else line
-			table[repo_path] = [line, f'{YELLOW}{utils.GLYPHS["running"]}']
+			table[repo_path] = [line, f'{YELLOW}{utils.GLYPHS["running"]}{RESET}']
 			self._print_process(table)
 
 		return_code = await process.wait()
