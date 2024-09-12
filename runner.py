@@ -311,7 +311,7 @@ class Runner:
 			if path.startswith('/'):
 				path = path[1:]
 			parts = path.split('/')
-			return DIM + WHITE + ('/'.join([p[0] for p in parts[:-1]] + [RESET + DIM + parts[-1]]) if collapse_paths else ('/'.join(parts[:-1])) + f'/{RESET}{DIM}' + parts[-1] + RESET)
+			return DIM + WHITE + ('/'.join([p[0] for p in parts[:-1]] + [RESET + DIM + parts[-1]]) + RESET if collapse_paths else ('/'.join(parts[:-1])) + f'/{RESET}{DIM}' + parts[-1] + RESET)
 
 		return f'{DIM}{path}{RESET}'
 
