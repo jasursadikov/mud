@@ -126,9 +126,9 @@ class App:
 				self.parser.print_help()
 				return
 			self._parse_aliases()
-			print(sys.argv)
+
 			command = ' '.join(sys.argv)
-			print(command)
+
 			if self.run_async:
 				try:
 					if self.table:
