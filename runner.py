@@ -311,8 +311,7 @@ class Runner:
 			if path.startswith('/'):
 				path = path[1:]
 			parts = path.split('/')
-			return DIM + WHITE + ('/'.join([p[0] for p in parts[:-1]] + [RESET + DIM + parts[-1]]) if simplify_branches else '/'.join(
-					[p for p in parts[:-1]] + [(parts[-1][:10] + '..' if len(parts[-1]) > 10 else parts[-1])])) + RESET
+			return DIM + WHITE + ('/'.join([p[0] for p in parts[:-1]] + [RESET + DIM + parts[-1]]) if simplify_branches else ('/'.join(parts[:-1])) + f'/{RESET}{DIM}' + parts[-1] + RESET)
 
 		return f'{DIM}{path}{RESET}'
 
