@@ -1,93 +1,49 @@
-import sys
-import shutil
 import random
+import shutil
 import subprocess
+import sys
+
+from prettytable import PrettyTable, PLAIN_COLUMNS
 
 from styles import *
 from settings import *
-from prettytable import PrettyTable, PLAIN_COLUMNS
 
 SETTINGS_FILE_NAME = '.mudsettings'
 CONFIG_FILE_NAME = '.mudconfig'
-GLYPHS = {}
-ICON_GLYPHS = {
-	'ahead': '\uf062',
-	'behind': '\uf063',
-	'modified': '\uf040',
-	'added': '\uf067',
-	'removed': '\uf1f8',
-	'moved': '\uf064',
-	'clear': '\uf00c',
-	'synced': '\uf00c',
-	'master': '\uf015',
-	'bugfix': '\uf188',
-	'release': '\uf135',
-	'feature': '\uf0ad',
-	'branch': '\ue725',
-	'failed': '\uf00d',
-	'finished': '\uf00c',
-	'running': '\uf46a',
-	'label': '\uf435',
-	'tag': '\uf02b',
-	'terminal': '\ue795',
-	'(': '\uE0B2',
-	')': '\uE0B0',
-	'space': ' ',
-}
-TEXT_GLYPHS = {
-	'ahead': 'Ahead',
-	'behind': 'Behind',
-	'modified': '*',
-	'added': '+',
-	'removed': '-',
-	'moved': 'M',
-	'clear': 'Clear',
-	'synced': 'Up to date',
-	'master': '',
-	'bugfix': '',
-	'release': '',
-	'feature': '',
-	'branch': '',
-	'failed': 'Failed',
-	'finished': 'Finished',
-	'running': 'Running',
-	'label': '',
-	'tag': '',
-	'terminal': '',
-	'(': '',
-	')': ' ',
-	'space': '',
-}
 
 settings: Settings
 
 
-def setup():
-	global GLYPHS
-	GLYPHS = ICON_GLYPHS if settings.mud_settings['nerd_fonts'] else TEXT_GLYPHS
-
-	if settings.config['mud'].getboolean('ask_updates') and update():
-		sys.exit()
+def glyphs(key: str) -> str:
+	return GLYPHS[key][0 if settings.mud_settings['nerd_fonts'] else 1]
 
 
 def version() -> None:
+	draw_logo()
 	os.chdir(os.path.dirname(os.path.abspath(__file__)))
-	hash = subprocess.check_output('git rev-parse --short HEAD', shell=True, text=True).splitlines()[0]
-	m = random.choice(TEXT[3:])
-	u = random.choice(TEXT[3:])
-	d = random.choice(TEXT[3:])
-	t = random.choice(TEXT[3:])
-	v = random.choice(TEXT[3:])
-	print(fr'''
-{m} __    __{u}  __  __{d}  _____   
-{m}/\ '-./  \{u}/\ \/\ \{d}/\  __-.     {BOLD}{t}Multi-directory runner{RESET} [{v}{hash}{RESET}]
-{m}\ \ \-./\ \{u} \ \_\ \{d} \ \/\ \    {RESET}Jasur Sadikov 
-{m} \ \_\ \ \_\{u} \_____\{d} \____-    {RESET}https://github.com/jasursadikov/mud
-{m}  \/_/  \/_/{u}\/_____/{d}\/____/    {RESET}Type 'mud --help' for help
-''')
+	hash = subprocess.check_output('git rev-parse HEAD', shell=True, text=True).splitlines()[0]
+	print(f'Jasur Sadikov')
+	print(f'https://github.com/jasursadikov/mud')
+	print(f'{BOLD}{random.choice(TEXT[3:])}{hash}{RESET}')
+
+
+def draw_logo() -> None:
+	colors = TEXT[3:]
+	colors.remove(BRIGHT_WHITE)
+	m = random.choice(colors)
+	u = random.choice(colors)
+	d = random.choice(colors)
+	print(fr'''{m} __    __{u}  __  __{d}  _____''')
+	print(fr'''{m}/\ '-./  \{u}/\ \/\ \{d}/\  __-.{RESET}''')
+	print(fr'''{m}\ \ \-./\ \{u} \ \_\ \{d} \ \/\ \{RESET}''')
+	print(fr'''{m} \ \_\ \ \_\{u} \_____\{d} \____-{RESET}''')
+	print(fr'''{m}  \/_/  \/_/{u}\/_____/{d}\/____/{RESET}''')
 
 
 def update(explicit: bool = False) -> bool:
+	if explicit:
+		draw_logo()
+
 	target_directory = os.getcwd()
 	os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -95,16 +51,6 @@ def update(explicit: bool = False) -> bool:
 	result = subprocess.run('git status -uno', shell=True, capture_output=True, text=True)
 
 	if 'Your branch is behind' in result.stdout:
-		m = random.choice(TEXT[3:])
-		u = random.choice(TEXT[3:])
-		d = random.choice(TEXT[3:])
-		print(fr'''
-        {m} __    __{u}  __  __{d}  _____   
-        {m}/\ '-./  \{u}/\ \/\ \{d}/\  __-.{RESET}
-        {m}\ \ \-./\ \{u} \ \_\ \{d} \ \/\ \{RESET}
-        {m} \ \_\ \ \_\{u} \_____\{d} \____-{RESET}
-        {m}  \/_/  \/_/{u}\/_____/{d}\/____/{RESET}
-        ''')
 		print(f'{BOLD}New update(s) is available!{RESET}\n')
 
 		log = subprocess.run('git log HEAD..@{u} --oneline --color=always', shell=True, text=True, stdout=subprocess.PIPE).stdout
@@ -126,7 +72,7 @@ def update(explicit: bool = False) -> bool:
 	return False
 
 
-def configure():
+def configure() -> None:
 	try:
 		settings.config['mud']['run_table'] = str(ask('Do you want to see command execution progress in table view? This will limit output content.'))
 		settings.config['mud']['run_async'] = str(ask('Do you want to run commands simultaneously for multiple repositories?'))
@@ -159,7 +105,7 @@ def ask(text: str) -> bool:
 	return response in ['y', '\r', '\n']
 
 
-def print_table(table: PrettyTable):
+def print_table(table: PrettyTable) -> None:
 	width, _ = shutil.get_terminal_size()
 	rows = table_to_str(table).split('\n')
 	for row in rows:

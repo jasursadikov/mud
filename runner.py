@@ -3,9 +3,11 @@ import utils
 import asyncio
 import subprocess
 
-from styles import *
+from utils import glyphs
 from typing import List, Dict
 from collections import Counter
+
+from styles import *
 
 
 class Runner:
@@ -26,7 +28,7 @@ class Runner:
 			formatted_path = self._get_formatted_path(path)
 			branch = self._get_branch_status(path)
 			status = self._get_status_string(files)
-			colored_labels = self._get_formatted_labels(labels, utils.GLYPHS["label"])
+			colored_labels = self._get_formatted_labels(labels)
 
 			# Sync with origin status
 			ahead_behind_cmd = subprocess.run('git rev-list --left-right --count HEAD...@{upstream}', shell=True, text=True, cwd=path, capture_output=True)
@@ -35,21 +37,21 @@ class Runner:
 			if len(stdout) >= 2:
 				ahead, behind = stdout[0], stdout[1]
 				if ahead and ahead != '0':
-					origin_sync += f'{BRIGHT_GREEN}{utils.GLYPHS["ahead"]} {ahead}{RESET}'
+					origin_sync += f'{BRIGHT_GREEN}{glyphs("ahead")} {ahead}{RESET}'
 				if behind and behind != '0':
 					if origin_sync:
 						origin_sync += ' '
-					origin_sync += f'{BRIGHT_BLUE}{utils.GLYPHS["behind"]} {behind}{RESET}'
+					origin_sync += f'{BRIGHT_BLUE}{glyphs("behind")} {behind}{RESET}'
 
 			if not origin_sync.strip():
-				origin_sync = f'{BLUE}{utils.GLYPHS["synced"]}{RESET}'
+				origin_sync = f'{BLUE}{glyphs("synced")}{RESET}'
 
 			table.add_row([formatted_path, branch, origin_sync, status, colored_labels])
 
 		utils.print_table(table)
 
 	# `mud status` command implementation
-	def status(self, repos: Dict[str, List[str]]):
+	def status(self, repos: Dict[str, List[str]]) -> None:
 		table = utils.get_table()
 		for path, labels in repos.items():
 			output = subprocess.check_output('git status --porcelain', shell=True, text=True, cwd=path)
@@ -87,11 +89,11 @@ class Runner:
 		utils.print_table(table)
 
 	# `mud labels` command implementation
-	def labels(self, repos: Dict[str, List[str]]):
+	def labels(self, repos: Dict[str, List[str]]) -> None:
 		table = utils.get_table()
 		for path, labels in repos.items():
 			formatted_path = self._get_formatted_path(path)
-			colored_labels = self._get_formatted_labels(labels, utils.GLYPHS['label'])
+			colored_labels = self._get_formatted_labels(labels)
 			table.add_row([formatted_path, colored_labels])
 
 		utils.print_table(table)
@@ -145,13 +147,13 @@ class Runner:
 		utils.print_table(table)
 
 	# `mud tags` command implementation
-	def tags(self, repos: Dict[str, List[str]]):
+	def tags(self, repos: Dict[str, List[str]]) -> None:
 		table = utils.get_table()
 
 		for path, labels in repos.items():
 			formatted_path = self._get_formatted_path(path)
 			tags = [line.strip() for line in subprocess.check_output('git tag', shell=True, text=True, cwd=path).splitlines() if line.strip()]
-			tags = [f'{utils.GLYPHS["tag"]}{utils.GLYPHS["space"]}{tag}' for tag in tags]
+			tags = [f'{glyphs("tag")}{glyphs("space")}{tag}' for tag in tags]
 			tags = ' '.join(tags)
 			table.add_row([formatted_path, tags])
 
@@ -198,7 +200,7 @@ class Runner:
 
 	async def _run_process(self, repo_path: str, table: Dict[str, List[str]], command: List[str]) -> None:
 		process = await asyncio.create_subprocess_exec(*command, cwd=repo_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		table[repo_path] = ['', f'{YELLOW}{utils.GLYPHS["running"]}{RESET}']
+		table[repo_path] = ['', f'{YELLOW}{glyphs("running")}{RESET}']
 
 		while True:
 			line = await process.stdout.readline()
@@ -208,15 +210,15 @@ class Runner:
 					break
 			line = line.decode().strip()
 			line = table[repo_path][0] if not line.strip() else line
-			table[repo_path] = [line, f'{YELLOW}{utils.GLYPHS["running"]}{RESET}']
+			table[repo_path] = [line, f'{YELLOW}{glyphs("running")}{RESET}']
 			self._print_process(table)
 
 		return_code = await process.wait()
 
 		if return_code == 0:
-			status = f'{GREEN}{utils.GLYPHS["finished"]}{RESET}'
+			status = f'{GREEN}{glyphs("finished")}{RESET}'
 		else:
-			status = f'{RED}{utils.GLYPHS["failed"]} Code: {return_code}{RESET}'
+			status = f'{RED}{glyphs("failed")} Code: {return_code}{RESET}'
 
 		table[repo_path] = [table[repo_path][0], status]
 		self._print_process(table)
@@ -238,7 +240,7 @@ class Runner:
 		self._last_printed_lines = num_lines
 
 	@staticmethod
-	def _get_status_string(files: List[str]):
+	def _get_status_string(files: List[str]) -> str:
 		modified, added, removed, moved = 0, 0, 0, 0
 
 		for file in files:
@@ -253,15 +255,15 @@ class Runner:
 				moved += 1
 		status = ''
 		if added:
-			status += f'{BRIGHT_GREEN}{added} {utils.GLYPHS["added"]}{RESET} '
+			status += f'{BRIGHT_GREEN}{added} {glyphs("added")}{RESET} '
 		if modified:
-			status += f'{YELLOW}{modified} {utils.GLYPHS["modified"]}{RESET} '
+			status += f'{YELLOW}{modified} {glyphs("modified")}{RESET} '
 		if moved:
-			status += f'{BLUE}{moved} {utils.GLYPHS["moved"]}{RESET} '
+			status += f'{BLUE}{moved} {glyphs("moved")}{RESET} '
 		if removed:
-			status += f'{RED}{removed} {utils.GLYPHS["removed"]}{RESET} '
+			status += f'{RED}{removed} {glyphs("removed")}{RESET} '
 		if not files:
-			status = f'{GREEN}{utils.GLYPHS["clear"]}{RESET}'
+			status = f'{GREEN}{glyphs("clear")}{RESET}'
 		return status
 
 	@staticmethod
@@ -269,36 +271,36 @@ class Runner:
 		branch_cmd = subprocess.run('git rev-parse --abbrev-ref HEAD', shell=True, text=True, cwd=path, capture_output=True)
 		branch_stdout = branch_cmd.stdout.strip()
 		if branch_stdout == 'master' or branch_stdout == 'main':
-			return f'{YELLOW}{utils.GLYPHS["master"]}{RESET}{utils.GLYPHS["space"]}{branch_stdout}'
+			return f'{YELLOW}{glyphs("master")}{RESET}{glyphs("space")}{branch_stdout}'
 		elif branch_stdout == 'develop':
-			return f'{GREEN}{utils.GLYPHS["feature"]}{RESET}{utils.GLYPHS["space"]}{branch_stdout}'
+			return f'{GREEN}{glyphs("feature")}{RESET}{glyphs("space")}{branch_stdout}'
 		elif '/' in branch_stdout:
 			branch_path = branch_stdout.split('/')
 			icon = Runner._get_branch_icon(branch_path[0])
 			branch_color = Runner._get_branch_color(branch_path[0])
-			return f'{branch_color}{icon}{RESET}{utils.GLYPHS["space"]}{branch_path[0]}{RESET}/{BOLD}{("/".join(branch_path[1:]))}'
+			return f'{branch_color}{icon}{RESET}{glyphs("space")}{branch_path[0]}{RESET}/{BOLD}{("/".join(branch_path[1:]))}'
 		elif branch_stdout == 'HEAD':
 			# check if we are on tag
-			glyph = utils.GLYPHS['tag']
+			glyph = glyphs('tag')
 			color = BRIGHT_MAGENTA
 			info_cmd = subprocess.run('git describe --tags --exact-match', shell=True, text=True, cwd=path, capture_output=True)
 			info_cmd = info_cmd.stdout.strip()
 
 			if not info_cmd.strip():
-				glyph = utils.GLYPHS["branch"]
+				glyph = glyphs("branch")
 				color = CYAN
 				info_cmd = subprocess.run('git rev-parse --short HEAD', shell=True, text=True, cwd=path, capture_output=True)
 				info_cmd = info_cmd.stdout.strip()
 
-			return f'{color}{glyph}{RESET}{utils.GLYPHS["space"]}{DIM}{branch_stdout}{RESET}:{info_cmd}'
+			return f'{color}{glyph}{RESET}{glyphs("space")}{DIM}{branch_stdout}{RESET}:{info_cmd}'
 		else:
-			return f'{CYAN}{utils.GLYPHS["branch"]}{RESET}{utils.GLYPHS["space"]}{branch_stdout}'
+			return f'{CYAN}{glyphs("branch")}{RESET}{glyphs("space")}{branch_stdout}'
 
 	@staticmethod
-	def _print_process_header(path: str, command: str, failed: bool, code: int):
+	def _print_process_header(path: str, command: str, failed: bool, code: int) -> None:
 		path = f'{BKG_BLACK}{Runner._get_formatted_path(path)}{RESET}'
-		command = f'{BKG_WHITE}{BLACK}{utils.GLYPHS[")"]}{utils.GLYPHS["space"]}{utils.GLYPHS["terminal"]}{utils.GLYPHS["space"]}{BOLD}{command} {RESET}{WHITE}{RESET}'
-		code = f'{WHITE}{BKG_RED if failed else BKG_GREEN}{utils.GLYPHS[")"]}{BRIGHT_WHITE}{utils.GLYPHS["space"]}{utils.GLYPHS["failed"] if failed else utils.GLYPHS["finished"]} {f"Code: {BOLD}{code}" if failed else ""}{utils.GLYPHS["space"]}{RESET}{RED if failed else GREEN}{utils.GLYPHS[")"]}{RESET}'
+		command = f'{BKG_WHITE}{BLACK}{glyphs(")")}{glyphs("space")}{glyphs("terminal")}{glyphs("space")}{BOLD}{command} {RESET}{WHITE}{RESET}'
+		code = f'{WHITE}{BKG_RED if failed else BKG_GREEN}{glyphs(")")}{BRIGHT_WHITE}{glyphs("space")}{glyphs("failed") if failed else glyphs("finished")} {f"Code: {BOLD}{code}" if failed else ""}{glyphs("space")}{RESET}{RED if failed else GREEN}{glyphs(")")}{RESET}'
 		print(f'{path} {command}{code}')
 
 	@staticmethod
@@ -332,13 +334,13 @@ class Runner:
 		return log
 
 	@staticmethod
-	def _get_formatted_labels(labels: List[str], glyph: str) -> str:
+	def _get_formatted_labels(labels: List[str]) -> str:
 		if len(labels) == 0:
 			return ''
 		colored_label = ''
 		for label in labels:
 			color_index = Runner._get_color_index(label) % len(TEXT)
-			colored_label += f'{TEXT[color_index + 3]}{glyph}{utils.GLYPHS["space"]}{label}{RESET} '
+			colored_label += f'{TEXT[color_index + 3]}{glyphs("label")}{glyphs("space")}{label}{RESET} '
 		return colored_label
 
 	@staticmethod
@@ -356,13 +358,13 @@ class Runner:
 			current_prefix = current_prefix + DIM if is_origin else current_prefix
 			origin_prefix = f'{MAGENTA}{DIM}o/' if is_origin else ''
 			color = WHITE
-			icon = utils.GLYPHS['branch']
+			icon = glyphs('branch')
 			if branch == 'master' or branch == 'main':
 				color = YELLOW
-				icon = f'{utils.GLYPHS["master"]}'
+				icon = glyphs('master')
 			elif branch == 'develop':
 				color = GREEN
-				icon = f'{utils.GLYPHS["feature"]}'
+				icon = glyphs('feature')
 			elif '/' in branch:
 				parts = branch.split('/')
 				end_dim = '' if is_origin else END_DIM
@@ -372,22 +374,30 @@ class Runner:
 				branch = f'{DIM}{branch}'
 				color = Runner._get_branch_color(parts[0])
 				icon = Runner._get_branch_icon(parts[0])
-			output += f'{current_prefix}{color}{icon}{utils.GLYPHS["space"]}{origin_prefix}{color}{branch}{RESET} '
+			output += f'{current_prefix}{color}{icon}{glyphs("space")}{origin_prefix}{color}{branch}{RESET} '
 		return output
 
 	@staticmethod
 	def _get_branch_icon(branch_prefix: str) -> str:
-		return f'{utils.GLYPHS["bugfix"]}' if branch_prefix in ['bugfix', 'bug', 'hotfix'] else \
-			f'{utils.GLYPHS["release"]}' if branch_prefix == 'release' else \
-				f'{utils.GLYPHS["feature"]}' if branch_prefix in ['feature', 'feat', 'develop'] else \
-					f'{utils.GLYPHS["branch"]}'
+		if branch_prefix in ['bugfix', 'bug', 'hotfix']:
+			return glyphs('bugfix')
+		elif branch_prefix == 'release':
+			return glyphs('release')
+		elif branch_prefix in ['feature', 'feat', 'develop']:
+			return glyphs('feature')
+		else:
+			return glyphs('branch')
 
 	@staticmethod
 	def _get_branch_color(branch_name: str) -> str:
-		return RED if branch_name in ['bugfix', 'bug', 'hotfix'] else \
-			BLUE if branch_name == 'release' else \
-				GREEN if branch_name in ['feature', 'feat', 'develop'] else \
-					GREEN
+		if branch_name in ['bugfix', 'bug', 'hotfix']:
+			return RED
+		elif branch_name == 'release':
+			return BLUE
+		elif branch_name in ['feature', 'feat', 'develop']:
+			return GREEN
+		else:
+			return GREEN
 
 	@staticmethod
 	def _get_color_index(label: str) -> (str, str):

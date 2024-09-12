@@ -58,6 +58,31 @@ RESET = '\033[0m'
 
 ALL = BKG + TEXT + STYLES + END + [RESET]
 
+GLYPHS = {
+	'ahead':	['\uf062',	'Ahead'],
+	'behind':	['\uf063',	'Behind'],
+	'modified':	['\uf040',	'*'],
+	'added':	['\uf067',	'+'],
+	'removed':	['\uf1f8',	'-'],
+	'moved':	['\uf064',	'M'],
+	'clear':	['\uf00c',	'Clear'],
+	'synced':	['\uf00c',	'Up to date'],
+	'master':	['\uf015',	''],
+	'bugfix':	['\uf188',	''],
+	'release':	['\uf135',	''],
+	'feature':	['\uf0ad',	''],
+	'branch':	['\ue725',	''],
+	'failed':	['\uf00d',	'Failed'],
+	'finished':	['\uf00c',	'Finished'],
+	'running':	['\uf46a',	'Running'],
+	'label':	['\uf435',	''],
+	'tag':		['\uf02b',	''],
+	'terminal':	['\ue795',	''],
+	'(':		['\uE0B2',	''],
+	')':		['\uE0B0',	' '],
+	'space':	[' ', 		'']
+}
+
 
 def sterilize(string: str) -> str:
 	for char in ALL:

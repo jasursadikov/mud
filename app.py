@@ -8,8 +8,9 @@ import utils
 
 from styles import *
 from commands import *
-from argparse import ArgumentParser
+from utils import glyphs
 from runner import Runner
+from argparse import ArgumentParser
 
 
 class App:
@@ -147,7 +148,7 @@ class App:
 				continue
 			self.config.add_label(directory, getattr(args, 'label', ''))
 			index += 1
-			table.add_row([f'{DIM}{directory}{RESET}', f'{GREEN}{utils.GLYPHS["added"]}{RESET}'])
+			table.add_row([f'{DIM}{directory}{RESET}', f'{GREEN}{glyphs("added")}{RESET}'])
 		if index == 0:
 			utils.print_error('No git repositories were found in this directory.')
 			return
@@ -227,7 +228,7 @@ class App:
 		os.chdir(directory)
 
 	@staticmethod
-	def _parse_aliases():
+	def _parse_aliases() -> None:
 		if utils.settings.alias_settings is None:
 			return
 		for alias, command in dict(utils.settings.alias_settings).items():
