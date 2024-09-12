@@ -303,7 +303,7 @@ class Runner:
 
 	@staticmethod
 	def _get_formatted_path(path: str) -> str:
-		simplify_branches = utils.settings.config['mud'].getboolean('simplify_branches')
+		collapse_paths = utils.settings.config['mud'].getboolean('collapse_paths')
 		if os.path.isabs(path):
 			home = os.path.expanduser('~')
 			if path.startswith(home):
@@ -311,7 +311,7 @@ class Runner:
 			if path.startswith('/'):
 				path = path[1:]
 			parts = path.split('/')
-			return DIM + WHITE + ('/'.join([p[0] for p in parts[:-1]] + [RESET + DIM + parts[-1]]) if simplify_branches else ('/'.join(parts[:-1])) + f'/{RESET}{DIM}' + parts[-1] + RESET)
+			return DIM + WHITE + ('/'.join([p[0] for p in parts[:-1]] + [RESET + DIM + parts[-1]]) if collapse_paths else ('/'.join(parts[:-1])) + f'/{RESET}{DIM}' + parts[-1] + RESET)
 
 		return f'{DIM}{path}{RESET}'
 
@@ -346,7 +346,7 @@ class Runner:
 		if len(branches) == 0:
 			return ''
 
-		simplify_branches = utils.settings.config['mud'].getboolean('simplify_branches')
+		collapse_paths = utils.settings.config['mud'].getboolean('collapse_paths')
 		output = ''
 
 		for branch in branches:
@@ -367,7 +367,7 @@ class Runner:
 				parts = branch.split('/')
 				end_dim = '' if is_origin else END_DIM
 				branch = '/'.join([p[0] for p in parts[:-1]] + [end_dim + (
-					parts[-1][:10] + '..' if len(parts[-1]) > 10 else parts[-1])]) if simplify_branches else '/'.join(
+					parts[-1][:10] + '..' if len(parts[-1]) > 10 else parts[-1])]) if collapse_paths else '/'.join(
 					[p for p in parts[:-1]] + [end_dim + (parts[-1][:10] + '..' if len(parts[-1]) > 10 else parts[-1])])
 				branch = f'{DIM}{branch}'
 				color = Runner._get_branch_color(parts[0])
