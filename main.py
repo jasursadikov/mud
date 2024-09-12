@@ -11,7 +11,7 @@ if __name__ == '__main__':
 		utils.settings = settings.Settings(utils.SETTINGS_FILE_NAME)
 		if utils.settings.config['mud'].getboolean('ask_updates') and utils.update():
 			sys.exit()
-		mud = App()
-		mud.run()
+		app = App()
+		app.run()
 	except KeyboardInterrupt:
 		utils.print_error('Stopped by user.')

@@ -160,25 +160,25 @@ class Runner:
 		utils.print_table(table)
 
 	# `mud <COMMAND>` when run_async = 0 and run_table = 0
-	def run_ordered(self, repos: List[str], command: [str]) -> None:
+	def run_ordered(self, repos: List[str], command: str) -> None:
 		command_str = ' '.join(command)
 		for path in repos:
 			process = subprocess.run(command_str, shell=True, cwd=path, capture_output=True, text=True)
-			self._print_process_header(path, ' '.join(command), process.returncode != 0, process.returncode)
+			self._print_process_header(path, command, process.returncode != 0, process.returncode)
 			if process.stdout and not process.stdout.isspace():
 				print(process.stdout)
 			if process.stderr and not process.stderr.isspace():
 				print(process.stderr)
 
 	# `mud <COMMAND>` when run_async = 1 and run_table = 0
-	async def run_async(self, repos: List[str], command: List[str]) -> None:
+	async def run_async(self, repos: List[str], command: str) -> None:
 		sem = asyncio.Semaphore(len(repos))
 
 		async def run_process(path: str) -> None:
 			async with sem:
 				process = await asyncio.create_subprocess_exec(*command, cwd=path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 				stdout, stderr = await process.communicate()
-				self._print_process_header(path, ' '.join(command), process.returncode != 0, process.returncode)
+				self._print_process_header(path, command, process.returncode != 0, process.returncode)
 				if stderr:
 					print(stderr.decode())
 				if stdout and not stdout.isspace():
@@ -187,7 +187,7 @@ class Runner:
 		await asyncio.gather(*(run_process(path) for path in repos))
 
 	# `mud <COMMAND>` when run_async = 1 and run_table = 1
-	async def run_async_table_view(self, repos: List[str], command: List[str]) -> None:
+	async def run_async_table_view(self, repos: List[str], command: str) -> None:
 		sem = asyncio.Semaphore(len(repos))
 		table = {repo: ['', ''] for repo in repos}
 
