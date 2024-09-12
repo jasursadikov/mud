@@ -231,13 +231,16 @@ class Runner:
 
 		table_str = utils.table_to_str(table)
 		num_lines = table_str.count('\n') + 1
+		self._clear_printed_lines()
+		utils.print_table(table)
+		self._last_printed_lines = num_lines
 
-		if hasattr(self, '_last_printed_lines') and self._last_printed_lines > 0:
+	def _clear_printed_lines(self) -> None:
+		if self._last_printed_lines > 0:
 			for _ in range(self._last_printed_lines):
 				# Clear previous line
 				print('\033[A\033[K', end='')
-		utils.print_table(table)
-		self._last_printed_lines = num_lines
+			self._last_printed_lines = 0
 
 	@staticmethod
 	def _get_status_string(files: List[str]) -> str:
@@ -270,15 +273,11 @@ class Runner:
 	def _get_branch_status(path: str) -> str:
 		branch_cmd = subprocess.run('git rev-parse --abbrev-ref HEAD', shell=True, text=True, cwd=path, capture_output=True)
 		branch_stdout = branch_cmd.stdout.strip()
-		if branch_stdout == 'master' or branch_stdout == 'main':
-			return f'{YELLOW}{glyphs("master")}{RESET}{glyphs("space")}{branch_stdout}'
-		elif branch_stdout == 'develop':
-			return f'{GREEN}{glyphs("feature")}{RESET}{glyphs("space")}{branch_stdout}'
-		elif '/' in branch_stdout:
+		if '/' in branch_stdout:
 			branch_path = branch_stdout.split('/')
 			icon = Runner._get_branch_icon(branch_path[0])
 			branch_color = Runner._get_branch_color(branch_path[0])
-			return f'{branch_color}{icon}{RESET}{glyphs("space")}{branch_path[0]}{RESET}/{BOLD}{("/".join(branch_path[1:]))}'
+			return f'{branch_color}{icon}{RESET}{glyphs("space")}{branch_path[0]}{RESET}/{BOLD}{("/".join(branch_path[1:]))}{RESET}'
 		elif branch_stdout == 'HEAD':
 			# check if we are on tag
 			glyph = glyphs('tag')
@@ -294,7 +293,7 @@ class Runner:
 
 			return f'{color}{glyph}{RESET}{glyphs("space")}{DIM}{branch_stdout}{RESET}:{info_cmd}'
 		else:
-			return f'{CYAN}{glyphs("branch")}{RESET}{glyphs("space")}{branch_stdout}'
+			return f'{Runner._get_branch_color(branch_stdout)}{Runner._get_branch_icon(branch_stdout)}{RESET}{glyphs("space")}{branch_stdout}'
 
 	@staticmethod
 	def _print_process_header(path: str, command: str, failed: bool, code: int) -> None:
@@ -322,16 +321,12 @@ class Runner:
 		cmd = subprocess.run('git log -1 --pretty=format:%an', shell=True, text=True, cwd=path, capture_output=True)
 		git_config_user_cmd = subprocess.run(['git', 'config', 'user.name'], text=True, capture_output=True)
 		committer_color = '' if cmd.stdout.strip() == git_config_user_cmd.stdout.strip() else DIM
-		author = cmd.stdout.strip()
-		author = author[:20] + '...' if len(author) > 20 else author
-		author = f'{committer_color}{author}{RESET}'
-		return author
+		return f'{committer_color}{cmd.stdout.strip()}{RESET}'
 
 	@staticmethod
 	def _get_commit_message(path: str) -> str:
 		cmd = subprocess.run('git log -1 --pretty=format:%s', shell=True, text=True, cwd=path, capture_output=True)
-		log = cmd.stdout.strip()
-		return log
+		return cmd.stdout.strip()
 
 	@staticmethod
 	def _get_formatted_labels(labels: List[str]) -> str:
@@ -381,10 +376,12 @@ class Runner:
 	def _get_branch_icon(branch_prefix: str) -> str:
 		if branch_prefix in ['bugfix', 'bug', 'hotfix']:
 			return glyphs('bugfix')
-		elif branch_prefix == 'release':
-			return glyphs('release')
 		elif branch_prefix in ['feature', 'feat', 'develop']:
 			return glyphs('feature')
+		elif branch_prefix == 'release':
+			return glyphs('release')
+		elif branch_prefix in ['master', 'main']:
+			return glyphs('master')
 		else:
 			return glyphs('branch')
 
@@ -396,8 +393,10 @@ class Runner:
 			return BLUE
 		elif branch_name in ['feature', 'feat', 'develop']:
 			return GREEN
+		elif branch_name in ['master', 'main']:
+			return YELLOW
 		else:
-			return GREEN
+			return CYAN
 
 	@staticmethod
 	def _get_color_index(label: str) -> (str, str):
