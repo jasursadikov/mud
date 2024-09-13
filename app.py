@@ -105,7 +105,7 @@ class App:
 				self.remove(args)
 			else:
 				if len(self.repos) == 0:
-					utils.print_error('No repositories are matching this filter.')
+					utils.print_error('No repositories are matching this filter.', 1)
 					return
 				if args.command in INFO:
 					self.cmd_runner.info(self.repos)
@@ -133,8 +133,7 @@ class App:
 					else:
 						asyncio.run(self.cmd_runner.run_async(self.repos.keys(), sys.argv))
 				except Exception as exception:
-					utils.print_error('Invalid command.')
-					print(type(exception))
+					utils.print_error(f'Invalid command. {exception}', 2)
 			else:
 				self.cmd_runner.run_ordered(self.repos.keys(), sys.argv)
 
@@ -150,7 +149,7 @@ class App:
 			index += 1
 			table.add_row([f'{DIM}{directory}{RESET}', f'{GREEN}{glyphs("added")}{RESET}'])
 		if index == 0:
-			utils.print_error('No git repositories were found in this directory.')
+			utils.print_error('No git repositories were found in this directory.', 3)
 			return
 		self.config.save(utils.CONFIG_FILE_NAME)
 		utils.print_table(table)
@@ -165,7 +164,7 @@ class App:
 		elif args.label:
 			self.config.remove_path(args.label)
 		else:
-			utils.print_error(f'Invalid input. Please provide a value to remove.')
+			utils.print_error(f'Invalid input. Please provide a value to remove.', 4)
 		self.config.save(utils.CONFIG_FILE_NAME)
 
 	# Filter out repositories if user provided filters

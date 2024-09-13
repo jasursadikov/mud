@@ -45,7 +45,7 @@ class Config:
 			self.load(utils.CONFIG_FILE_NAME)
 			return
 
-		utils.print_error(f'{BOLD}.mudconfig{RESET} file was not found. Type `mud init` to create configuration file.')
+		utils.print_error(f'{BOLD}.mudconfig{RESET} file was not found. Type `mud init` to create configuration file.', 11)
 		return
 
 	def load(self, file_path: str) -> None:
@@ -59,11 +59,11 @@ class Config:
 					path = os.path.expanduser(path)
 
 				if not os.path.isdir(path):
-					utils.print_error(f'Invalid path {BOLD}{path}{RESET}.')
+					utils.print_error(f'Invalid path {BOLD}{path}{RESET}.', 12)
 					continue
 
 				if not os.path.isdir(os.path.join(path, '.git')):
-					utils.print_error(f'{BOLD}.git{RESET} directory not found at target "{path}".')
+					utils.print_error(f'{BOLD}.git{RESET} directory not found at target "{path}".', 13)
 					continue
 
 				labels = [label.strip() for label in row[1].split(',') if label.strip()]
@@ -88,7 +88,7 @@ class Config:
 			path = label
 			label = None
 		if not os.path.isdir(path):
-			utils.print_error(f'Invalid path {BOLD}{path}{RESET}. Remember that path should be relative.')
+			utils.print_error(f'Invalid path {BOLD}{path}{RESET}. Remember that path should be relative.', 14)
 			return
 		if path not in self.data:
 			self.data[path] = []

@@ -61,7 +61,7 @@ def update(explicit: bool = False) -> bool:
 			if update_process.returncode == 0:
 				print(f'{GREEN}{BOLD}Update successful!{RESET}')
 			else:
-				print_error('Update failed', update_process.returncode)
+				print_error('Update failed', 30)
 		os.chdir(target_directory)
 		return True
 
@@ -129,5 +129,5 @@ def get_table() -> PrettyTable:
 
 
 def print_error(text: str, code: int = 255) -> None:
-	print(f'{RED}Error:{RESET} {text}')
+	print(f'{BKG_RED}{BRIGHT_WHITE}{glyphs("space")}Error {code}{glyphs("space")}{RESET}{RED}{glyphs(")")}{RESET} {text}')
 	sys.exit(code)
