@@ -186,25 +186,24 @@ class Runner:
 		utils.print_table(table)
 
 	# `mud <COMMAND>` when run_async = 0 and run_table = 0
-	def run_ordered(self, repos: List[str], command: [str]) -> None:
-		command_str = ' '.join(command)
+	def run_ordered(self, repos: List[str], command: str) -> None:
 		for path in repos:
-			process = subprocess.run(command_str, shell=True, cwd=path, capture_output=True, text=True)
-			self._print_process_header(path, ' '.join(command), process.returncode != 0, process.returncode)
+			process = subprocess.run(command, cwd=path, universal_newlines=True, shell=True, capture_output=True, text=True)
+			self._print_process_header(path, command, process.returncode != 0, process.returncode)
 			if process.stdout and not process.stdout.isspace():
 				print(process.stdout)
 			if process.stderr and not process.stderr.isspace():
 				print(process.stderr)
 
 	# `mud <COMMAND>` when run_async = 1 and run_table = 0
-	async def run_async(self, repos: List[str], command: List[str]) -> None:
+	async def run_async(self, repos: List[str], command: str) -> None:
 		sem = asyncio.Semaphore(len(repos))
 
 		async def run_process(path: str) -> None:
 			async with sem:
-				process = await asyncio.create_subprocess_exec(*command, cwd=path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+				process = await asyncio.create_subprocess_shell(command, cwd=path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 				stdout, stderr = await process.communicate()
-				self._print_process_header(path, ' '.join(command), process.returncode != 0, process.returncode)
+				self._print_process_header(path, command, process.returncode != 0, process.returncode)
 				if stderr:
 					print(stderr.decode())
 				if stdout and not stdout.isspace():
@@ -213,7 +212,7 @@ class Runner:
 		await asyncio.gather(*(run_process(path) for path in repos))
 
 	# `mud <COMMAND>` when run_async = 1 and run_table = 1
-	async def run_async_table_view(self, repos: List[str], command: List[str]) -> None:
+	async def run_async_table_view(self, repos: List[str], command: str) -> None:
 		sem = asyncio.Semaphore(len(repos))
 		table = {repo: ['', ''] for repo in repos}
 
@@ -224,9 +223,9 @@ class Runner:
 		tasks = [asyncio.create_task(task(repo)) for repo in repos]
 		await asyncio.gather(*tasks)
 
-	async def _run_process(self, repo_path: str, table: Dict[str, List[str]], command: List[str]) -> None:
-		process = await asyncio.create_subprocess_exec(*command, cwd=repo_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		table[repo_path] = ['', f'{YELLOW}{glyphs("running")}{RESET}']
+	async def _run_process(self, path: str, table: Dict[str, List[str]], command: str) -> None:
+		process = await asyncio.create_subprocess_shell(command, cwd=path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		table[path] = ['', f'{YELLOW}{glyphs("running")}{RESET}']
 
 		while True:
 			line = await process.stdout.readline()
@@ -235,8 +234,8 @@ class Runner:
 				if not line:
 					break
 			line = line.decode().strip()
-			line = table[repo_path][0] if not line.strip() else line
-			table[repo_path] = [line, f'{YELLOW}{glyphs("running")}{RESET}']
+			line = table[path][0] if not line.strip() else line
+			table[path] = [line, f'{YELLOW}{glyphs("running")}{RESET}']
 			self._print_process(table)
 
 		return_code = await process.wait()
@@ -246,7 +245,7 @@ class Runner:
 		else:
 			status = f'{RED}{glyphs("failed")} Code: {return_code}{RESET}'
 
-		table[repo_path] = [table[repo_path][0], status]
+		table[path] = [table[path][0], status]
 		self._print_process(table)
 
 	def _print_process(self, info: Dict[str, List[str]]) -> None:
@@ -357,7 +356,7 @@ class Runner:
 	@staticmethod
 	def _print_process_header(path: str, command: str, failed: bool, code: int) -> None:
 		path = f'{BKG_BLACK}{Runner._get_formatted_path(path)}{RESET}'
-		command = f'{BKG_WHITE}{BLACK}{glyphs(")")}{glyphs("space")}{glyphs("terminal")}{glyphs("space")}{BOLD}{command} {RESET}{WHITE}{RESET}'
+		command = f'{BKG_WHITE}{BLACK}{glyphs(")")}{glyphs("space")}{glyphs("terminal")}{glyphs("space")}{BOLD}{command} {END_BOLD}{WHITE}{RESET}'
 		code = f'{WHITE}{BKG_RED if failed else BKG_GREEN}{glyphs(")")}{BRIGHT_WHITE}{glyphs("space")}{glyphs("failed") if failed else glyphs("finished")} {f"Code: {BOLD}{code}" if failed else ""}{glyphs("space")}{RESET}{RED if failed else GREEN}{glyphs(")")}{RESET}'
 		print(f'{path} {command}{code}')
 

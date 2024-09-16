@@ -83,7 +83,12 @@ jobs:
           echo "mud tags"
           ./mud.sh tags
       - name: Test custom command
-        run: ./mud.sh echo "Hello world"
+        run: |
+          ./mud.sh echo "Hello world"
+          ./mud.sh -a echo "Hello world"
+          ./mud.sh -a -t echo "Hello world"
+          ./mud.sh -t echo "Hello world"
+          ./mud.sh -t -c='echo "Hello" && echo "world"'
       - name: Test label filtering
         run: ./mud.sh -l=label_1 echo "Hello world"
       - name: Test branch filtering
