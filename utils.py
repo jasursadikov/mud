@@ -127,21 +127,23 @@ def table_to_str(table: PrettyTable) -> str:
 
 
 def get_table() -> PrettyTable:
+	def set_style(item: str) -> str:
+		return f'{DIM}{item}{RESET}'
 	table = PrettyTable(border=settings.config['mud'].getboolean('show_borders'), header=False, style=PLAIN_COLUMNS, align='l')
 
-	table.horizontal_char = '─'
-	table.vertical_char = '│'
-	table.junction_char = '┼'
+	table.horizontal_char = set_style('─')
+	table.vertical_char = set_style('│')
+	table.junction_char = set_style('┼')
 
-	table.top_junction_char = '┬'
-	table.bottom_junction_char = '┴'
-	table.left_junction_char = '├'
-	table.right_junction_char = '┤'
+	table.top_junction_char = set_style('┬')
+	table.bottom_junction_char = set_style('┴')
+	table.left_junction_char = set_style('├')
+	table.right_junction_char = set_style('┤')
 
-	table.top_left_junction_char = '╭'
-	table.top_right_junction_char = '╮'
-	table.bottom_left_junction_char = '╰'
-	table.bottom_right_junction_char = '╯'
+	table.top_left_junction_char = set_style('╭')
+	table.top_right_junction_char = set_style('╮')
+	table.bottom_left_junction_char = set_style('╰')
+	table.bottom_right_junction_char = set_style('╯')
 	return table
 
 
