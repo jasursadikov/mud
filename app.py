@@ -210,17 +210,22 @@ class App:
 		to_delete = []
 		for repo, labels in self.repos.items():
 			os.chdir(os.path.join(directory, repo))
-			branch = subprocess.check_output('git rev-parse --abbrev-ref HEAD', shell=True, text=True).splitlines()[0]
 			delete = False
-			if any(include_branches) and branch not in include_branches:
+
+			if any(include_labels) and not any(item in include_labels for item in labels):
 				delete = True
-			if any(exclude_branches) and branch in exclude_branches:
+			if any(exclude_labels) and any(item in exclude_labels for item in labels):
 				delete = True
 
-			if not delete and any(include_labels) and not any(item in include_labels for item in labels):
-				delete = True
-			if not delete and any(exclude_labels) and any(item in exclude_labels for item in labels):
-				delete = True
+			if not delete:
+				try:
+					branch = subprocess.check_output('git rev-parse --abbrev-ref HEAD', shell=True, text=True).splitlines()[0]
+				except subprocess.CalledProcessError:
+					branch = 'NA'
+				if any(include_branches) and branch not in include_branches:
+					delete = True
+				if any(exclude_branches) and branch in exclude_branches:
+					delete = True
 
 			if not delete and modified:
 				status_output = subprocess.check_output('git status --porcelain', shell=True, stderr=subprocess.DEVNULL)

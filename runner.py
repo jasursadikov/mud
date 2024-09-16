@@ -31,8 +31,12 @@ class Runner:
 			colored_labels = self._get_formatted_labels(labels)
 
 			# Sync with origin status
-			ahead_behind_cmd = subprocess.run('git rev-list --left-right --count HEAD...@{upstream}', shell=True, text=True, cwd=path, capture_output=True)
-			stdout = ahead_behind_cmd.stdout.strip().split()
+			try:
+				ahead_behind_cmd = subprocess.run('git rev-list --left-right --count HEAD...@{upstream}', shell=True, text=True, cwd=path, capture_output=True)
+				stdout = ahead_behind_cmd.stdout.strip().split()
+			except subprocess.CalledProcessError:
+				stdout = ['0', '0']
+
 			origin_sync = ''
 			if len(stdout) >= 2:
 				ahead, behind = stdout[0], stdout[1]
@@ -271,8 +275,11 @@ class Runner:
 
 	@staticmethod
 	def _get_branch_status(path: str) -> str:
-		branch_cmd = subprocess.run('git rev-parse --abbrev-ref HEAD', shell=True, text=True, cwd=path, capture_output=True)
-		branch_stdout = branch_cmd.stdout.strip()
+		try:
+			branch_cmd = subprocess.run('git rev-parse --abbrev-ref HEAD', shell=True, text=True, cwd=path, capture_output=True)
+			branch_stdout = branch_cmd.stdout.strip()
+		except subprocess.CalledProcessError:
+			branch_stdout = 'NA'
 		if '/' in branch_stdout:
 			branch_path = branch_stdout.split('/')
 			icon = Runner._get_branch_icon(branch_path[0])
@@ -335,7 +342,8 @@ class Runner:
 		colored_label = ''
 		for label in labels:
 			color_index = Runner._get_color_index(label) % len(TEXT)
-			colored_label += f'{TEXT[color_index + 3]}{glyphs("label")}{glyphs("space")}{label}{RESET} '
+			colored_label += f'{TEXT[(color_index + 3) % len(TEXT)]}{glyphs("label")}{glyphs("space")}{label}{RESET} '
+
 		return colored_label
 
 	@staticmethod
