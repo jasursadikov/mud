@@ -16,6 +16,7 @@ from argparse import ArgumentParser
 class App:
 	def __init__(self):
 		self.cmd_runner = None
+		self.command = None
 		self.config = None
 		self.parser = self._create_parser()
 
@@ -42,6 +43,7 @@ class App:
 		remove_parser.add_argument('label', help='Label to remove from repository (optional).', nargs='?', default='', type=str)
 		remove_parser.add_argument('path', help='Repository to remove (optional).', nargs='?', type=str)
 
+		parser.add_argument(*COMMAND_ATTR, metavar='COMMAND', nargs='?', default='', type=str, help=f'Explicit command argument. Use this when you want to run a command that has a special characters.')
 		parser.add_argument(*TABLE_ATTR, metavar='TABLE', nargs='?', default='', type=str, help=f'Switches table view, runs in table view it is disabled in {BOLD}.mudsettings{RESET}.')
 		parser.add_argument(*LABEL_PREFIX, metavar='LABEL', nargs='?', default='', type=str, help='Includes repositories with provided label.')
 		parser.add_argument(*NOT_LABEL_PREFIX, metavar='NOT_LABEL', nargs='?', default='', type=str, help=f'Excludes repositories with provided label..')
@@ -122,20 +124,25 @@ class App:
 		# Handling subcommands
 		else:
 			del sys.argv[0]
-			if len(sys.argv) == 0:
-				self.parser.print_help()
-				return
-			self._parse_aliases()
+			if self.command is None:
+				if len(sys.argv) == 0:
+					self.parser.print_help()
+					return
+				self.command = ' '.join(sys.argv)
+				self._parse_aliases()
+
+			print(self.command)
+
 			if self.run_async:
 				try:
 					if self.table:
-						asyncio.run(self.cmd_runner.run_async_table_view(self.repos.keys(), sys.argv))
+						asyncio.run(self.cmd_runner.run_async_table_view(self.repos.keys(), self.command))
 					else:
-						asyncio.run(self.cmd_runner.run_async(self.repos.keys(), sys.argv))
+						asyncio.run(self.cmd_runner.run_async(self.repos.keys(), self.command))
 				except Exception as exception:
 					utils.print_error(f'Invalid command. {exception}', 2)
 			else:
-				self.cmd_runner.run_ordered(self.repos.keys(), sys.argv)
+				self.cmd_runner.run_ordered(self.repos.keys(), self.command)
 
 	def init(self, args) -> None:
 		table = utils.get_table()
@@ -202,6 +209,8 @@ class App:
 				self.table = not self.table
 			elif arg in ASYNC_ATTR:
 				self.run_async = not self.run_async
+			elif any(arg.startswith(prefix) for prefix in COMMAND_ATTR):
+				self.command = arg.split('=', 1)[1]
 			else:
 				index += 1
 				continue

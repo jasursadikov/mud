@@ -41,6 +41,7 @@ All entries are stored in `.mudconfig` in TSV format. After making your first en
 - `-nl=<label>` or `--not-label=<label>` - excludes repositories with provided label.
 - `-b=<branch>` or `--branch=<branch>` - includes repositories with provided branch.
 - `-nb=<branch>` or `--not-branch=<branch>` - excludes repositories with provided label.
+- `-c` or `--command` - explicit command argument. Use this whenever you're trying to run a complex command.
 - `-m` or `--modified` - filters out modified repositories.
 - `-d` or `--diverged` - filters repositories with diverged branches.
 - `-t` or `--table` - toggles default table view setting for run.

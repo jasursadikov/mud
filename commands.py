@@ -19,6 +19,7 @@ COMMANDS = [ADD, REMOVE, LOG, INFO, INIT, TAGS, LABELS, STATUS, BRANCHES, HELP, 
 # Filters
 ASYNC_ATTR = '-a', '--async'
 TABLE_ATTR = '-t', '--table'
+COMMAND_ATTR = '-c', '--command'
 MODIFIED_ATTR = '-m', '--modified'
 DIVERGED_ATTR = '-d', '--diverged'
 LABEL_PREFIX = '-l=', '--label='
