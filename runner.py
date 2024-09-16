@@ -9,6 +9,7 @@ from collections import Counter
 
 from styles import *
 
+
 class Runner:
 	_label_color_cache = {}
 	_current_color_index = 0
@@ -21,9 +22,9 @@ class Runner:
 	def info(self, repos: Dict[str, List[str]]) -> None:
 		def get_directory_size(directory):
 			total_size = 0
-			for dirpath, dirnames, filenames in os.walk(directory):
-				for f in filenames:
-					fp = os.path.join(dirpath, f)
+			for directory_path, directory_names, file_names in os.walk(directory):
+				for f in file_names:
+					fp = os.path.join(directory_path, f)
 					if os.path.isfile(fp):
 						total_size += os.path.getsize(fp)
 			return total_size
@@ -67,24 +68,20 @@ class Runner:
 
 		table = utils.get_table()
 		for path, labels in repos.items():
-			output = self._get_status_porcelain(path)
-			files = output.splitlines()
-
 			formatted_path = self._get_formatted_path(path)
-			size = f'{format_size(get_directory_size(path))}'
 			origin = get_git_origin_host()
+			size = f'{format_size(get_directory_size(path))}'
+			commits = f'{BOLD}{subprocess.check_output("git rev-list --count HEAD", shell=True, text=True, cwd=path).strip()}{RESET} {DIM}commits{RESET}'
+			user_commits = f'{GREEN}{BOLD}{subprocess.check_output("git rev-list --count --author=\"$(git config user.name)\" HEAD", shell=True, text=True, cwd=path).strip()}{RESET} {DIM}by you{RESET}'
 			branch = self._get_branch_status(path)
-			status = self._get_status_string(files)
 			colored_labels = self._get_formatted_labels(labels)
-			origin_sync = self._get_origin_sync(path)
 
-			table.add_row([formatted_path, origin, size, branch, origin_sync, status, colored_labels])
+			table.add_row([formatted_path, origin, commits, user_commits, size, branch, colored_labels])
 
 		utils.print_table(table)
 
 	# `mud status` command implementation
 	def status(self, repos: Dict[str, List[str]]) -> None:
-
 		table = utils.get_table()
 		for path, labels in repos.items():
 			output = self._get_status_porcelain(path)
@@ -92,15 +89,13 @@ class Runner:
 
 			formatted_path = self._get_formatted_path(path)
 			branch = self._get_branch_status(path)
-			status = self._get_status_string(files)
 			origin_sync = self._get_origin_sync(path)
+			status = self._get_status_string(files)
 
 			colored_output = []
 
-			for file in files[:5]:
+			for file in files:
 				file_status = file[:2].strip()
-				filename = file[3:].strip()
-				parts = filename.split(os.sep)
 				if file_status == 'M':
 					color = YELLOW
 				elif file_status == 'A':
@@ -112,11 +107,8 @@ class Runner:
 				else:
 					color = CYAN
 
-				shortened_parts = [part[0] if index < len(parts) - 1 and part else f'{RESET}{color}{part}' for index, part in enumerate(parts)]
-				filename = os.sep.join(shortened_parts)
+				filename = self._get_formatted_path(file[3:].strip(), color)
 				colored_output.append(f'{color}{DIM}{filename}{RESET}')
-			if len(files) > 5:
-				colored_output.append('...')
 
 			table.add_row([formatted_path, branch, origin_sync, status, ', '.join(colored_output)])
 
@@ -282,7 +274,7 @@ class Runner:
 			output = subprocess.check_output('git status --porcelain', shell=True, text=True, cwd=path)
 			return output
 		except Exception as e:
-			return e
+			return str(e)
 
 	@staticmethod
 	def _get_status_string(files: List[str]) -> str:
@@ -321,8 +313,7 @@ class Runner:
 		if '/' in branch_stdout:
 			branch_path = branch_stdout.split('/')
 			icon = Runner._get_branch_icon(branch_path[0])
-			branch_color = Runner._get_branch_color(branch_path[0])
-			return f'{branch_color}{icon}{RESET}{glyphs("space")}{branch_path[0]}{RESET}/{BOLD}{("/".join(branch_path[1:]))}{RESET}'
+			return f'{icon}{RESET}{glyphs("space")}{branch_path[0]}{RESET}/{BOLD}{("/".join(branch_path[1:]))}{RESET}'
 		elif branch_stdout == 'HEAD':
 			# check if we are on tag
 			glyph = glyphs('tag')
@@ -338,7 +329,7 @@ class Runner:
 
 			return f'{color}{glyph}{RESET}{glyphs("space")}{DIM}{branch_stdout}{RESET}:{info_cmd}'
 		else:
-			return f'{Runner._get_branch_color(branch_stdout)}{Runner._get_branch_icon(branch_stdout)}{RESET}{glyphs("space")}{branch_stdout}'
+			return f'{Runner._get_branch_icon(branch_stdout)}{RESET}{glyphs("space")}{branch_stdout}'
 
 	@staticmethod
 	def _get_origin_sync(path: str) -> str:
@@ -371,8 +362,21 @@ class Runner:
 		print(f'{path} {command}{code}')
 
 	@staticmethod
-	def _get_formatted_path(path: str) -> str:
-		collapse_paths = utils.settings.config['mud'].getboolean('collapse_paths')
+	def _get_formatted_path(path: str, color: str = None) -> str:
+		collapse_paths = utils.settings.config['mud'].getboolean('collapse_paths', fallback=False)
+
+		if color is None:
+			color = WHITE
+
+		in_quotes = path.startswith('\"') and path.endswith('\"')
+		quote = '\"' if in_quotes else ''
+
+		if in_quotes:
+			path = path.replace('\"', '')
+
+		def apply_styles(text: str) -> str:
+			return color + quote + text + quote + RESET
+
 		if os.path.isabs(path):
 			home = os.path.expanduser('~')
 			if path.startswith(home):
@@ -380,9 +384,18 @@ class Runner:
 			if path.startswith('/'):
 				path = path[1:]
 			parts = path.split('/')
-			return DIM + WHITE + ('/'.join([p[0] for p in parts[:-1]] + [RESET + DIM + parts[-1]]) + RESET if collapse_paths else ('/'.join(parts[:-1])) + f'/{RESET}{DIM}' + parts[-1] + RESET)
+			if collapse_paths:
+				return apply_styles((DIM + '/'.join([p[0] for p in parts[:-1]] + [END_DIM + parts[-1]])))
+			else:
+				return apply_styles((DIM + '/'.join(parts[:-1]) + '/' + END_DIM + parts[-1]))
+		if '/' not in path:
+			return apply_styles(path)
 
-		return f'{DIM}{path}{RESET}'
+		parts = path.split('/')
+		if collapse_paths:
+			return apply_styles((DIM + '/'.join([p[0] for p in parts[:-1]] + [END_DIM + parts[-1]])))
+		else:
+			return apply_styles((DIM + '/'.join(parts[:-1]) + '/' + END_DIM + parts[-1]))
 
 	@staticmethod
 	def _get_authors_name(path: str) -> str:
@@ -400,72 +413,38 @@ class Runner:
 	def _get_formatted_labels(labels: List[str]) -> str:
 		if len(labels) == 0:
 			return ''
-		colored_label = ''
+		colored_labels = ''
 		for label in labels:
 			color_index = Runner._get_color_index(label) % len(TEXT)
-			colored_label += f'{TEXT[(color_index + 3) % len(TEXT)]}{glyphs("label")}{glyphs("space")}{label}{RESET} '
+			colored_labels += f'{TEXT[(color_index + 3) % len(TEXT)]}{glyphs("label")}{glyphs("space")}{label}{RESET} '
 
-		return colored_label
+		return colored_labels.rstrip()
 
 	@staticmethod
 	def _get_formatted_branches(branches: List[str], current_branch: str) -> str:
 		if len(branches) == 0:
 			return ''
 
-		collapse_paths = utils.settings.config['mud'].getboolean('collapse_paths')
 		output = ''
-
 		for branch in branches:
-			is_origin = branch.startswith('origin/')
-			branch = branch.replace('origin/', '') if is_origin else branch
-			current_prefix = f'{UNDERLINE}' if current_branch == branch else ''
-			current_prefix = current_prefix + DIM if is_origin else current_prefix
-			origin_prefix = f'{MAGENTA}{DIM}o/' if is_origin else ''
-			color = WHITE
-			icon = glyphs('branch')
-			if branch == 'master' or branch == 'main':
-				color = YELLOW
-				icon = glyphs('master')
-			elif branch == 'develop':
-				color = GREEN
-				icon = glyphs('feature')
-			elif '/' in branch:
-				parts = branch.split('/')
-				end_dim = '' if is_origin else END_DIM
-				branch = '/'.join([p[0] for p in parts[:-1]] + [end_dim + (
-					parts[-1][:10] + '..' if len(parts[-1]) > 10 else parts[-1])]) if collapse_paths else '/'.join(
-					[p for p in parts[:-1]] + [end_dim + (parts[-1][:10] + '..' if len(parts[-1]) > 10 else parts[-1])])
-				branch = f'{DIM}{branch}'
-				color = Runner._get_branch_color(parts[0])
-				icon = Runner._get_branch_icon(parts[0])
-			output += f'{current_prefix}{color}{icon}{glyphs("space")}{origin_prefix}{color}{branch}{RESET} '
+			prefix = f'{BOLD}{RED}*{RESET}' if current_branch == branch else ''
+			icon = Runner._get_branch_icon(branch.split('/')[0])
+			branch = Runner._get_formatted_path(branch, BRIGHT_WHITE)
+			output += f'{icon}{glyphs("space")}{prefix}{BRIGHT_WHITE}{branch}{RESET} '
 		return output
 
 	@staticmethod
 	def _get_branch_icon(branch_prefix: str) -> str:
 		if branch_prefix in ['bugfix', 'bug', 'hotfix']:
-			return glyphs('bugfix')
+			return RED + glyphs('bugfix') + RESET
 		elif branch_prefix in ['feature', 'feat', 'develop']:
-			return glyphs('feature')
+			return GREEN + glyphs('feature') + RESET
 		elif branch_prefix == 'release':
-			return glyphs('release')
+			return BLUE + glyphs('release') + RESET
 		elif branch_prefix in ['master', 'main']:
-			return glyphs('master')
+			return YELLOW + glyphs('master') + RESET
 		else:
-			return glyphs('branch')
-
-	@staticmethod
-	def _get_branch_color(branch_name: str) -> str:
-		if branch_name in ['bugfix', 'bug', 'hotfix']:
-			return RED
-		elif branch_name == 'release':
-			return BLUE
-		elif branch_name in ['feature', 'feat', 'develop']:
-			return GREEN
-		elif branch_name in ['master', 'main']:
-			return YELLOW
-		else:
-			return CYAN
+			return CYAN + glyphs('branch') + RESET
 
 	@staticmethod
 	def _get_color_index(label: str) -> (str, str):

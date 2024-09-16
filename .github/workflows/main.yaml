@@ -14,10 +14,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python 3.10
+      - name: Set up Python 3.12
         uses: actions/setup-python@v3
         with:
-          python-version: "3.10"
+          python-version: "3.12"
       - name: Install dependencies and set up the environment
         run: |
           python -m venv .venv
@@ -40,9 +40,8 @@ jobs:
               git commit -m "Initial commit"
               cd ..
           done
-      - name: Set up and Initialize
+      - name: Initialize
         run: |
-          echo -e "[mud]\nrun_async = False\nrun_table = True\nnerd_fonts = False" > ~/.mudsettings
           ./mud.sh init
       - name: Test remove by path
         run: |

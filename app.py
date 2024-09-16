@@ -170,8 +170,8 @@ class App:
 	# Filter out repositories if user provided filters
 	def _filter_with_arguments(self) -> None:
 		self.repos = self.config.data
-		self.table = utils.settings.config['mud'].getboolean('run_table')
-		self.run_async = utils.settings.config['mud'].getboolean('run_async')
+		self.table = utils.settings.config['mud'].getboolean('run_table', fallback=True)
+		self.run_async = utils.settings.config['mud'].getboolean('run_async', fallback=True)
 
 		for path, labels in self.config.filter_label('ignore', self.config.data).items():
 			del self.repos[path]

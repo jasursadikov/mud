@@ -9,7 +9,7 @@ from app import App
 if __name__ == '__main__':
 	try:
 		utils.settings = settings.Settings(utils.SETTINGS_FILE_NAME)
-		if utils.settings.config['mud'].getboolean('ask_updates') and utils.update():
+		if utils.settings.config['mud'].getboolean('ask_updates', fallback=True) and utils.update():
 			sys.exit()
 		app = App()
 		app.run()
