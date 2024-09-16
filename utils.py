@@ -15,7 +15,7 @@ settings: Settings
 
 
 def glyphs(key: str) -> str:
-	return GLYPHS[key][0 if settings.mud_settings['nerd_fonts'] else 1]
+	return GLYPHS[key][0 if settings.config['mud'].getboolean('nerd_fonts') else 1]
 
 
 def version() -> None:
@@ -77,6 +77,7 @@ def configure() -> None:
 		settings.config['mud']['run_table'] = str(ask('Do you want to see command execution progress in table view? This will limit output content.'))
 		settings.config['mud']['run_async'] = str(ask('Do you want to run commands simultaneously for multiple repositories?'))
 		settings.config['mud']['nerd_fonts'] = str(ask(f'Do you want to use {BOLD}nerd-fonts{RESET}?'))
+		settings.config['mud']['nerd_fonts'] = str(ask(f'Do you want to see borders in table view?'))
 		settings.config['mud']['collapse_paths'] = str(ask(f'Do you want to collapse paths, such as directory paths and branches? (ex. {BOLD}feature/name{RESET} -> {BOLD}f/name{RESET}'))
 		settings.config['mud']['ask_updates'] = str(ask(f'Do you want to get information about latest updates?'))
 	except KeyboardInterrupt:
@@ -126,7 +127,22 @@ def table_to_str(table: PrettyTable) -> str:
 
 
 def get_table() -> PrettyTable:
-	return PrettyTable(border=False, header=False, style=PLAIN_COLUMNS, align='l')
+	table = PrettyTable(border=settings.config['mud'].getboolean('show_borders'), header=False, style=PLAIN_COLUMNS, align='l')
+
+	table.horizontal_char = '─'
+	table.vertical_char = '│'
+	table.junction_char = '┼'
+
+	table.top_junction_char = '┬'
+	table.bottom_junction_char = '┴'
+	table.left_junction_char = '├'
+	table.right_junction_char = '┤'
+
+	table.top_left_junction_char = '╭'
+	table.top_right_junction_char = '╮'
+	table.bottom_left_junction_char = '╰'
+	table.bottom_right_junction_char = '╯'
+	return table
 
 
 def print_error(text: str, code: int = 255) -> None:

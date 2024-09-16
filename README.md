@@ -55,11 +55,13 @@ mud -b=master -d git pull
 
 Settings are stored in your home directory in `.mudsettings` file.
 
+- `ask_updates = 0/1` - display update message when updates are available.
+- `run_async = 0/1` - enables asynchronous commands.
+- `run_table = 0/1` - enables asynchronous commands in a table view. Requires `run_async`.
+- `nerd_fonts = 0/1` - use nerd fonts in the output 💅.
+- `show_borders = 0/1` - enables borders in table view.
+- `collapse_paths = 0/1` - simplifies branch name in the branch view.
 - `config_path = /home/user/path/.mudconfig` - this is set up by `mud --set-global` [command](#global-mudconfig).
-- `nerd_fonts = 0/1` - toggles whenever nerd font icons should be used in output.
-- `run_async = 0/1` - enabled to run commands asynchronously.
-- `run_table = 0/1` - enable to see asynchronous commands in a table view. Requires `run_async`.
-- `simplify_branches = 0/1` - simplifies branch name in the branch view.
 
 ### Aliases
 You can create your own aliases for commands. To create your own aliases, edit .mudsettings file, `[alias]` section. .mudsettings has the following aliases by default:
