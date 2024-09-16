@@ -90,7 +90,7 @@ class App:
 			return
 
 		self.config.find()
-		self._parse_arguments()
+		self._filter_with_arguments()
 
 		self.cmd_runner = Runner(self.config)
 		# Handling commands
@@ -168,7 +168,7 @@ class App:
 		self.config.save(utils.CONFIG_FILE_NAME)
 
 	# Filter out repositories if user provided filters
-	def _parse_arguments(self) -> None:
+	def _filter_with_arguments(self) -> None:
 		self.repos = self.config.data
 		self.table = utils.settings.config['mud'].getboolean('run_table')
 		self.run_async = utils.settings.config['mud'].getboolean('run_async')

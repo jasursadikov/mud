@@ -9,7 +9,6 @@ from collections import Counter
 
 from styles import *
 
-
 class Runner:
 	_label_color_cache = {}
 	_current_color_index = 0
@@ -20,50 +19,81 @@ class Runner:
 
 	# `mud info` command implementation
 	def info(self, repos: Dict[str, List[str]]) -> None:
+		def get_directory_size(directory):
+			total_size = 0
+			for dirpath, dirnames, filenames in os.walk(directory):
+				for f in filenames:
+					fp = os.path.join(dirpath, f)
+					if os.path.isfile(fp):
+						total_size += os.path.getsize(fp)
+			return total_size
+
+		def format_size(size_in_bytes):
+			if size_in_bytes >= 1024 ** 3:
+				return f'{RED}{glyphs("weight")}{glyphs("space")}{RESET}{BOLD}{size_in_bytes / (1024 ** 3):.2f}{RESET} GB'
+			elif size_in_bytes >= 1024 ** 2:
+				return f'{YELLOW}{glyphs("weight")}{glyphs("space")}{RESET}{BOLD}{size_in_bytes / (1024 ** 2):.2f}{RESET} MB'
+			elif size_in_bytes >= 1024:
+				return f'{GREEN}{glyphs("weight")}{glyphs("space")}{RESET}{BOLD}{size_in_bytes / 1024:.2f}{RESET} KB'
+			else:
+				return f'{BLUE}{glyphs("weight")}{glyphs("space")}{RESET}{BOLD}{size_in_bytes}{RESET} Bytes'
+
+		def get_git_origin_host():
+			try:
+				result = subprocess.check_output('git remote get-url origin', shell=True, text=True, cwd=path)
+				remote_url = result.strip()
+
+				if '://' in remote_url:
+					host = remote_url.split('/')[2]
+				else:
+					host = remote_url.split(':')[0].split('@')[1]
+
+				icon = YELLOW + glyphs('git')
+
+				if 'azure' in remote_url or 'visualstudio' in remote_url:
+					icon = BLUE + glyphs('azure')
+				elif 'github' in remote_url:
+					icon = GRAY + glyphs('github')
+				elif 'gitlab' in remote_url:
+					icon = YELLOW + glyphs('gitlab')
+				elif 'bitbucket' in remote_url:
+					icon = CYAN + glyphs('bitbucket')
+
+				icon += RESET + glyphs('space')
+
+				return f'{icon}{host}'
+			except Exception as e:
+				return 'Unknown origin'
+
 		table = utils.get_table()
 		for path, labels in repos.items():
-			output = subprocess.check_output('git status --porcelain', shell=True, text=True, cwd=path)
+			output = self._get_status_porcelain(path)
 			files = output.splitlines()
 
 			formatted_path = self._get_formatted_path(path)
+			size = f'{format_size(get_directory_size(path))}'
+			origin = get_git_origin_host()
 			branch = self._get_branch_status(path)
 			status = self._get_status_string(files)
 			colored_labels = self._get_formatted_labels(labels)
+			origin_sync = self._get_origin_sync(path)
 
-			# Sync with origin status
-			try:
-				ahead_behind_cmd = subprocess.run('git rev-list --left-right --count HEAD...@{upstream}', shell=True, text=True, cwd=path, capture_output=True)
-				stdout = ahead_behind_cmd.stdout.strip().split()
-			except subprocess.CalledProcessError:
-				stdout = ['0', '0']
-
-			origin_sync = ''
-			if len(stdout) >= 2:
-				ahead, behind = stdout[0], stdout[1]
-				if ahead and ahead != '0':
-					origin_sync += f'{BRIGHT_GREEN}{glyphs("ahead")} {ahead}{RESET}'
-				if behind and behind != '0':
-					if origin_sync:
-						origin_sync += ' '
-					origin_sync += f'{BRIGHT_BLUE}{glyphs("behind")} {behind}{RESET}'
-
-			if not origin_sync.strip():
-				origin_sync = f'{BLUE}{glyphs("synced")}{RESET}'
-
-			table.add_row([formatted_path, branch, origin_sync, status, colored_labels])
+			table.add_row([formatted_path, origin, size, branch, origin_sync, status, colored_labels])
 
 		utils.print_table(table)
 
 	# `mud status` command implementation
 	def status(self, repos: Dict[str, List[str]]) -> None:
+
 		table = utils.get_table()
 		for path, labels in repos.items():
-			output = subprocess.check_output('git status --porcelain', shell=True, text=True, cwd=path)
+			output = self._get_status_porcelain(path)
 			files = output.splitlines()
 
 			formatted_path = self._get_formatted_path(path)
 			branch = self._get_branch_status(path)
 			status = self._get_status_string(files)
+			origin_sync = self._get_origin_sync(path)
 
 			colored_output = []
 
@@ -88,7 +118,7 @@ class Runner:
 			if len(files) > 5:
 				colored_output.append('...')
 
-			table.add_row([formatted_path, branch, status, ', '.join(colored_output)])
+			table.add_row([formatted_path, branch, origin_sync, status, ', '.join(colored_output)])
 
 		utils.print_table(table)
 
@@ -247,6 +277,14 @@ class Runner:
 			self._last_printed_lines = 0
 
 	@staticmethod
+	def _get_status_porcelain(path: str) -> str:
+		try:
+			output = subprocess.check_output('git status --porcelain', shell=True, text=True, cwd=path)
+			return output
+		except Exception as e:
+			return e
+
+	@staticmethod
 	def _get_status_string(files: List[str]) -> str:
 		modified, added, removed, moved = 0, 0, 0, 0
 
@@ -301,6 +339,29 @@ class Runner:
 			return f'{color}{glyph}{RESET}{glyphs("space")}{DIM}{branch_stdout}{RESET}:{info_cmd}'
 		else:
 			return f'{Runner._get_branch_color(branch_stdout)}{Runner._get_branch_icon(branch_stdout)}{RESET}{glyphs("space")}{branch_stdout}'
+
+	@staticmethod
+	def _get_origin_sync(path: str) -> str:
+		try:
+			ahead_behind_cmd = subprocess.run('git rev-list --left-right --count HEAD...@{upstream}', shell=True, text=True, cwd=path, capture_output=True)
+			stdout = ahead_behind_cmd.stdout.strip().split()
+		except subprocess.CalledProcessError:
+			stdout = ['0', '0']
+
+		origin_sync = ''
+		if len(stdout) >= 2:
+			ahead, behind = stdout[0], stdout[1]
+			if ahead and ahead != '0':
+				origin_sync += f'{BRIGHT_GREEN}{glyphs("ahead")} {ahead}{RESET}'
+			if behind and behind != '0':
+				if origin_sync:
+					origin_sync += ' '
+				origin_sync += f'{BRIGHT_BLUE}{glyphs("behind")} {behind}{RESET}'
+
+		if not origin_sync.strip():
+			origin_sync = f'{BLUE}{glyphs("synced")}{RESET}'
+
+		return origin_sync
 
 	@staticmethod
 	def _print_process_header(path: str, command: str, failed: bool, code: int) -> None:
