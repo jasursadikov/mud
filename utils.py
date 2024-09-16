@@ -15,7 +15,7 @@ settings: Settings
 
 
 def glyphs(key: str) -> str:
-	return GLYPHS[key][0 if settings.config['mud'].getboolean('nerd_fonts') else 1]
+	return GLYPHS[key][0 if settings.config['mud'].getboolean('nerd_fonts', fallback=False) else 1]
 
 
 def version() -> None:
@@ -129,7 +129,7 @@ def table_to_str(table: PrettyTable) -> str:
 def get_table() -> PrettyTable:
 	def set_style(item: str) -> str:
 		return f'{DIM}{item}{RESET}'
-	table = PrettyTable(border=settings.config['mud'].getboolean('show_borders'), header=False, style=PLAIN_COLUMNS, align='l')
+	table = PrettyTable(border=settings.config['mud'].getboolean('show_borders', fallback=False), header=False, style=PLAIN_COLUMNS, align='l')
 
 	table.horizontal_char = set_style('─')
 	table.vertical_char = set_style('│')

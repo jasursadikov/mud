@@ -363,7 +363,7 @@ class Runner:
 
 	@staticmethod
 	def _get_formatted_path(path: str, color: str = None) -> str:
-		collapse_paths = utils.settings.config['mud'].getboolean('collapse_paths')
+		collapse_paths = utils.settings.config['mud'].getboolean('collapse_paths', fallback=False)
 
 		if color is None:
 			color = WHITE

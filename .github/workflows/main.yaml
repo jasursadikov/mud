@@ -40,9 +40,8 @@ jobs:
               git commit -m "Initial commit"
               cd ..
           done
-      - name: Set up and Initialize
+      - name: Initialize
         run: |
-          echo -e "[mud]\nrun_async = False\nrun_table = True\nnerd_fonts = False" > ~/.mudsettings
           ./mud.sh init
       - name: Test remove by path
         run: |
