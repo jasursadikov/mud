@@ -223,9 +223,9 @@ class Runner:
 		tasks = [asyncio.create_task(task(repo)) for repo in repos]
 		await asyncio.gather(*tasks)
 
-	async def _run_process(self, repo_path: str, table: Dict[str, List[str]], command: str) -> None:
-		process = await asyncio.create_subprocess_exec(*command, cwd=repo_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		table[repo_path] = ['', f'{YELLOW}{glyphs("running")}{RESET}']
+	async def _run_process(self, path: str, table: Dict[str, List[str]], command: str) -> None:
+		process = await asyncio.create_subprocess_shell(command, cwd=path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		table[path] = ['', f'{YELLOW}{glyphs("running")}{RESET}']
 
 		while True:
 			line = await process.stdout.readline()
@@ -234,8 +234,8 @@ class Runner:
 				if not line:
 					break
 			line = line.decode().strip()
-			line = table[repo_path][0] if not line.strip() else line
-			table[repo_path] = [line, f'{YELLOW}{glyphs("running")}{RESET}']
+			line = table[path][0] if not line.strip() else line
+			table[path] = [line, f'{YELLOW}{glyphs("running")}{RESET}']
 			self._print_process(table)
 
 		return_code = await process.wait()
@@ -245,7 +245,7 @@ class Runner:
 		else:
 			status = f'{RED}{glyphs("failed")} Code: {return_code}{RESET}'
 
-		table[repo_path] = [table[repo_path][0], status]
+		table[path] = [table[path][0], status]
 		self._print_process(table)
 
 	def _print_process(self, info: Dict[str, List[str]]) -> None:

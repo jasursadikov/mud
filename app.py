@@ -130,19 +130,16 @@ class App:
 					return
 				self.command = ' '.join(sys.argv)
 				self._parse_aliases()
-
-			print(self.command)
-
-			if self.run_async:
-				try:
+			try:
+				if self.run_async:
 					if self.table:
 						asyncio.run(self.cmd_runner.run_async_table_view(self.repos.keys(), self.command))
 					else:
 						asyncio.run(self.cmd_runner.run_async(self.repos.keys(), self.command))
-				except Exception as exception:
-					utils.print_error(f'Invalid command. {exception}', 2)
-			else:
-				self.cmd_runner.run_ordered(self.repos.keys(), self.command)
+				else:
+					self.cmd_runner.run_ordered(self.repos.keys(), self.command)
+			except Exception as exception:
+				utils.print_error(f'Invalid command. {exception}', 2)
 
 	def init(self, args) -> None:
 		table = utils.get_table()
