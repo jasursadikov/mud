@@ -30,13 +30,13 @@ class Runner:
 
 		def format_size(size_in_bytes):
 			if size_in_bytes >= 1024 ** 3:
-				return f"{RED}{glyphs("weight")}{glyphs("space")}{RESET}{BOLD}{size_in_bytes / (1024 ** 3):.2f}{RESET} GB"
+				return f'{RED}{glyphs("weight")}{glyphs("space")}{RESET}{BOLD}{size_in_bytes / (1024 ** 3):.2f}{RESET} GB'
 			elif size_in_bytes >= 1024 ** 2:
-				return f"{YELLOW}{glyphs("weight")}{glyphs("space")}{RESET}{BOLD}{size_in_bytes / (1024 ** 2):.2f}{RESET}  MB"
+				return f'{YELLOW}{glyphs("weight")}{glyphs("space")}{RESET}{BOLD}{size_in_bytes / (1024 ** 2):.2f}{RESET} MB'
 			elif size_in_bytes >= 1024:
-				return f"{GREEN}{glyphs("weight")}{glyphs("space")}{RESET}{BOLD}{size_in_bytes / 1024:.2f}{RESET} KB"
+				return f'{GREEN}{glyphs("weight")}{glyphs("space")}{RESET}{BOLD}{size_in_bytes / 1024:.2f}{RESET} KB'
 			else:
-				return f"{BLUE}{glyphs("weight")}{glyphs("space")}{RESET}{BOLD}{size_in_bytes}{RESET} Bytes"
+				return f'{BLUE}{glyphs("weight")}{glyphs("space")}{RESET}{BOLD}{size_in_bytes}{RESET} Bytes'
 
 		def get_git_origin_host():
 			try:
