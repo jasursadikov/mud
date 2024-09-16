@@ -9,7 +9,6 @@ from collections import Counter
 
 from styles import *
 
-
 class Runner:
 	_label_color_cache = {}
 	_current_color_index = 0
@@ -277,29 +276,6 @@ class Runner:
 				print('\033[A\033[K', end='')
 			self._last_printed_lines = 0
 
-	# Sync with origin status
-	def _get_origin_sync(self, path: str) -> str:
-		try:
-			ahead_behind_cmd = subprocess.run('git rev-list --left-right --count HEAD...@{upstream}', shell=True, text=True, cwd=path, capture_output=True)
-			stdout = ahead_behind_cmd.stdout.strip().split()
-		except subprocess.CalledProcessError:
-			stdout = ['0', '0']
-
-		origin_sync = ''
-		if len(stdout) >= 2:
-			ahead, behind = stdout[0], stdout[1]
-			if ahead and ahead != '0':
-				origin_sync += f'{BRIGHT_GREEN}{glyphs("ahead")} {ahead}{RESET}'
-			if behind and behind != '0':
-				if origin_sync:
-					origin_sync += ' '
-				origin_sync += f'{BRIGHT_BLUE}{glyphs("behind")} {behind}{RESET}'
-
-		if not origin_sync.strip():
-			origin_sync = f'{BLUE}{glyphs("synced")}{RESET}'
-
-		return origin_sync
-
 	@staticmethod
 	def _get_status_porcelain(path: str) -> str:
 		try:
@@ -363,6 +339,29 @@ class Runner:
 			return f'{color}{glyph}{RESET}{glyphs("space")}{DIM}{branch_stdout}{RESET}:{info_cmd}'
 		else:
 			return f'{Runner._get_branch_color(branch_stdout)}{Runner._get_branch_icon(branch_stdout)}{RESET}{glyphs("space")}{branch_stdout}'
+
+	@staticmethod
+	def _get_origin_sync(path: str) -> str:
+		try:
+			ahead_behind_cmd = subprocess.run('git rev-list --left-right --count HEAD...@{upstream}', shell=True, text=True, cwd=path, capture_output=True)
+			stdout = ahead_behind_cmd.stdout.strip().split()
+		except subprocess.CalledProcessError:
+			stdout = ['0', '0']
+
+		origin_sync = ''
+		if len(stdout) >= 2:
+			ahead, behind = stdout[0], stdout[1]
+			if ahead and ahead != '0':
+				origin_sync += f'{BRIGHT_GREEN}{glyphs("ahead")} {ahead}{RESET}'
+			if behind and behind != '0':
+				if origin_sync:
+					origin_sync += ' '
+				origin_sync += f'{BRIGHT_BLUE}{glyphs("behind")} {behind}{RESET}'
+
+		if not origin_sync.strip():
+			origin_sync = f'{BLUE}{glyphs("synced")}{RESET}'
+
+		return origin_sync
 
 	@staticmethod
 	def _print_process_header(path: str, command: str, failed: bool, code: int) -> None:
