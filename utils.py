@@ -5,8 +5,8 @@ import sys
 
 from prettytable import PrettyTable, PLAIN_COLUMNS
 
-from styles import *
 from settings import *
+from styles import *
 
 SETTINGS_FILE_NAME = '.mudsettings'
 CONFIG_FILE_NAME = '.mudconfig'
@@ -19,30 +19,30 @@ def glyphs(key: str) -> str:
 
 
 def version() -> None:
-	draw_logo()
 	os.chdir(os.path.dirname(os.path.abspath(__file__)))
 	hash = subprocess.check_output('git rev-parse HEAD', shell=True, text=True).splitlines()[0]
-	print(f'Jasur Sadikov')
-	print(f'https://github.com/jasursadikov/mud')
-	print(f'{BOLD}{random.choice(TEXT[3:])}{hash}{RESET}')
+	logo = get_logo()
+	info = f'Jasur Sadikov\nhttps://github.com/jasursadikov/mud\n{BOLD}{random.choice(TEXT[3:])}{hash}{RESET}\n'
+	print(logo)
+	print(info)
 
 
-def draw_logo() -> None:
+def get_logo() -> str:
 	colors = TEXT[3:]
 	colors.remove(BRIGHT_WHITE)
 	m = random.choice(colors)
 	u = random.choice(colors)
 	d = random.choice(colors)
-	print(fr'''{m} __    __{u}  __  __{d}  _____''')
-	print(fr'''{m}/\ '-./  \{u}/\ \/\ \{d}/\  __-.{RESET}''')
-	print(fr'''{m}\ \ \-./\ \{u} \ \_\ \{d} \ \/\ \{RESET}''')
-	print(fr'''{m} \ \_\ \ \_\{u} \_____\{d} \____-{RESET}''')
-	print(fr'''{m}  \/_/  \/_/{u}\/_____/{d}\/____/{RESET}''')
+	logo = f'                 {d}__{RESET}\n'
+	logo += f'  {m}__ _  {u}__ __{d}___/ /{RESET}\n'
+	logo += f' {m}/  \' \\{u}/ // / {d}_  /{RESET}\n'
+	logo += f'{m}/_/_/_/{u}\\_,_/{d}\\_,_/  {RESET}'
+	return logo
 
 
 def update(explicit: bool = False) -> bool:
 	if explicit:
-		draw_logo()
+		print(get_logo())
 
 	target_directory = os.getcwd()
 	os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -92,7 +92,8 @@ def ask(text: str) -> bool:
 		from msvcrt import getch
 		response = getch().decode().lower()
 	else:
-		import tty, termios
+		import tty
+		import termios
 		fd = sys.stdin.fileno()
 		old_settings = termios.tcgetattr(fd)
 		try:

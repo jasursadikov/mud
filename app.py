@@ -212,12 +212,26 @@ class App:
 			os.chdir(os.path.join(directory, repo))
 			branch = subprocess.check_output('git rev-parse --abbrev-ref HEAD', shell=True, text=True).splitlines()[0]
 			delete = False
-			delete |= any(include_branches) and branch not in include_branches
-			delete |= any(exclude_branches) and branch in exclude_branches
-			delete |= any(include_labels) and not any(item in include_labels for item in labels)
-			delete |= any(exclude_labels) and any(item in exclude_labels for item in labels)
-			delete |= modified and (not subprocess.check_output('git status --porcelain', shell=True, stderr=subprocess.DEVNULL))
-			delete |= diverged and (not any('ahead' in line or 'behind' in line for line in subprocess.check_output('git status --branch --porcelain', shell=True, text=True).splitlines() if line.startswith('##')))
+			if any(include_branches) and branch not in include_branches:
+				delete = True
+			if any(exclude_branches) and branch in exclude_branches:
+				delete = True
+
+			if not delete and any(include_labels) and not any(item in include_labels for item in labels):
+				delete = True
+			if not delete and any(exclude_labels) and any(item in exclude_labels for item in labels):
+				delete = True
+
+			if not delete and modified:
+				status_output = subprocess.check_output('git status --porcelain', shell=True, stderr=subprocess.DEVNULL)
+				if not status_output:
+					delete = True
+
+			if not delete and diverged:
+				branch_status = subprocess.check_output('git status --branch --porcelain', shell=True, text=True).splitlines()
+				if not any('ahead' in line or 'behind' in line for line in branch_status if line.startswith('##')):
+					delete = True
+
 			if delete:
 				to_delete.append(repo)
 
