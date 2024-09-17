@@ -251,11 +251,11 @@ class App:
 
 		os.chdir(directory)
 
-	@staticmethod
-	def _parse_aliases() -> None:
+	def _parse_aliases(self) -> None:
 		if utils.settings.alias_settings is None:
 			return
 		for alias, command in dict(utils.settings.alias_settings).items():
-			if sys.argv[0] == alias:
-				del sys.argv[0]
-				sys.argv = command.split(' ') + sys.argv
+			args = self.command.split(' ')
+			if args[0] == alias:
+				del args[0]
+				self.command = ' '.join(command.split(' ') + args)
