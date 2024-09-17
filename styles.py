@@ -88,9 +88,3 @@ GLYPHS = {
 	'azure':		['\uebe8',	''],
 	'bitbucket':	['\ue703',	'']
 }
-
-
-def sterilize(string: str) -> str:
-	for char in ALL:
-		string = string.replace(char, '')
-	return string

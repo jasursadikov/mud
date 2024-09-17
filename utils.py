@@ -1,7 +1,8 @@
-import random
-import shutil
-import subprocess
+import re
 import sys
+import shutil
+import random
+import subprocess
 
 from prettytable import PrettyTable, PLAIN_COLUMNS
 
@@ -109,15 +110,29 @@ def ask(text: str) -> bool:
 
 def print_table(table: PrettyTable) -> None:
 	width, _ = shutil.get_terminal_size()
+
+	def get_real_length(string):
+		ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
+		i = 0
+		displayed_count = 0
+
+		while displayed_count < width and i < len(string):
+			match = ansi_escape.match(string, i)
+			if match:
+				i = match.end()
+			else:
+				displayed_count += 1
+				i += 1
+		return i
+
 	rows = table_to_str(table).split('\n')
 	for row in rows:
-		if len(row) != 0:
-			if len(sterilize(row)) > width:
-				styles_count = len(row) - len(sterilize(row))
-				count = width + styles_count - 1
-				print(row[:count] + RESET)
+		stripped = row.strip()
+		if len(stripped) != 0:
+			if len(stripped) > width:
+				print(stripped[:get_real_length(stripped)] + RESET)
 			else:
-				print(row)
+				print(stripped)
 
 
 def table_to_str(table: PrettyTable) -> str:
@@ -128,22 +143,24 @@ def table_to_str(table: PrettyTable) -> str:
 
 def get_table() -> PrettyTable:
 	def set_style(item: str) -> str:
-		return f'{DIM}{item}{RESET}'
-	table = PrettyTable(border=settings.config['mud'].getboolean('show_borders', fallback=False), header=False, style=PLAIN_COLUMNS, align='l')
+		return f'{DIM}{GRAY}{item}{RESET}'
 
-	table.horizontal_char = set_style('─')
-	table.vertical_char = set_style('│')
-	table.junction_char = set_style('┼')
+	borders = settings.config['mud'].getboolean('show_borders', fallback=False)
+	table = PrettyTable(border=borders, header=False, style=PLAIN_COLUMNS, align='l')
+	if borders:
+		table.horizontal_char = set_style('─')
+		table.vertical_char = set_style('│')
+		table.junction_char = set_style('┼')
 
-	table.top_junction_char = set_style('┬')
-	table.bottom_junction_char = set_style('┴')
-	table.left_junction_char = set_style('├')
-	table.right_junction_char = set_style('┤')
+		table.top_junction_char = set_style('┬')
+		table.bottom_junction_char = set_style('┴')
+		table.left_junction_char = set_style('├')
+		table.right_junction_char = set_style('┤')
 
-	table.top_left_junction_char = set_style('╭')
-	table.top_right_junction_char = set_style('╮')
-	table.bottom_left_junction_char = set_style('╰')
-	table.bottom_right_junction_char = set_style('╯')
+		table.top_left_junction_char = set_style('╭')
+		table.top_right_junction_char = set_style('╮')
+		table.bottom_left_junction_char = set_style('╰')
+		table.bottom_right_junction_char = set_style('╯')
 	return table
 
 
