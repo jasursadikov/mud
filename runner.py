@@ -114,8 +114,7 @@ class Runner:
 				else:
 					color = CYAN
 
-				filename = self._get_formatted_path(file[3:].strip(), color)
-				colored_output.append(f'{color}{DIM}{filename}{RESET}')
+				colored_output.append(self._get_formatted_path(file[3:].strip(), color))
 
 			table.add_row([formatted_path, branch, origin_sync, status, ', '.join(colored_output)])
 
