@@ -228,7 +228,6 @@ class Runner:
 	async def run_async_table_view(self, repos: List[str], command: str) -> None:
 		sem = asyncio.Semaphore(len(repos))
 		table = {repo: ['', ''] for repo in repos}
-		table.field_names = ['Path', 'Status', 'Output']
 
 		async def task(repo: str) -> None:
 			async with sem:
