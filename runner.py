@@ -31,13 +31,13 @@ class Runner:
 
 		def format_size(size_in_bytes):
 			if size_in_bytes >= 1024 ** 3:
-				return f'{RED}{glyphs("weight")}{glyphs("space")}{RESET}{BOLD}{size_in_bytes / (1024 ** 3):.2f}{RESET} GB'
+				return f'{BOLD}{size_in_bytes / (1024 ** 3):.2f}{RESET} GB{glyphs("space")}{RED}{glyphs("weight")}{RESET}'
 			elif size_in_bytes >= 1024 ** 2:
-				return f'{YELLOW}{glyphs("weight")}{glyphs("space")}{RESET}{BOLD}{size_in_bytes / (1024 ** 2):.2f}{RESET} MB'
+				return f'{BOLD}{size_in_bytes / (1024 ** 2):.2f}{RESET} MB{glyphs("space")}{YELLOW}{glyphs("weight")}{RESET}'
 			elif size_in_bytes >= 1024:
-				return f'{GREEN}{glyphs("weight")}{glyphs("space")}{RESET}{BOLD}{size_in_bytes / 1024:.2f}{RESET} KB'
+				return f'{BOLD}{size_in_bytes / 1024:.2f}{RESET} KB{glyphs("space")}{GREEN}{glyphs("weight")}{RESET}'
 			else:
-				return f'{BLUE}{glyphs("weight")}{glyphs("space")}{RESET}{BOLD}{size_in_bytes}{RESET} Bytes'
+				return f'{BOLD}{size_in_bytes}{RESET} Bytes{glyphs("space")}{BLUE}{glyphs("weight")}{RESET}'
 
 		def get_git_origin_host():
 			try:
@@ -67,6 +67,11 @@ class Runner:
 				return 'Unknown origin'
 
 		table = utils.get_table()
+		table.field_names = ['Path', 'Origin', 'Commits', 'User Commits', 'Size', 'Branch', 'Labels']
+		table.align['Commits'] = 'r'
+		table.align['User Commits'] = 'r'
+		table.align['Size'] = 'r'
+
 		for path, labels in repos.items():
 			formatted_path = self._get_formatted_path(path)
 			origin = get_git_origin_host()
@@ -83,6 +88,8 @@ class Runner:
 	# `mud status` command implementation
 	def status(self, repos: Dict[str, List[str]]) -> None:
 		table = utils.get_table()
+		table.field_names = ['Path', 'Branch', 'Origin Sync', 'Status', 'Edits']
+
 		for path, labels in repos.items():
 			output = self._get_status_porcelain(path)
 			files = output.splitlines()
@@ -117,6 +124,8 @@ class Runner:
 	# `mud labels` command implementation
 	def labels(self, repos: Dict[str, List[str]]) -> None:
 		table = utils.get_table()
+		table.field_names = ['Path', 'Labels']
+
 		for path, labels in repos.items():
 			formatted_path = self._get_formatted_path(path)
 			colored_labels = self._get_formatted_labels(labels)
@@ -127,6 +136,8 @@ class Runner:
 	# `mud log` command implementation
 	def log(self, repos: Dict[str, List[str]]) -> None:
 		table = utils.get_table()
+		table.field_names = ['Path', 'Branch', 'Author', 'Time', 'Message']
+
 		for path in repos.keys():
 			formatted_path = self._get_formatted_path(path)
 			branch = self._get_branch_status(path)
@@ -144,6 +155,7 @@ class Runner:
 	# `mud branch` command implementation
 	def branches(self, repos: Dict[str, List[str]]) -> None:
 		table = utils.get_table()
+		table.field_names = ['Path', 'Branches']
 		all_branches = {}
 
 		# Preparing branches for sorting to display them in the right order.
@@ -175,6 +187,7 @@ class Runner:
 	# `mud tags` command implementation
 	def tags(self, repos: Dict[str, List[str]]) -> None:
 		table = utils.get_table()
+		table.field_names = ['Path', 'Tags']
 
 		for path, labels in repos.items():
 			formatted_path = self._get_formatted_path(path)
@@ -215,6 +228,7 @@ class Runner:
 	async def run_async_table_view(self, repos: List[str], command: str) -> None:
 		sem = asyncio.Semaphore(len(repos))
 		table = {repo: ['', ''] for repo in repos}
+		table.field_names = ['Path', 'Status', 'Output']
 
 		async def task(repo: str) -> None:
 			async with sem:
