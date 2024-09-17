@@ -169,7 +169,7 @@ class Runner:
 
 		for path, labels in repos.items():
 			formatted_path = self._get_formatted_path(path)
-			branches = subprocess.check_output('git branch', shell=True, text=True, cwd=path).splitlines()
+			branches = subprocess.check_output('git branch --color=never', shell=True, text=True, cwd=path).splitlines()
 			current_branch = next((branch.lstrip('* ') for branch in branches if branch.startswith('*')), None)
 			branches = [branch.lstrip('* ') for branch in branches]
 			sorted_branches = sorted(branches, key=lambda x: branch_counter.get(x, 0), reverse=True)
