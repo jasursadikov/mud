@@ -63,7 +63,7 @@ class Runner:
 				icon += RESET + glyphs('space')
 
 				return f'{icon}{host}'
-			except Exception as e:
+			except Exception:
 				return 'Unknown origin'
 
 		table = utils.get_table()
