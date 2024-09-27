@@ -42,38 +42,6 @@ def get_logo() -> str:
 	return logo
 
 
-def update(explicit: bool = False) -> bool:
-	if explicit:
-		print(get_logo())
-
-	target_directory = os.getcwd()
-	os.chdir(os.path.dirname(os.path.abspath(__file__)))
-
-	subprocess.run('git fetch', shell=True, check=True)
-	result = subprocess.run('git status -uno', shell=True, capture_output=True, text=True)
-
-	if 'Your branch is behind' in result.stdout:
-		print(f'{BOLD}New update(s) is available!{RESET}\n')
-
-		log = subprocess.run('git log HEAD..@{u} --oneline --color=always', shell=True, text=True, stdout=subprocess.PIPE).stdout
-		print(log)
-
-		if ask('Do you want to update?'):
-			update_process = subprocess.run('git pull --force', shell=True, text=False, stdout=subprocess.DEVNULL)
-			if update_process.returncode == 0:
-				print(f'{GREEN}{BOLD}Update successful!{RESET}')
-			else:
-				print_error('Update failed', 30)
-		os.chdir(target_directory)
-		return True
-
-	if explicit:
-		print('No updates available')
-
-	os.chdir(target_directory)
-	return False
-
-
 def configure() -> None:
 	try:
 		settings.config['mud']['run_table'] = str(ask('Do you want to see command execution progress in table view? This will limit output content.'))

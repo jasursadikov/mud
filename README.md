@@ -8,8 +8,11 @@ mud is a multi-directory git runner which allows you to run git commands in a mu
 
 ## Installing
 
-1. Download [install.sh](install.sh) script.
-2. Run `install.sh` to install.
+Using pip
+```pip install mud-git```
+
+Using AUR
+```paru -S mud```
 
 ## Getting started
 
@@ -57,7 +60,6 @@ mud -b=master -d git pull
 
 Settings are stored in your home directory in `.mudsettings` file.
 
-- `ask_updates = 0/1` - display update message when updates are available.
 - `run_async = 0/1` - enables asynchronous commands.
 - `run_table = 0/1` - enables asynchronous commands in a table view. Requires `run_async`.
 - `nerd_fonts = 0/1` - use nerd fonts in the output 💅.
