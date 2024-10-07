@@ -58,15 +58,7 @@ class Config:
 				if path.startswith('~'):
 					path = os.path.expanduser(path)
 
-				if not os.path.isdir(path):
-					utils.print_error(f'Invalid path {BOLD}{path}{RESET}.', 12)
-					continue
-
-				if not os.path.isdir(os.path.join(path, '.git')):
-					utils.print_error(f'{BOLD}.git{RESET} directory not found at target "{path}".', 13)
-					continue
-
-				labels = [label.strip() for label in row[1].split(',') if label.strip()]
+				labels = [label.strip() for label in row[1].split(',') if len(row) > 1 and label.strip()] if len(row) > 1 else []
 				self.data[path] = labels
 
 	def paths(self) -> List[str]:

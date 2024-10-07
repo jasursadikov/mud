@@ -164,6 +164,7 @@ def get_table() -> PrettyTable:
 	return table
 
 
-def print_error(text: str, code: int = 255) -> None:
+def print_error(text: str, code: int = 255, exit: bool = False) -> None:
 	print(f'{BKG_RED}{BRIGHT_WHITE}{glyphs("space")}Error {code}{glyphs("space")}{RESET}{RED}{glyphs(")")}{RESET} {text}')
-	sys.exit(code)
+	if exit:
+		sys.exit(code)

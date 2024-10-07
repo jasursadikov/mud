@@ -214,8 +214,20 @@ class App:
 			del sys.argv[index]
 		directory = os.getcwd()
 		to_delete = []
+
 		for repo, labels in self.repos.items():
-			os.chdir(os.path.join(directory, repo))
+			abs_path = os.path.join(directory, repo)
+
+			if not os.path.isdir(abs_path):
+				utils.print_error(f'Invalid path {BOLD}{repo}{RESET}.', 12, False)
+				to_delete.append(repo)
+				continue
+			elif not os.path.isdir(os.path.join(abs_path, '.git')):
+				utils.print_error(f'{BOLD}.git{RESET} directory not found at target "{repo}".', 13, False)
+				to_delete.append(repo)
+				continue
+
+			os.chdir(abs_path)
 			delete = False
 
 			if any(include_labels) and not any(item in include_labels for item in labels):
