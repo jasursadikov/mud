@@ -83,7 +83,7 @@ GLYPHS = {
 	')':			['\uE0B0',	' '],
 	'weight':		['\uee94',	''],
 	'space':		[' ', 		''],
-	'git':			['\ue702',	''],
+	'git':			['\uefa0',	''],
 	'github':		['\uf09b',	''],
 	'gitlab':		['\uf296',	''],
 	'azure':		['\uebe8',	''],
