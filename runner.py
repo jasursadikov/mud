@@ -40,23 +40,19 @@ class Runner:
 				return f'{BOLD}{size_in_bytes}{RESET} Bytes{glyphs("space")}{BLUE}{glyphs("weight")}{RESET}'
 
 		def get_git_origin_host_icon(url: str):
-			try:
-				icon = YELLOW + glyphs('git')
+			icon = YELLOW + glyphs('git')
 
-				if 'azure' in url or 'visualstudio' in url:
-					icon = BLUE + glyphs('azure')
-				elif 'github' in url:
-					icon = GRAY + glyphs('github')
-				elif 'gitlab' in url:
-					icon = YELLOW + glyphs('gitlab')
-				elif 'bitbucket' in url:
-					icon = CYAN + glyphs('bitbucket')
+			if 'azure' in url or 'visualstudio' in url:
+				icon = BLUE + glyphs('azure')
+			elif 'github' in url:
+				icon = GRAY + glyphs('github')
+			elif 'gitlab' in url:
+				icon = YELLOW + glyphs('gitlab')
+			elif 'bitbucket' in url:
+				icon = CYAN + glyphs('bitbucket')
 
-				icon += RESET + glyphs('space')
-
-				return icon
-			except Exception:
-				return YELLOW + glyphs('git')
+			icon += RESET + glyphs('space')
+			return icon
 
 		table = utils.get_table()
 		table.field_names = ['Path', 'Commits', 'User Commits', 'Size', 'Branch', 'Labels']
@@ -65,7 +61,11 @@ class Runner:
 		table.align['Size'] = 'r'
 
 		for path, labels in repos.items():
-			origin_url = subprocess.check_output('git remote get-url origin', shell=True, text=True, cwd=path).strip()
+			try:
+				origin_url = subprocess.check_output('git remote get-url origin', shell=True, text=True, cwd=path).strip()
+			except Exception:
+				origin_url = ''
+
 			formatted_path = f'{get_git_origin_host_icon(origin_url)}{self._get_formatted_path(path)}'
 			size = f'{format_size(get_directory_size(path))}'
 			commits = f'{BOLD}{subprocess.check_output("git rev-list --count HEAD", shell=True, text=True, cwd=path).strip()}{RESET} {DIM}commits{RESET}'
