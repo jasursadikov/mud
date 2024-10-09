@@ -33,6 +33,7 @@ class App:
 		subparsers.add_parser(LABELS[0], aliases=LABELS[1:], help='Displays mud labels across repositories.')
 		subparsers.add_parser(STATUS[0], aliases=STATUS[1:], help='Displays working directory changes.')
 		subparsers.add_parser(BRANCHES[0], aliases=BRANCHES[1:], help='Displays all branches in repositories.')
+		subparsers.add_parser(REMOTE_BRANCHES[0], aliases=REMOTE_BRANCHES[1:], help='Displays all remote branches in repositories.')
 		subparsers.add_parser(CONFIGURE[0], aliases=CONFIGURE[1:], help='Runs the interactive configuration wizard.')
 
 		add_parser = subparsers.add_parser(ADD[0], aliases=ADD[1:], help='Adds repository or labels an existing repository.')
@@ -113,6 +114,8 @@ class App:
 					self.cmd_runner.info(self.repos)
 				elif args.command in LOG:
 					self.cmd_runner.log(self.repos)
+				elif args.command in REMOTE_BRANCHES:
+					self.cmd_runner.remote_branches(self.repos)
 				elif args.command in BRANCHES:
 					self.cmd_runner.branches(self.repos)
 				elif args.command in LABELS:

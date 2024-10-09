@@ -71,6 +71,7 @@ GLYPHS = {
 	'bugfix':		['\uf188',	''],
 	'release':		['\uf135',	''],
 	'feature':		['\uf0ad',	''],
+	'test':			['\uf0c3',	''],
 	'branch':		['\ue725',	''],
 	'failed':		['\uf00d',	'Failed'],
 	'finished':		['\uf00c',	'Finished'],

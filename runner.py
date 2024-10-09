@@ -39,49 +39,41 @@ class Runner:
 			else:
 				return f'{BOLD}{size_in_bytes}{RESET} Bytes{glyphs("space")}{BLUE}{glyphs("weight")}{RESET}'
 
-		def get_git_origin_host():
+		def get_git_origin_host_icon(url: str):
 			try:
-				result = subprocess.check_output('git remote get-url origin', shell=True, text=True, cwd=path)
-				remote_url = result.strip()
-
-				if '://' in remote_url:
-					host = remote_url.split('/')[2]
-				else:
-					host = remote_url.split(':')[0].split('@')[1]
-
 				icon = YELLOW + glyphs('git')
 
-				if 'azure' in remote_url or 'visualstudio' in remote_url:
+				if 'azure' in url or 'visualstudio' in url:
 					icon = BLUE + glyphs('azure')
-				elif 'github' in remote_url:
+				elif 'github' in url:
 					icon = GRAY + glyphs('github')
-				elif 'gitlab' in remote_url:
+				elif 'gitlab' in url:
 					icon = YELLOW + glyphs('gitlab')
-				elif 'bitbucket' in remote_url:
+				elif 'bitbucket' in url:
 					icon = CYAN + glyphs('bitbucket')
 
 				icon += RESET + glyphs('space')
 
-				return f'{icon}{host}'
-			except Exception as e:
-				return 'Unknown origin'
+				return icon
+			except Exception:
+				return YELLOW + glyphs('git')
 
 		table = utils.get_table()
-		table.field_names = ['Path', 'Origin', 'Commits', 'User Commits', 'Size', 'Branch', 'Labels']
+		table.field_names = ['Path', 'Commits', 'User Commits', 'Size', 'Branch', 'Labels']
 		table.align['Commits'] = 'r'
 		table.align['User Commits'] = 'r'
 		table.align['Size'] = 'r'
 
 		for path, labels in repos.items():
-			formatted_path = self._get_formatted_path(path)
-			origin = get_git_origin_host()
+			origin_url = subprocess.check_output('git remote get-url origin', shell=True, text=True, cwd=path).strip()
+			formatted_path = f'{get_git_origin_host_icon(origin_url)}{self._get_formatted_path(path)}'
 			size = f'{format_size(get_directory_size(path))}'
 			commits = f'{BOLD}{subprocess.check_output("git rev-list --count HEAD", shell=True, text=True, cwd=path).strip()}{RESET} {DIM}commits{RESET}'
 			user_commits = f'{GREEN}{BOLD}{subprocess.check_output("git rev-list --count --author=\"$(git config user.name)\" HEAD", shell=True, text=True, cwd=path).strip()}{RESET} {DIM}by you{RESET}'
 			branch = self._get_branch_status(path)
 			colored_labels = self._get_formatted_labels(labels)
 
-			table.add_row([formatted_path, origin, commits, user_commits, size, branch, colored_labels])
+			table.add_row([formatted_path, commits, user_commits, size, branch, colored_labels])
 
 		utils.print_table(table)
 
@@ -183,15 +175,62 @@ class Runner:
 
 		utils.print_table(table)
 
+	# `mud branch` command implementation
+	def remote_branches(self, repos: Dict[str, List[str]]) -> None:
+		# TODO: merge with branches() function
+		table = utils.get_table()
+		table.field_names = ['Path', 'Branches']
+		all_branches = {}
+
+		# Preparing branches for sorting to display them in the right order.
+		for path in repos.keys():
+			raw_branches = [
+				line.lstrip('* ').removeprefix('origin/')
+				for line in subprocess.check_output('git branch -r', shell=True, text=True, cwd=path).split('\n')
+				if line.strip() and '->' not in line
+			]
+			for branch in raw_branches:
+				branch = branch.replace(' ', '').replace('*', '')
+				if branch not in all_branches:
+					all_branches[branch] = 0
+				all_branches[branch] += 1
+		branch_counter = Counter(all_branches)
+
+		for path, labels in repos.items():
+			formatted_path = self._get_formatted_path(path)
+			branches = subprocess.check_output('git branch -r --color=never', shell=True, text=True, cwd=path).splitlines()
+			current_branch = next((branch.lstrip('* ') for branch in branches if branch.startswith('*')), None)
+			branches = [branch.lstrip('* ').removeprefix('origin/') for branch in branches if '->' not in branch]
+			sorted_branches = sorted(branches, key=lambda x: branch_counter.get(x, 0), reverse=True)
+
+			if current_branch and current_branch in sorted_branches:
+				sorted_branches.remove(current_branch)
+				sorted_branches.insert(0, current_branch)
+
+			formatted_branches = self._get_formatted_branches(sorted_branches, current_branch)
+			table.add_row([formatted_path, formatted_branches])
+
+		utils.print_table(table)
+
 	# `mud tags` command implementation
 	def tags(self, repos: Dict[str, List[str]]) -> None:
+		COLORS = [196, 202, 208, 214, 220, 226, 118, 154, 190, 33, 39, 45, 51, 87, 93, 99, 105, 111, 27, 63, 69, 75, 81, 87, 123, 129, 135, 141, 147, 183, 189, 225]
+
+		tag_colors = {}
+
+		def assign_color(tag: str) -> str:
+			if tag not in tag_colors:
+				color_code = COLORS[len(tag_colors) % len(COLORS)]
+				tag_colors[tag] = f'\033[38;5;{color_code}m'
+			return tag_colors[tag]
+
 		table = utils.get_table()
 		table.field_names = ['Path', 'Tags']
 
 		for path, labels in repos.items():
 			formatted_path = self._get_formatted_path(path)
-			tags = [line.strip() for line in subprocess.check_output('git tag', shell=True, text=True, cwd=path).splitlines() if line.strip()]
-			tags = [f'{glyphs("tag")}{glyphs("space")}{tag}' for tag in tags]
+			tags = sorted([line.strip() for line in subprocess.check_output('git tag', shell=True, text=True, cwd=path).splitlines() if line.strip()], reverse=True)
+			tags = [f'{assign_color(tag)}{glyphs("tag")}{glyphs("space")}{tag}{RESET}' for tag in tags]
 			tags = ' '.join(tags)
 			table.add_row([formatted_path, tags])
 
@@ -450,10 +489,12 @@ class Runner:
 			return RED + glyphs('bugfix') + RESET
 		elif branch_prefix in ['feature', 'feat', 'develop']:
 			return GREEN + glyphs('feature') + RESET
-		elif branch_prefix == 'release':
+		elif branch_prefix in ['release']:
 			return BLUE + glyphs('release') + RESET
 		elif branch_prefix in ['master', 'main']:
 			return YELLOW + glyphs('master') + RESET
+		elif branch_prefix in ['test']:
+			return MAGENTA + glyphs('test') + RESET
 		else:
 			return CYAN + glyphs('branch') + RESET
 

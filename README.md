@@ -28,12 +28,13 @@ All entries are stored in `.mudconfig` in TSV format. After making your first en
 ### Commands
 `mud <FILTER> <COMMAND>` will execute bash command across all repositories. To filter repositories check [arguments](#arguments) section.
 
-- `mud info` - displays branch divergence and working directory changes.
-- `mud status` - displays working directory changes.
-- `mud log` - displays latest commit message, it's time and it's author.
-- `mud labels` - displays mud labels across repositories.
-- `mud branch` - displays all branches in repositories.
-- `mud tags` - displays git tags in repositories.
+- `mud info`/`mud i` - displays branch divergence and working directory changes.
+- `mud status`/`mud st` - displays working directory changes.
+- `mud log`/`mud l` - displays latest commit message, it's time and it's author.
+- `mud labels`/`mud lb` - displays mud labels across repositories.
+- `mud branch`/`mud br` - displays all branches in repositories.
+- `mud remote-branch`/`mud rbr` - displays all branches in repositories.
+- `mud tags`/`mud t` - displays git tags in repositories.
 - `mud update` - check for available updates.
 
 ### Arguments
