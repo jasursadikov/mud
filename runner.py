@@ -230,7 +230,7 @@ class Runner:
 		for path, labels in repos.items():
 			formatted_path = self._get_formatted_path(path)
 			tags = sorted([line.strip() for line in subprocess.check_output('git tag', shell=True, text=True, cwd=path).splitlines() if line.strip()], reverse=True)
-			tags = [f'{assign_color(tag)}{glyphs("tag")}{glyphs("space")}{tag}{RESET}' for tag in tags]
+			tags = [f'{assign_color(tag)}{glyphs("tag")} {RESET}{tag}' for tag in tags]
 			tags = ' '.join(tags)
 			table.add_row([formatted_path, tags])
 

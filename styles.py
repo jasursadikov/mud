@@ -77,7 +77,7 @@ GLYPHS = {
 	'finished':		['\uf00c',	'Finished'],
 	'running':		['\uf46a',	'Running'],
 	'label':		['\uf435',	''],
-	'tag':			['\uf02b',	''],
+	'tag':			['\uf02b',	'>'],
 	'terminal':		['\ue795',	''],
 	'(':			['\uE0B2',	''],
 	')':			['\uE0B0',	' '],
