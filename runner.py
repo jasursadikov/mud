@@ -54,8 +54,7 @@ class Runner:
 			icon += RESET + glyphs('space')
 			return icon
 
-		table = utils.get_table()
-		table.field_names = ['Path', 'Commits', 'User Commits', 'Size', 'Branch', 'Labels']
+		table = utils.get_table(['Path', 'Commits', 'User Commits', 'Size', 'Labels'])
 		table.align['Commits'] = 'r'
 		table.align['User Commits'] = 'r'
 		table.align['Size'] = 'r'
@@ -70,17 +69,15 @@ class Runner:
 			size = format_size(get_directory_size(path))
 			commits = f'{BOLD}{subprocess.check_output("git rev-list --count HEAD", shell=True, text=True, cwd=path).strip()}{RESET} {DIM}commits{RESET}'
 			user_commits = f'{GREEN}{BOLD}{subprocess.check_output("git rev-list --count --author=\"$(git config user.name)\" HEAD", shell=True, text=True, cwd=path).strip()}{RESET} {DIM}by you{RESET}'
-			branch = self._get_branch_status(path)
 			colored_labels = self._get_formatted_labels(labels)
 
-			table.add_row([formatted_path, commits, user_commits, size, branch, colored_labels])
+			table.add_row([formatted_path, commits, user_commits, size, colored_labels])
 
 		utils.print_table(table)
 
 	# `mud status` command implementation
 	def status(self, repos: Dict[str, List[str]]) -> None:
-		table = utils.get_table()
-		table.field_names = ['Path', 'Branch', 'Origin Sync', 'Status', 'Edits']
+		table = utils.get_table(['Path', 'Branch', 'Origin Sync', 'Status', 'Edits'])
 
 		for path, labels in repos.items():
 			output = self._get_status_porcelain(path)
@@ -126,8 +123,7 @@ class Runner:
 
 	# `mud log` command implementation
 	def log(self, repos: Dict[str, List[str]]) -> None:
-		table = utils.get_table()
-		table.field_names = ['Path', 'Branch', 'Author', 'Time', 'Message']
+		table = utils.get_table(['Path', 'Branch', 'Author', 'Time', 'Message'])
 
 		for path in repos.keys():
 			formatted_path = self._get_formatted_path(path)
@@ -145,8 +141,7 @@ class Runner:
 
 	# `mud branch` command implementation
 	def branches(self, repos: Dict[str, List[str]]) -> None:
-		table = utils.get_table()
-		table.field_names = ['Path', 'Branches']
+		table = utils.get_table(['Path', 'Branches'])
 		all_branches = {}
 
 		# Preparing branches for sorting to display them in the right order.
@@ -178,8 +173,7 @@ class Runner:
 	# `mud branch` command implementation
 	def remote_branches(self, repos: Dict[str, List[str]]) -> None:
 		# TODO: merge with branches() function
-		table = utils.get_table()
-		table.field_names = ['Path', 'Branches']
+		table = utils.get_table(['Path', 'Branches'])
 		all_branches = {}
 
 		# Preparing branches for sorting to display them in the right order.
@@ -224,8 +218,7 @@ class Runner:
 				tag_colors[tag] = f'\033[38;5;{color_code}m'
 			return tag_colors[tag]
 
-		table = utils.get_table()
-		table.field_names = ['Path', 'Tags']
+		table = utils.get_table(['Path', 'Tags'])
 
 		for path, labels in repos.items():
 			formatted_path = self._get_formatted_path(path)

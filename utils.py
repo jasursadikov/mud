@@ -4,6 +4,7 @@ import shutil
 import random
 import subprocess
 
+from typing import List
 from prettytable import PrettyTable, PLAIN_COLUMNS
 
 from settings import *
@@ -141,7 +142,7 @@ def table_to_str(table: PrettyTable) -> str:
 	return table
 
 
-def get_table() -> PrettyTable:
+def get_table(field_names: List[str]) -> PrettyTable:
 	def set_style(item: str) -> str:
 		return f'{DIM}{GRAY}{item}{RESET}'
 
@@ -161,6 +162,9 @@ def get_table() -> PrettyTable:
 		table.top_right_junction_char = set_style('╮')
 		table.bottom_left_junction_char = set_style('╰')
 		table.bottom_right_junction_char = set_style('╯')
+
+	table.field_names = field_names
+
 	return table
 
 
