@@ -23,7 +23,7 @@ def version() -> None:
 	os.chdir(os.path.dirname(os.path.abspath(__file__)))
 	hash = subprocess.check_output('git rev-parse HEAD', shell=True, text=True).splitlines()[0]
 	logo = get_logo()
-	info = f'Jasur Sadikov\nhttps://github.com/jasursadikov/mud\n{BOLD}{random.choice(TEXT[3:])}{hash}{RESET}'
+	info = f'Jasur Sadikov <jasur@sadikoff.com>\nhttps://github.com/jasursadikov/mud\n{BOLD}{random.choice(TEXT[3:])}{hash}{RESET}'
 	print(logo)
 	print(info)
 

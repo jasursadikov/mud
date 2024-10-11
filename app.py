@@ -61,6 +61,7 @@ class App:
 	def run(self) -> None:
 		# Displays default help message
 		if len(sys.argv) == 1 or sys.argv[1] in HELP:
+			utils.version()
 			self.parser.print_help()
 			return
 		# Sets global repository in .mudsettings

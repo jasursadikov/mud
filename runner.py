@@ -67,7 +67,7 @@ class Runner:
 				origin_url = ''
 
 			formatted_path = f'{get_git_origin_host_icon(origin_url)}{self._get_formatted_path(path)}'
-			size = f'{format_size(get_directory_size(path))}'
+			size = format_size(get_directory_size(path))
 			commits = f'{BOLD}{subprocess.check_output("git rev-list --count HEAD", shell=True, text=True, cwd=path).strip()}{RESET} {DIM}commits{RESET}'
 			user_commits = f'{GREEN}{BOLD}{subprocess.check_output("git rev-list --count --author=\"$(git config user.name)\" HEAD", shell=True, text=True, cwd=path).strip()}{RESET} {DIM}by you{RESET}'
 			branch = self._get_branch_status(path)
