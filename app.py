@@ -146,7 +146,7 @@ class App:
 				utils.print_error(f'Invalid command. {exception}', 2)
 
 	def init(self, args) -> None:
-		table = utils.get_table()
+		table = utils.get_table(['Path', 'Status'])
 		self.config.data = {}
 		index = 0
 		directories = [d for d in os.listdir('.') if os.path.isdir(d) and os.path.isdir(os.path.join(d, '.git'))]
