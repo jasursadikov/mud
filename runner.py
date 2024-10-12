@@ -111,8 +111,7 @@ class Runner:
 
 	# `mud labels` command implementation
 	def labels(self, repos: Dict[str, List[str]]) -> None:
-		table = utils.get_table()
-		table.field_names = ['Path', 'Labels']
+		table = utils.get_table(['Path', 'Labels'])
 
 		for path, labels in repos.items():
 			formatted_path = self._get_formatted_path(path)
