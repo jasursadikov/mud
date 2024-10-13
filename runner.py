@@ -292,7 +292,7 @@ class Runner:
 		self._print_process(table)
 
 	def _print_process(self, info: Dict[str, List[str]]) -> None:
-		table = utils.get_table()
+		table = utils.get_table(['Path', 'Status', 'Output'])
 		for path, (line, status) in info.items():
 			formatted_path = self._get_formatted_path(path)
 			table.add_row([formatted_path, status, line])
