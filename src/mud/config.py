@@ -1,10 +1,11 @@
 import os
 import re
 import csv
-import utils
 
-from styles import *
 from typing import List, Dict
+
+from mud import utils
+from mud.styles import *
 
 
 class Config:
