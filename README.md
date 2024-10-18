@@ -4,11 +4,12 @@
 
 ![Build Status](https://img.shields.io/github/actions/workflow/status/jasursadikov/mud/main.yaml)
 
-mud is a multi-directory git runner which allows you to run git commands in a multiple repositories. It has multiple powerful tools filtering tools and support of aliasing.  This tool is not limited to git commands only, you can run any commands as you wish, but this tool was primarily designed to be used with git, so each referenced directory should have `.git`.
+mud is a multi-directory git runner which allows you to run git commands in a multiple repositories. It has multiple powerful tools filtering tools and support of aliasing. This tool is not limited to git commands only, you can run any commands as you wish, but this tool was primarily designed to be used with git, so each referenced directory should have `.git`.
 
 ## Installing
-
-to-do
+```bash
+pip install mud
+```
 
 ## Getting started
 
@@ -48,6 +49,7 @@ All entries are stored in `.mudconfig` in TSV format. After making your first en
 - `-a` or `--async` - toggles asynchronous run feature.
 
 Example:
+
 ```bash
 mud -b=master -d git pull
 # Filters out all repos with master branch and diverged branches and then runs pull command.
@@ -57,16 +59,18 @@ mud -b=master -d git pull
 
 Settings are stored in your home directory in `.mudsettings` file.
 
-- `ask_updates = 0/1` - display update message when updates are available.
-- `run_async = 0/1` - enables asynchronous commands.
-- `run_table = 0/1` - enables asynchronous commands in a table view. Requires `run_async`.
-- `nerd_fonts = 0/1` - use nerd fonts in the output 💅.
-- `show_borders = 0/1` - enables borders in table view.
-- `collapse_paths = 0/1` - simplifies branch name in the branch view.
-- `config_path = /home/user/path/.mudconfig` - this is set up by `mud --set-global` [command](#global-mudconfig).
+-   `ask_updates = 0/1` - display update message when updates are available.
+-   `run_async = 0/1` - enables asynchronous commands.
+-   `run_table = 0/1` - enables asynchronous commands in a table view. Requires `run_async`.
+-   `nerd_fonts = 0/1` - use nerd fonts in the output 💅.
+-   `show_borders = 0/1` - enables borders in table view.
+-   `collapse_paths = 0/1` - simplifies branch name in the branch view.
+-   `config_path = /home/user/path/.mudconfig` - this is set up by `mud --set-global` [command](#global-mudconfig).
 
 ### Aliases
+
 You can create your own aliases for commands. To create your own aliases, edit .mudsettings file, `[alias]` section. .mudsettings has the following aliases by default:
+
 ```ini
 [alias]
 to = git checkout
@@ -80,10 +84,12 @@ push = git push
 You can modify your .mudconfig file by using following commands:
 
 ### Adding and labeling repositories
-- `mud add <label> <path>` - adds path with an optional label.
-- `mud add <path>` - adds path without a label.
+
+-   `mud add <label> <path>` - adds path with an optional label.
+-   `mud add <path>` - adds path without a label.
 
 ### Removing labels and repositories
-- `mud remove <label>` - removes label from all directories.
-- `mud remove <path>` - removes directory with a specified path.
-- `mud remove <label> <path>` - removes label from a directory.
+
+-   `mud remove <label>` - removes label from all directories.
+-   `mud remove <path>` - removes directory with a specified path.
+-   `mud remove <label> <path>` - removes label from a directory.
