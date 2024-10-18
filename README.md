@@ -1,6 +1,6 @@
 # mud
 
-![Demo](img.png)
+![Demo](./img.png)
 
 ![Build Status](https://img.shields.io/github/actions/workflow/status/jasursadikov/mud/main.yaml)
 
@@ -8,8 +8,7 @@ mud is a multi-directory git runner which allows you to run git commands in a mu
 
 ## Installing
 
-1. Download [install.sh](install.sh) script.
-2. Run `install.sh` to install.
+to-do
 
 ## Getting started
 
@@ -47,8 +46,9 @@ All entries are stored in `.mudconfig` in TSV format. After making your first en
 - `-d` or `--diverged` - filters repositories with diverged branches.
 - `-t` or `--table` - toggles default table view setting for run.
 - `-a` or `--async` - toggles asynchronous run feature.
-```
+
 Example:
+```bash
 mud -b=master -d git pull
 # Filters out all repos with master branch and diverged branches and then runs pull command.
 ```

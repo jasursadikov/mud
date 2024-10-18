@@ -3,14 +3,17 @@ import sys
 import asyncio
 import argparse
 import subprocess
-import config
-import utils
 
-from styles import *
-from commands import *
-from utils import glyphs
-from runner import Runner
 from argparse import ArgumentParser
+
+from mud import config
+
+from mud import utils
+from mud.utils import glyphs
+
+from mud.styles import *
+from mud.commands import *
+from mud.runner import Runner
 
 
 class App:
