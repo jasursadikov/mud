@@ -18,8 +18,7 @@ class Settings:
 				'nerd_fonts': True,
 				'run_async': True,
 				'run_table': True,
-				'simplify_branches': True,
-				'ask_updates': True
+				'simplify_branches': True
 			},
 			'alias': {
 				'to': 'git checkout',
