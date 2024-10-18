@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mud"
-version = "0.0.1"
+version = "1.0.0"
 authors = [{ name = "Jasur Sadikov", email = "jasur@sadikoff.com" }]
 description = "🗃️ Multi repository git utility. Manage multiple git-repositories simultaneously."
 readme = "README.md"
