@@ -1,100 +1,96 @@
 name: Test projects integrity
 
 on:
-    push:
-        branches: ["master"]
-    pull_request:
-        branches: ["master"]
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
 
 permissions:
-    contents: read
+  contents: read
 
 jobs:
-    test:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
-            - name: Set up Python 3.12
-              uses: actions/setup-python@v3
-              with:
-                  python-version: "3.12"
-            - name: Install dependencies and set up the environment
-              run: |
-                  python -m pip install -r requirements.txt
-                  python -m pip install requests build
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.12"
+      - name: Install dependencies and set up the environment
+        run: |
+          python -m pip install -r requirements.txt
+          python -m pip install requests build
 
-                  python -m build
-                  pip install dist/*.whl
-            - name: Create repositories
-              run: |
-                  git config --global user.name "Jasur Sadikov"
-                  git config --global user.email "test@test.com"
+          python -m build
+          pip install dist/*.whl
+      - name: Create repositories
+        run: |
+          git config --global user.name "Jasur Sadikov"
+          git config --global user.email "test@test.com"
 
-                  for i in {1..3}; do
-                      mkdir "repo_$i"
-                      cd "repo_$i"
-                      echo "repo_$i" > test.txt
-                      git init
-                      git add .
-                      git commit -m "Initial commit"
-                      cd ..
-                  done
-            - name: Initialize
-              run: |
-                  mud init
-            - name: Test remove by path
-              run: |
-                  for i in {1..3}; do
-                    mud remove repo_$i
-                  done
-            - name: Test add with label
-              run: |
-                  for i in {1..3}; do
-                    mud add label_$i repo_$i
-                  done
-                  mud lb
-            - name: Test remove label
-              run: |
-                  for i in {1..3}; do
-                    mud remove label_$i
-                  done
-                  mud lb
-            - name: Add all repositories with labels
-              run: |
-                  rm .mudconfig
-                  mud init
-                  for i in {1..3}; do
-                    mud add label_$i repo_$i
-                  done
-                  mud lb
-            - name: Test default commands
-              run: |
-                  echo "mud labels"
-                  mud labels
-                  echo "mud status"
-                  mud status
-                  echo "mud info"
-                  mud info
-                  echo "mud log"
-                  mud log
-                  echo "mud branch"
-                  mud branch
-                  echo "mud tags"
-                  mud tags
-            - name: Test custom command
-              run: |
-                  mud echo "Hello world"
-                  mud -a echo "Hello world"
-                  mud -a -t echo "Hello world"
-                  mud -t echo "Hello world"
-                  mud -t -c='echo "Hello" && echo "world"'
-            - name: Test label filtering
-              run: mud -l=label_1 echo "Hello world"
-            - name: Test branch filtering
-              run: |
-                  mud -l=label_1 git checkout -b develop
-                  mud -b=develop echo "Hello world"
-
-#          git reset --hard HEAD^1
-#          ./mud.sh update
-#          git pull --force
+          for i in {1..3}; do
+              mkdir "repo_$i"
+              cd "repo_$i"
+              echo "repo_$i" > test.txt
+              git init
+              git add .
+              git commit -m "Initial commit"
+              cd ..
+          done
+      - name: Initialize
+        run: |
+          mud init
+      - name: Test remove by path
+        run: |
+          for i in {1..3}; do
+            mud remove repo_$i
+          done
+      - name: Test add with label
+        run: |
+          for i in {1..3}; do
+            mud add label_$i repo_$i
+          done
+          mud lb
+      - name: Test remove label
+        run: |
+          for i in {1..3}; do
+            mud remove label_$i
+          done
+          mud lb
+      - name: Add all repositories with labels
+        run: |
+          rm .mudconfig
+          mud init
+          for i in {1..3}; do
+            mud add label_$i repo_$i
+          done
+          mud lb
+      - name: Test default commands
+        run: |
+          echo "mud labels"
+          mud labels
+          echo "mud status"
+          mud status
+          echo "mud info"
+          mud info
+          echo "mud log"
+          mud log
+          echo "mud branch"
+          mud branch
+          echo "mud tags"
+          mud tags
+      - name: Test custom command
+        run: |
+          mud echo "Hello world"
+          mud -a echo "Hello world"
+          mud -a -t echo "Hello world"
+          mud -t echo "Hello world"
+          mud -t -c='echo "Hello" && echo "world"'
+      - name: Test label filtering
+        run: mud -l=label_1 echo "Hello world"
+      - name: Test branch filtering
+        run: |
+          mud -l=label_1 git checkout -b develop
+          mud -b=develop echo "Hello world"
