@@ -32,7 +32,6 @@ class App:
 		subparsers.add_parser(INFO[0], aliases=INFO[1:], help='Displays branch divergence and working directory changes')
 		subparsers.add_parser(INIT[0], aliases=INIT[1:], help=f'Initializes the {BOLD}.mudconfig{RESET} and adds all repositories in this directory to {BOLD}.mudconfig{RESET}.')
 		subparsers.add_parser(TAGS[0], aliases=TAGS[1:], help='Displays git tags in repositories.')
-		subparsers.add_parser(UPDATE[0], aliases=UPDATE[1:], help='Update mud to the latest version.')
 		subparsers.add_parser(LABELS[0], aliases=LABELS[1:], help='Displays mud labels across repositories.')
 		subparsers.add_parser(STATUS[0], aliases=STATUS[1:], help='Displays working directory changes.')
 		subparsers.add_parser(BRANCHES[0], aliases=BRANCHES[1:], help='Displays all branches in repositories.')
@@ -78,10 +77,6 @@ class App:
 		# Prints version
 		elif sys.argv[1] in VERSION:
 			utils.version()
-			return
-		# Checks for available updates
-		elif sys.argv[1] in UPDATE:
-			utils.update(True)
 			return
 		# Runs configuration wizard
 		elif sys.argv[1] in CONFIGURE:
