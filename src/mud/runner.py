@@ -1,13 +1,13 @@
 import os
-import utils
 import asyncio
 import subprocess
 
-from utils import glyphs
 from typing import List, Dict
 from collections import Counter
 
-from styles import *
+from mud import utils
+from mud.utils import glyphs
+from mud.styles import *
 
 
 class Runner:

@@ -10,12 +10,11 @@ STATUS = ['status', 'st']
 BRANCHES = ['branch', 'branches', 'br']
 REMOTE_BRANCHES = ['remote-branch', 'remote-branches', 'rbr']
 HELP = ['help', '--help', '-h']
-UPDATE = ['update']
 VERSION = ['--version', '-v', 'version']
 CONFIGURE = ['configure', 'config']
 SET_GLOBAL = ['--set-global']
 
-COMMANDS = [ADD, REMOVE, LOG, INFO, INIT, TAGS, LABELS, STATUS, BRANCHES, REMOTE_BRANCHES, HELP, UPDATE, VERSION, CONFIGURE, SET_GLOBAL]
+COMMANDS = [ADD, REMOVE, LOG, INFO, INIT, TAGS, LABELS, STATUS, BRANCHES, REMOTE_BRANCHES, HELP, VERSION, CONFIGURE, SET_GLOBAL]
 
 # Filters
 ASYNC_ATTR = '-a', '--async'

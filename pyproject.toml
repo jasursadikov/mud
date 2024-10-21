@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mud"
+version = "1.0.0"
+authors = [{ name = "Jasur Sadikov", email = "jasur@sadikoff.com" }]
+description = "🗃️ Multi repository git utility. Manage multiple git-repositories simultaneously."
+readme = "README.md"
+requires-python = ">=3.5"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = ["prettytable"]
+
+[project.urls]
+Homepage = "https://github.com/jasursadikov/mud"
+Issues = "https://github.com/jasursadikov/mud/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mud"]
+
+[tool.hatch.version]
+path = "src/mud/__about__.py"
+
+[project.scripts]
+mud = "mud:run"

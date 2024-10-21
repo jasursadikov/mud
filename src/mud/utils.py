@@ -2,13 +2,13 @@ import re
 import sys
 import shutil
 import random
-import subprocess
 
 from typing import List
 from prettytable import PrettyTable, PLAIN_COLUMNS
 
-from settings import *
-from styles import *
+from mud.settings import *
+from mud.styles import *
+from mud.__about__ import __version__
 
 SETTINGS_FILE_NAME = '.mudsettings'
 CONFIG_FILE_NAME = '.mudconfig'
@@ -22,9 +22,8 @@ def glyphs(key: str) -> str:
 
 def version() -> None:
 	os.chdir(os.path.dirname(os.path.abspath(__file__)))
-	hash = subprocess.check_output('git rev-parse HEAD', shell=True, text=True).splitlines()[0]
 	logo = get_logo()
-	info = f'Jasur Sadikov <jasur@sadikoff.com>\nhttps://github.com/jasursadikov/mud\n{BOLD}{random.choice(TEXT[3:])}{hash}{RESET}'
+	info = f'Jasur Sadikov <jasur@sadikoff.com>\nhttps://github.com/jasursadikov/mud\n{BOLD}{random.choice(TEXT[3:])}{__version__}{RESET}'
 	print(logo)
 	print(info)
 
@@ -42,46 +41,13 @@ def get_logo() -> str:
 	return logo
 
 
-def update(explicit: bool = False) -> bool:
-	if explicit:
-		print(get_logo())
-
-	target_directory = os.getcwd()
-	os.chdir(os.path.dirname(os.path.abspath(__file__)))
-
-	subprocess.run('git fetch', shell=True, check=True)
-	result = subprocess.run('git status -uno', shell=True, capture_output=True, text=True)
-
-	if 'Your branch is behind' in result.stdout:
-		print(f'{BOLD}New update(s) is available!{RESET}\n')
-
-		log = subprocess.run('git log HEAD..@{u} --oneline --color=always', shell=True, text=True, stdout=subprocess.PIPE).stdout
-		print(log)
-
-		if ask('Do you want to update?'):
-			update_process = subprocess.run('git pull --force', shell=True, text=False, stdout=subprocess.DEVNULL)
-			if update_process.returncode == 0:
-				print(f'{GREEN}{BOLD}Update successful!{RESET}')
-			else:
-				print_error('Update failed', 30)
-		os.chdir(target_directory)
-		return True
-
-	if explicit:
-		print('No updates available')
-
-	os.chdir(target_directory)
-	return False
-
-
 def configure() -> None:
 	try:
 		settings.config['mud']['run_table'] = str(ask('Do you want to see command execution progress in table view? This will limit output content.'))
 		settings.config['mud']['run_async'] = str(ask('Do you want to run commands simultaneously for multiple repositories?'))
 		settings.config['mud']['nerd_fonts'] = str(ask(f'Do you want to use {BOLD}nerd-fonts{RESET}?'))
-		settings.config['mud']['nerd_fonts'] = str(ask(f'Do you want to see borders in table view?'))
+		settings.config['mud']['show_borders'] = str(ask(f'Do you want to see borders in table view?'))
 		settings.config['mud']['collapse_paths'] = str(ask(f'Do you want to collapse paths, such as directory paths and branches? (ex. {BOLD}feature/name{RESET} -> {BOLD}f/name{RESET}'))
-		settings.config['mud']['ask_updates'] = str(ask(f'Do you want to get information about latest updates?'))
 	except KeyboardInterrupt:
 		return
 
