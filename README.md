@@ -1,8 +1,10 @@
 # mud
 
-![Demo](./img.png)
+![Version](https://img.shields.io/pypi/v/mud-git?logo=python)
+![Build Status](https://img.shields.io/github/actions/workflow/status/jasursadikov/mud/test.yaml?logo=github)
+![Pulbish](https://img.shields.io/github/actions/workflow/status/jasursadikov/mud/publish.yaml?logo=github)
 
-![Build Status](https://img.shields.io/github/actions/workflow/status/jasursadikov/mud/main.yaml)
+![Demo](./img.png)
 
 mud is a multi-directory git runner which allows you to run git commands in a multiple repositories. It has multiple powerful tools filtering tools and support of aliasing. This tool is not limited to git commands only, you can run any commands as you wish, but this tool was primarily designed to be used with git, so each referenced directory should have `.git`.
 
