@@ -10,7 +10,7 @@ mud is a multi-directory git runner which allows you to run git commands in a mu
 
 ## Installing
 ```bash
-pip install mud
+pip install mud-git
 ```
 
 ## Getting started
