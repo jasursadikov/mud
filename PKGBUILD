@@ -13,14 +13,10 @@ md5sums=('SKIP')
 
 pkgver() {
     cd "$srcdir/$_pkgname"
-    _ver=$(grep '^version =' pyproject.toml | cut -d '"' -f2)
-    _rev=$(git rev-list --count HEAD)
-    _commit=$(git rev-parse --short HEAD)
-    echo "${_ver}.r${_rev}.g${_commit}"
+    echo $(grep '^version =' pyproject.toml | cut -d '"' -f2)
 }
 
 build() {
-    cd "$srcdir/$_pkgname"
     python -m build --wheel --no-isolation
 }
 
