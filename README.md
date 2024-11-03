@@ -1,6 +1,7 @@
 # mud
 
 ![Version](https://img.shields.io/pypi/v/mud-git?logo=python)
+![AUR Version](https://img.shields.io/aur/version/mud-git?logo=archlinux)
 ![Build Status](https://img.shields.io/github/actions/workflow/status/jasursadikov/mud/test.yaml?logo=github)
 ![Pulbish](https://img.shields.io/github/actions/workflow/status/jasursadikov/mud/publish.yaml?logo=github)
 
@@ -9,8 +10,13 @@
 mud is a multi-directory git runner which allows you to run git commands in a multiple repositories. It has multiple powerful tools filtering tools and support of aliasing. This tool is not limited to git commands only, you can run any commands as you wish, but this tool was primarily designed to be used with git, so each referenced directory should have `.git`.
 
 ## Installing
+For PyPI
 ```bash
 pip install mud-git
+```
+For Arch Linux
+```bash
+paru -S mud-git
 ```
 
 ## Getting started

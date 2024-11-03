@@ -11,11 +11,6 @@ makedepends=('python-build' 'python-setuptools' 'python-setuptools-scm' 'git')
 source=("${pkgname}::git+https://github.com/jasursadikov/mud.git")
 md5sums=('SKIP')
 
-pkgver() {
-    cd "$srcdir/$pkgname"
-    git describe --tags | sed 's/^v//;s/-/./g'
-}
-
 build() {
     cd "$srcdir/$pkgname"
     python -m build --wheel --no-isolation
