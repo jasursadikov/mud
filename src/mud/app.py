@@ -7,13 +7,11 @@ import subprocess
 from argparse import ArgumentParser
 
 from mud import config
-
 from mud import utils
-from mud.utils import glyphs
-
+from mud.runner import Runner
 from mud.styles import *
 from mud.commands import *
-from mud.runner import Runner
+from mud.utils import glyphs
 
 
 class App:
