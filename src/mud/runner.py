@@ -11,7 +11,7 @@ from mud.styles import *
 
 
 class Runner:
-	_label_color_cache = {}
+	_label_color_cache = {}1
 	_current_color_index = 0
 
 	def __init__(self, repos):

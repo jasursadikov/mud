@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-import sys
-
 from mud import utils, settings
 from mud.app import App
+
 
 def run():
 	try:
