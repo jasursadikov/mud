@@ -1,13 +1,14 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["hatchling", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "mud-git"
-version = "1.0.2"
+dynamic = ["version"]
 authors = [{ name = "Jasur Sadikov", email = "jasur@sadikoff.com" }]
-description = "🗃️ Multi repository git utility. Manage multiple git-repositories simultaneously."
+description = "Multi repository git utility. Manage multiple git-repositories simultaneously."
 readme = "README.md"
+license = { file = "LICENSE" }
 requires-python = ">=3.12"
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -16,15 +17,16 @@ classifiers = [
 ]
 dependencies = ["prettytable"]
 
-[project.urls]
-Homepage = "https://github.com/jasursadikov/mud"
-Issues = "https://github.com/jasursadikov/mud/issues"
+[tool.setuptools_scm]
+version_scheme = "no-guess-dev"
+local_scheme = "no-local-version"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/mud"]
 
-[tool.hatch.version]
-path = "src/mud/__about__.py"
-
 [project.scripts]
 mud = "mud:run"
+
+[project.urls]
+Homepage = "https://github.com/jasursadikov/mud"
+Issues = "https://github.com/jasursadikov/mud/issues"
