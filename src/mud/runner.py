@@ -92,14 +92,14 @@ class Runner:
 
 			for file in files:
 				file_status = file[:2].strip()
-				if file_status == 'M':
+				if file_status.startswith('M') or file_status.startswith('U'):
 					color = YELLOW
-				elif file_status == 'A':
-					color = GREEN
-				elif file_status == 'R':
-					color = BLUE
-				elif file_status == 'D':
+				elif file_status.startswith('A') or file_status.startswith('C') or file_status.startswith('??') or file_status.startswith('!!'):
+					color = BRIGHT_GREEN
+				elif file_status.startswith('D'):
 					color = RED
+				elif file_status.startswith('R'):
+					color = BLUE
 				else:
 					color = CYAN
 
@@ -324,9 +324,9 @@ class Runner:
 
 		for file in files:
 			file = file.lstrip()
-			if file.startswith('M'):
+			if file.startswith('M') or file.startswith('U'):
 				modified += 1
-			elif file.startswith('A') or file.startswith('??'):
+			elif file.startswith('A') or file.startswith('C') or file.startswith('??') or file.startswith('!!'):
 				added += 1
 			elif file.startswith('D'):
 				removed += 1
