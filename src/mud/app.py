@@ -54,14 +54,14 @@ class App:
 		parser.add_argument(*DIVERGED_ATTR, action='store_true', help='Filters repositories with diverged branches.')
 		parser.add_argument(*ASYNC_ATTR, action='store_true', help='Switches asynchronous run feature.')
 		parser.add_argument(SET_GLOBAL[0], help=f'Sets {BOLD}.mudconfig{RESET} in the current repository as your fallback {BOLD}.mudconfig{RESET}.', action='store_true')
-		parser.add_argument(VERSION[0], help='Displays the current version of mud.', action='store_true')
 		parser.add_argument('catch_all', nargs='*', help='Type any commands to execute among repositories.')
 		return parser
 
 	def run(self) -> None:
 		# Displays default help message
 		if len(sys.argv) == 1 or sys.argv[1] in HELP:
-			utils.version()
+			utils.info()
+			print()
 			self.parser.print_help()
 			return
 		# Sets global repository in .mudsettings
@@ -71,10 +71,6 @@ class App:
 				utils.settings.config.set('mud', 'config_path', config_path)
 				utils.settings.save()
 				print(f'Current {BOLD}.mudconfig{RESET} set as a global configuration.')
-			return
-		# Prints version
-		elif sys.argv[1] in VERSION:
-			utils.version()
 			return
 		# Runs configuration wizard
 		elif sys.argv[1] in CONFIGURE:

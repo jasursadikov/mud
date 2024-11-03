@@ -8,7 +8,6 @@ from prettytable import PrettyTable, PLAIN_COLUMNS
 
 from mud.settings import *
 from mud.styles import *
-from mud.__about__ import __version__
 
 SETTINGS_FILE_NAME = '.mudsettings'
 CONFIG_FILE_NAME = '.mudconfig'
@@ -20,25 +19,18 @@ def glyphs(key: str) -> str:
 	return GLYPHS[key][0 if settings.config['mud'].getboolean('nerd_fonts', fallback=False) else 1]
 
 
-def version() -> None:
+def info() -> None:
 	os.chdir(os.path.dirname(os.path.abspath(__file__)))
-	logo = get_logo()
-	info = f'Jasur Sadikov <jasur@sadikoff.com>\nhttps://github.com/jasursadikov/mud\n{BOLD}{random.choice(TEXT[3:])}{__version__}{RESET}'
-	print(logo)
-	print(info)
-
-
-def get_logo() -> str:
 	colors = TEXT[3:]
 	colors.remove(BRIGHT_WHITE)
 	m = random.choice(colors)
 	u = random.choice(colors)
 	d = random.choice(colors)
-	logo = f'                 {d}__{RESET}\n'
-	logo += f'  {m}__ _  {u}__ __{d}___/ /{RESET}\n'
-	logo += f' {m}/  \' \\{u}/ // / {d}_  /{RESET}\n'
-	logo += f'{m}/_/_/_/{u}\\_,_/{d}\\_,_/  {RESET}'
-	return logo
+	print(f'                 {d}__{RESET}')
+	print(f'  {m}__ _  {u}__ __{d}___/ /{RESET}')
+	print(f' {m}/  \' \\{u}/ // / {d}_  /{RESET}')
+	print(f'{m}/_/_/_/{u}\\_,_/{d}\\_,_/  {RESET}')
+	print(f'Jasur Sadikov <jasur@sadikoff.com>\nhttps://github.com/jasursadikov/mud')
 
 
 def configure() -> None:
@@ -56,23 +48,17 @@ def configure() -> None:
 
 
 def ask(text: str) -> bool:
-	print(f'{text} [Y/n] ', end='', flush=True)
-	if sys.platform.startswith('win'):
-		from msvcrt import getch
-		response = getch().decode().lower()
-	else:
-		import tty
-		import termios
-		fd = sys.stdin.fileno()
-		old_settings = termios.tcgetattr(fd)
-		try:
-			tty.setraw(fd)
-			response = sys.stdin.read(1).lower()
-		finally:
-			termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-
-	print()
-	return response in ['y', '\r', '\n']
+	try:
+		answer = input(f"{text}? [Y/n]: ").strip().lower()
+		if answer in ('y', 'yes', ''):
+			return True
+		elif answer in ('n', 'no'):
+			return False
+		else:
+			print("Invalid input.")
+			return True
+	except KeyboardInterrupt:
+		exit()
 
 
 def print_table(table: PrettyTable) -> None:
