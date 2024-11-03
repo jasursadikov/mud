@@ -1,27 +1,28 @@
 # Maintainer: Jasur Sadikov <jasur@sadikoff.com>
-pkgname=mud
-pkgver=v1.0.2
+pkgname=mud-git
+pkgver=1.0.3
 pkgrel=1
 pkgdesc="Multi repository git utility. Manage multiple git-repositories simultaneously."
 arch=('any')
 url="https://github.com/jasursadikov/mud"
 license=('MIT')
 depends=('python' 'python-prettytable')
-makedepends=('python-build' 'python-installer' 'git')
-source=("${_pkgname}::git+https://github.com/jasursadikov/mud.git")
+makedepends=('python-build' 'python-setuptools' 'python-setuptools-scm' 'git')
+source=("${pkgname}::git+https://github.com/jasursadikov/mud.git")
 md5sums=('SKIP')
 
 pkgver() {
-    cd "$srcdir/$_pkgname"
-    echo $(grep '^version =' pyproject.toml | cut -d '"' -f2)
+    cd "$srcdir/$pkgname"
+    git describe --tags | sed 's/^v//;s/-/./g'
 }
 
 build() {
+    cd "$srcdir/$pkgname"
     python -m build --wheel --no-isolation
 }
 
 package() {
-    cd "$srcdir/$_pkgname"
+    cd "$srcdir/$pkgname"
     python -m installer --destdir="$pkgdir" dist/*.whl
     install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }
