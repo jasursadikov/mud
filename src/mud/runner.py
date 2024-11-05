@@ -16,6 +16,7 @@ class Runner:
 	_current_color_index = 0
 
 	def __init__(self, repos):
+		self._force_color_env = self._force_color_env | os.environ.copy()
 		self._last_printed_lines = 0
 		self.repos = repos
 
