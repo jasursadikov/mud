@@ -233,7 +233,7 @@ class App:
 
 			if not delete:
 				try:
-					branch = subprocess.check_output('git rev-parse --abbrev-ref HEAD', shell=True, text=True).splitlines()[0]
+					branch = subprocess.check_output('git rev-parse --abbrev-ref HEAD', shell=True, text=True, stderr=subprocess.DEVNULL).splitlines()[0]
 				except subprocess.CalledProcessError:
 					branch = 'NA'
 				if any(include_branches) and branch not in include_branches:
