@@ -11,6 +11,7 @@ from mud.styles import *
 
 
 class Runner:
+	_force_color_env = {"GIT_PAGER": "cat", "TERM": "xterm-256color", "GIT_CONFIG_PARAMETERS": "'color.ui=always'"}
 	_label_color_cache = {}
 	_current_color_index = 0
 
@@ -231,7 +232,7 @@ class Runner:
 	# `mud <COMMAND>` when run_async = 0 and run_table = 0
 	def run_ordered(self, repos: List[str], command: str) -> None:
 		for path in repos:
-			process = subprocess.run(command, cwd=path, universal_newlines=True, shell=True, capture_output=True, text=True)
+			process = subprocess.run(command, cwd=path, universal_newlines=True, shell=True, capture_output=True, text=True, env=self._force_color_env)
 			self._print_process_header(path, command, process.returncode != 0, process.returncode)
 			if process.stdout and not process.stdout.isspace():
 				print(process.stdout)
@@ -244,7 +245,7 @@ class Runner:
 
 		async def run_process(path: str) -> None:
 			async with sem:
-				process = await asyncio.create_subprocess_shell(command, cwd=path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+				process = await asyncio.create_subprocess_shell(command, cwd=path, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=self._force_color_env)
 				stdout, stderr = await process.communicate()
 				self._print_process_header(path, command, process.returncode != 0, process.returncode)
 				if stderr:
@@ -267,7 +268,7 @@ class Runner:
 		await asyncio.gather(*tasks)
 
 	async def _run_process(self, path: str, table: Dict[str, List[str]], command: str) -> None:
-		process = await asyncio.create_subprocess_shell(command, cwd=path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		process = await asyncio.create_subprocess_shell(command, cwd=path, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=self._force_color_env)
 		table[path] = ['', f'{YELLOW}{glyphs("running")}{RESET}']
 
 		while True:
@@ -398,10 +399,10 @@ class Runner:
 
 	@staticmethod
 	def _print_process_header(path: str, command: str, failed: bool, code: int) -> None:
-		path = f'{BKG_BLACK}{Runner._get_formatted_path(path)}{RESET}'
-		command = f'{BKG_WHITE}{BLACK}{glyphs(")")}{glyphs("space")}{glyphs("terminal")}{glyphs("space")}{BOLD}{command} {END_BOLD}{WHITE}{RESET}'
-		code = f'{WHITE}{BKG_RED if failed else BKG_GREEN}{glyphs(")")}{BRIGHT_WHITE}{glyphs("space")}{glyphs("failed") if failed else glyphs("finished")} {f"Code: {BOLD}{code}" if failed else ""}{glyphs("space")}{RESET}{RED if failed else GREEN}{glyphs(")")}{RESET}'
-		print(f'{path} {command}{code}')
+		command = f'{BKG_WHITE}{BLACK}{glyphs("space")}{glyphs("terminal")}{glyphs("space")}{BOLD}{command} {END_BOLD}{WHITE}{RESET}{WHITE}{BKG_BLACK}{glyphs(")")}{RESET}'
+		path = f'{BKG_BLACK}{glyphs("space")}{DIM}{glyphs("directory")}{END_DIM}{glyphs("space")}{Runner._get_formatted_path(path)}{glyphs("space")}{RESET}'
+		code = f'{BLACK}{BKG_RED if failed else BKG_GREEN}{glyphs(")")}{BRIGHT_WHITE}{glyphs("space")}{glyphs("failed") if failed else glyphs("finished")} {f"{BOLD}{code}" if failed else ""}{glyphs("space")}{RESET}{RED if failed else GREEN}{glyphs(")")}{RESET}'
+		print(f'{command}{path}{code}')
 
 	@staticmethod
 	def _get_formatted_path(path: str, color: str = None) -> str:

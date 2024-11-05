@@ -83,6 +83,7 @@ GLYPHS = {
 	'label':		['\uf435',	''],
 	'tag':			['\uf02b',	'>'],
 	'terminal':		['\ue795',	''],
+	'directory':	['\uf4d4',	''],
 	'(':			['\uE0B2',	''],
 	')':			['\uE0B0',	' '],
 	'weight':		['\uee94',	''],
