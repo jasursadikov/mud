@@ -11,7 +11,7 @@ from mud.styles import *
 
 
 class Runner:
-	_force_color_env = {"GIT_PAGER": "cat", "GIT_CONFIG_PARAMETERS": "'color.ui=always'"}
+	_force_color_env = {"GIT_PAGER": "cat", "TERM": "xterm-256color", "GIT_CONFIG_PARAMETERS": "'color.ui=always'"}
 	_label_color_cache = {}
 	_current_color_index = 0
 
