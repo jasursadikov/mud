@@ -2,8 +2,9 @@
 
 ![Version](https://img.shields.io/pypi/v/mud-git?logo=python)
 ![AUR Version](https://img.shields.io/aur/version/mud-git?logo=archlinux)
-![Build Status](https://img.shields.io/github/actions/workflow/status/jasursadikov/mud/test.yaml?logo=github)
-![Pulbish](https://img.shields.io/github/actions/workflow/status/jasursadikov/mud/publish.yaml?logo=github)
+[![Test projects integrity](https://github.com/jasursadikov/mud/actions/workflows/test.yaml/badge.svg)](https://github.com/jasursadikov/mud/actions/workflows/test.yaml)
+[![Publish Python Package](https://github.com/jasursadikov/mud/actions/workflows/publish-pypi.yaml/badge.svg)](https://github.com/jasursadikov/mud/actions/workflows/publish-pypi.yaml)
+[![Publish to AUR](https://github.com/jasursadikov/mud/actions/workflows/publish-aur.yaml/badge.svg)](https://github.com/jasursadikov/mud/actions/workflows/publish-aur.yaml)
 
 ![Demo](./img.png)
 
