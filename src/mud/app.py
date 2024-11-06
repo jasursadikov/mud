@@ -44,17 +44,17 @@ class App:
 		remove_parser.add_argument('label', help='Label to remove from repository (optional).', nargs='?', default='', type=str)
 		remove_parser.add_argument('path', help='Repository to remove (optional).', nargs='?', type=str)
 
-		parser.add_argument(*COMMAND_ATTR, metavar='COMMAND', nargs='?', default='', type=str, help=f'Explicit command argument. Use this when you want to run a command that has a special characters.')
-		parser.add_argument(*TABLE_ATTR, metavar='TABLE', nargs='?', default='', type=str, help=f'Switches table view, runs in table view it is disabled in {BOLD}.mudsettings{RESET}.')
-		parser.add_argument(*LABEL_PREFIX, metavar='LABEL', nargs='?', default='', type=str, help='Includes repositories with provided label.')
-		parser.add_argument(*NOT_LABEL_PREFIX, metavar='NOT_LABEL', nargs='?', default='', type=str, help=f'Excludes repositories with provided label..')
-		parser.add_argument(*BRANCH_PREFIX, metavar='BRANCH', nargs='?', default='', type=str, help='Includes repositories on a provided branch.')
-		parser.add_argument(*NOT_BRANCH_PREFIX, metavar='NOT_BRANCH', nargs='?', default='', type=str, help='Excludes repositories on a provided branch.')
+		parser.add_argument(*COMMAND_ATTR, metavar='COMMAND', help=f'Explicit command argument. Use this when you want to run a command that has a special characters.', nargs='?', default='', type=str)
+		parser.add_argument(*TABLE_ATTR, metavar='TABLE', help=f'Switches table view, runs in table view it is disabled in {BOLD}.mudsettings{RESET}.', nargs='?', default='', type=str)
+		parser.add_argument(*LABEL_PREFIX, metavar='LABEL', help='Includes repositories with provided label.', nargs='?', default='', type=str)
+		parser.add_argument(*NOT_LABEL_PREFIX, metavar='NOT_LABEL', help=f'Excludes repositories with provided label..', nargs='?', default='', type=str)
+		parser.add_argument(*BRANCH_PREFIX, metavar='BRANCH', help='Includes repositories on a provided branch.', nargs='?', default='', type=str)
+		parser.add_argument(*NOT_BRANCH_PREFIX, metavar='NOT_BRANCH', help='Excludes repositories on a provided branch.', nargs='?', default='', type=str)
 		parser.add_argument(*MODIFIED_ATTR, action='store_true', help='Filters modified repositories.')
 		parser.add_argument(*DIVERGED_ATTR, action='store_true', help='Filters repositories with diverged branches.')
 		parser.add_argument(*ASYNC_ATTR, action='store_true', help='Switches asynchronous run feature.')
 		parser.add_argument(SET_GLOBAL[0], help=f'Sets {BOLD}.mudconfig{RESET} in the current repository as your fallback {BOLD}.mudconfig{RESET}.', action='store_true')
-		parser.add_argument('catch_all', nargs='*', help='Type any commands to execute among repositories.')
+		parser.add_argument('catch_all', help='Type any commands to execute among repositories.', nargs='*')
 		return parser
 
 	def run(self) -> None:
