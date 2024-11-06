@@ -1,4 +1,4 @@
-name: Publish to AUR
+name: Upload to Arch Linux User Repository (AUR)
 
 on:
   workflow_run:
