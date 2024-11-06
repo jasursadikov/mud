@@ -1,12 +1,9 @@
-name: Test
+name: Release Test
 
 on:
   push:
-    branches:
-      - '*'
-  pull_request:
-    branches:
-      - master
+    tags:
+      - 'v*.*.*'
 
 permissions:
   contents: read
