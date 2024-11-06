@@ -46,7 +46,7 @@ class Config:
 			self.load(utils.CONFIG_FILE_NAME)
 			return
 
-		utils.print_error(f'{BOLD}.mudconfig{RESET} file was not found. Type `mud init` to create configuration file.', 11)
+		utils.print_error(f'{BOLD}{utils.CONFIG_FILE_NAME}{RESET} was not found. Type `mud init` to create configuration file.', 11, exit=True)
 		return
 
 	def load(self, file_path: str) -> None:

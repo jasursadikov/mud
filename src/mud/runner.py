@@ -400,17 +400,17 @@ class Runner:
 
 	@staticmethod
 	def _print_process_header(path: str, command: str, failed: bool, code: int) -> None:
-		command = f'{BKG_WHITE}{BLACK}{glyphs("space")}{glyphs("terminal")}{glyphs("space")}{BOLD}{command} {END_BOLD}{WHITE}{RESET}{WHITE}{BKG_BLACK}{glyphs(")")}{RESET}'
-		path = f'{BKG_BLACK}{glyphs("space")}{DIM}{glyphs("directory")}{END_DIM}{glyphs("space")}{Runner._get_formatted_path(path)}{glyphs("space")}{RESET}'
-		code = f'{BLACK}{BKG_RED if failed else BKG_GREEN}{glyphs(")")}{BRIGHT_WHITE}{glyphs("space")}{glyphs("failed") if failed else glyphs("finished")} {f"{BOLD}{code}" if failed else ""}{glyphs("space")}{RESET}{RED if failed else GREEN}{glyphs(")")}{RESET}'
-		print(f'{command}{path}{code}')
+		command = f'{BKG_WHITE}{BLACK}{glyphs("space")}{glyphs("terminal")} {BOLD}{command} {END_BOLD}{WHITE}{RESET}'
+		code = f'{WHITE}{BKG_RED if failed else BKG_GREEN}{glyphs(")")} {glyphs("failed") if failed else glyphs("finished")} {f"{BOLD}{code}" if failed else ""}{glyphs("space")}{RESET}'
+		path = f'{BKG_BLACK}{RED if failed else GREEN}{glyphs(")")}{RESET}{BKG_BLACK}{glyphs("space")}{WHITE}{glyphs("directory")}{END_DIM} {Runner._get_formatted_path(path)}{BKG_BLACK} {RESET}{BLACK}{glyphs(")")}{RESET}'
+		print(f'{command}{code}{path}')
 
 	@staticmethod
 	def _get_formatted_path(path: str, color: str = None) -> str:
 		collapse_paths = utils.settings.config['mud'].getboolean('collapse_paths', fallback=False)
 
 		if color is None:
-			color = WHITE
+			color = ''
 
 		in_quotes = path.startswith('\"') and path.endswith('\"')
 		quote = '\"' if in_quotes else ''
@@ -473,8 +473,8 @@ class Runner:
 		for branch in branches:
 			prefix = f'{BOLD}{RED}*{RESET}' if current_branch == branch else ''
 			icon = Runner._get_branch_icon(branch.split('/')[0])
-			branch = Runner._get_formatted_path(branch, BRIGHT_WHITE)
-			output += f'{icon}{glyphs("space")}{prefix}{BRIGHT_WHITE}{branch}{RESET} '
+			branch = Runner._get_formatted_path(branch)
+			output += f'{icon}{glyphs("space")}{prefix}{branch}{RESET} '
 		return output
 
 	@staticmethod
