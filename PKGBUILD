@@ -20,7 +20,7 @@ makedepends=(
     'python-setuptools'
     'python-setuptools-scm'
 )
-source=("${pkgname}::git+${url}")
+source=("${pkgname}::git+${url}#tag=v${pkgver}")
 md5sums=('SKIP')
 
 build() {
