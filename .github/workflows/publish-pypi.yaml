@@ -11,25 +11,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Check out the repository
-      uses: actions/checkout@v3
+      - name: Check out the repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.12'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install build twine
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine
 
-    - name: Build the package
-      run: python -m build
+      - name: Build the package
+        run: |
+          rm -rf dist  # Clean up any previous builds
+          python -m build
 
-    - name: Publish to PyPI
-      env:
-        TWINE_USERNAME: "__token__"
-        TWINE_PASSWORD: ${{ secrets.TWINE_PAT }}
-      run: |
-        twine upload dist/*
+      - name: Publish to PyPI
+        env:
+          TWINE_USERNAME: "__token__"
+          TWINE_PASSWORD: ${{ secrets.TWINE_PAT }}
+        run: |
+          twine upload dist/*
