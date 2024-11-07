@@ -1,7 +1,7 @@
 # Maintainer: Jasur Sadikov <jasur@sadikoff.com>
 pkgname=mud-git
 _pkgname=mud
-pkgver=1.0.8
+pkgver=1.0.0
 pkgrel=1
 pkgdesc="Multi repository git utility. Manage multiple git-repositories simultaneously."
 arch=('any')
@@ -23,10 +23,6 @@ makedepends=(
 )
 source=("${pkgname}::git+${url}#tag=v${pkgver}")
 md5sums=('SKIP')
-
-pkgver() {
-	git -C "${_pkgname}" describe --tags --abbrev=0 | sed 's/^v//' 
-}
 
 build() {
     cd "$srcdir/$pkgname"
