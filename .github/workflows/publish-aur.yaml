@@ -1,10 +1,8 @@
 name: Upload to Arch Linux (AUR)
 
 on:
-  workflow_run:
-    workflows: ["Release Test"]
-    types:
-      - completed
+  release:
+    types: [published]
 
 jobs:
   aur-publish:
