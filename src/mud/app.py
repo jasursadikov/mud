@@ -23,18 +23,19 @@ class App:
 
 	@staticmethod
 	def _create_parser() -> ArgumentParser:
-		parser = argparse.ArgumentParser(description=f'{BOLD}mud{RESET} allows you to run commands in multiple repositories.')
+		parser = argparse.ArgumentParser(description=f'mud allows you to run commands in multiple repositories.')
 		subparsers = parser.add_subparsers(dest='command')
 
 		subparsers.add_parser(LOG[0], aliases=LOG[1:], help='Displays log of latest commit messages for all repositories in a table view.')
 		subparsers.add_parser(INFO[0], aliases=INFO[1:], help='Displays branch divergence and working directory changes')
-		subparsers.add_parser(INIT[0], aliases=INIT[1:], help=f'Initializes the {BOLD}.mudconfig{RESET} and adds all repositories in this directory to {BOLD}.mudconfig{RESET}.')
+		subparsers.add_parser(INIT[0], aliases=INIT[1:], help=f'Initializes the .mudconfig and adds all repositories in this directory to .mudconfig.')
 		subparsers.add_parser(TAGS[0], aliases=TAGS[1:], help='Displays git tags in repositories.')
 		subparsers.add_parser(LABELS[0], aliases=LABELS[1:], help='Displays mud labels across repositories.')
 		subparsers.add_parser(STATUS[0], aliases=STATUS[1:], help='Displays working directory changes.')
 		subparsers.add_parser(BRANCHES[0], aliases=BRANCHES[1:], help='Displays all branches in repositories.')
 		subparsers.add_parser(REMOTE_BRANCHES[0], aliases=REMOTE_BRANCHES[1:], help='Displays all remote branches in repositories.')
 		subparsers.add_parser(CONFIGURE[0], aliases=CONFIGURE[1:], help='Runs the interactive configuration wizard.')
+		subparsers.add_parser(GET_CONFIG[0], aliases=GET_CONFIG[1:], help='Prints current .mudconfig path.')
 
 		add_parser = subparsers.add_parser(ADD[0], aliases=ADD[1:], help='Adds repository or labels an existing repository.')
 		add_parser.add_argument('label', help='The label to add (optional).', nargs='?', default='', type=str)
@@ -53,7 +54,7 @@ class App:
 		parser.add_argument(*MODIFIED_ATTR, action='store_true', help='Filters modified repositories.')
 		parser.add_argument(*DIVERGED_ATTR, action='store_true', help='Filters repositories with diverged branches.')
 		parser.add_argument(*ASYNC_ATTR, action='store_true', help='Switches asynchronous run feature.')
-		parser.add_argument(SET_GLOBAL[0], help=f'Sets {BOLD}.mudconfig{RESET} in the current repository as your fallback {BOLD}.mudconfig{RESET}.', action='store_true')
+		parser.add_argument(SET_GLOBAL[0], help=f'Sets .mudconfig in the current repository as your fallback .mudconfig.', action='store_true')
 		parser.add_argument('catch_all', help='Type any commands to execute among repositories.', nargs='*')
 		return parser
 
@@ -66,11 +67,19 @@ class App:
 			return
 		# Sets global repository in .mudsettings
 		if sys.argv[1] in SET_GLOBAL:
-			config_path = os.path.join(os.getcwd(), utils.CONFIG_FILE_NAME)
+			if len(sys.argv) > 2:
+				config_path = sys.argv[2]
+				if not os.path.isabs(config_path):
+					config_path = os.path.abspath(config_path)
+			else:
+				config_path = os.path.join(os.getcwd(), utils.CONFIG_FILE_NAME)
+
 			if os.path.exists(config_path):
 				utils.settings.config.set('mud', 'config_path', config_path)
 				utils.settings.save()
-				print(f'Current {BOLD}.mudconfig{RESET} set as a global configuration.')
+				print(f'{config_path} set as a global.')
+			else:
+				utils.print_error(f'File {config_path} not found')
 			return
 		# Runs configuration wizard
 		elif sys.argv[1] in CONFIGURE:
@@ -85,7 +94,13 @@ class App:
 			self.init(self.parser.parse_args())
 			return
 
-		self.config.find()
+		config_path = self.config.find()
+
+		# Prints current config path
+		if sys.argv[1] in GET_CONFIG:
+			print(config_path)
+			return
+
 		self._filter_with_arguments()
 
 		self.cmd_runner = Runner(self.config)

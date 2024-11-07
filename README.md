@@ -25,18 +25,18 @@ paru -S mud-git
 1. Run `mud config` to start interactive wizard which help you to set the preferable settings. Check [settings](#settings) section for more. At the end, `.mudsettings` file will appear at your home directory that you can alter in the future.
 2. Locate to your preferable directory with repositories.
 3. Run `mud init` command to create `.mudconfig` file. This file is important to keep references to repositories. All repositories in current dictionary would be included to `.mudconfig`.
-4. Optional: Run [`mud --set-global`](#global-mudconfig) to make current configuration default and reachable from any directory.
+4. Optional: Run [`mud set-global`](#commands) to make current configuration default and reachable from any directory.
 
 All entries are stored in `.mudconfig` in TSV format. After making your first entry, you can open `.mudconfig` in a text editor and modify it according to your needs.
-
-### Global .mudconfig
-- `mud --set-global` - sets current `.mudconfig` as a global configuration, so it would be used as a fallback configuration to run from any directory.
 
 ## Using
 
 ### Commands
-`mud <FILTER> <COMMAND>` will execute bash command across all repositories. To filter repositories check [arguments](#arguments) section.
 
+- `mud set-global` - sets current `.mudconfig` as a global configuration, so it would be used as a fallback configuration to run from any directory.
+- `mud get-config` - prints closest `.mudconfig` location.
+
+`mud <FILTER> <COMMAND>` will execute bash command across all repositories. To filter repositories check [arguments](#arguments) section.
 - `mud info`/`mud i` - displays branch divergence and working directory changes.
 - `mud status`/`mud st` - displays working directory changes.
 - `mud log`/`mud l` - displays latest commit message, it's time and it's author.
@@ -59,8 +59,11 @@ All entries are stored in `.mudconfig` in TSV format. After making your first en
 Example:
 
 ```bash
-mud -b=master -d git pull
 # Filters out all repos with master branch and diverged branches and then runs pull command.
+mud -b=master -d git pull
+
+# Fetches all repositories that are not on master branch and have "personal" label but excluding ones with "work" label
+mud -nb=master -l=personal -nl=work git fetch
 ```
 
 ## Settings

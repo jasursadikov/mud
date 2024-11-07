@@ -24,30 +24,24 @@ class Config:
 				formatted_labels = ','.join(valid_labels) if valid_labels else ''
 				writer.writerow([path, formatted_labels])
 
-	def find(self) -> None:
-		if os.path.exists(utils.CONFIG_FILE_NAME):
-			self.load(utils.CONFIG_FILE_NAME)
-			return
-
+	def find(self) -> str:
 		directory = os.getcwd()
 		current_path = directory
 		while os.path.dirname(current_path) != current_path:
 			os.chdir(current_path)
 			if os.path.exists(utils.CONFIG_FILE_NAME):
 				self.load(utils.CONFIG_FILE_NAME)
-				return utils.CONFIG_FILE_NAME
+				return current_path
 			current_path = os.path.dirname(current_path)
 
-		if utils.settings.mud_settings['config_path'] != '' and os.path.exists(
-				utils.settings.mud_settings['config_path']):
+		if utils.settings.mud_settings['config_path'] != '' and os.path.exists(utils.settings.mud_settings['config_path']):
 			directory = os.path.dirname(utils.settings.mud_settings['config_path'])
 			os.chdir(directory)
 			os.environ['PWD'] = directory
 			self.load(utils.CONFIG_FILE_NAME)
-			return
+			return current_path
 
-		utils.print_error(f'{BOLD}{utils.CONFIG_FILE_NAME}{RESET} was not found. Type `mud init` to create configuration file.', 11, exit=True)
-		return
+		utils.print_error(f'{BOLD}{utils.CONFIG_FILE_NAME}{RESET} was not found. Run \'mud init\' to create a configuration file.', 11, exit=True)
 
 	def load(self, file_path: str) -> None:
 		self.data = {}
