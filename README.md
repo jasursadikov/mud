@@ -55,6 +55,7 @@ All entries are stored in `.mudconfig` in TSV format. After making your first en
 - `-d` or `--diverged` - filters repositories with diverged branches.
 - `-t` or `--table` - toggles default table view setting for run.
 - `-a` or `--async` - toggles asynchronous run feature.
+- `-p` or `--plain` - removes all decorations from the ouput.
 
 Example:
 
@@ -72,7 +73,7 @@ Settings are stored in your home directory in `.mudsettings` file.
 - `nerd_fonts = 0/1` - use nerd fonts in the output 💅.
 - `show_borders = 0/1` - enables borders in table view.
 - `collapse_paths = 0/1` - simplifies branch name in the branch view.
-- `config_path = /home/user/path/.mudconfig` - this is set up by `mud --set-global` [command](#global-mudconfig).
+- `config_path = /home/user/path/.mudconfig` - this is set up by `mud set-global` [command](#global-mudconfig).
 
 ### Aliases
 

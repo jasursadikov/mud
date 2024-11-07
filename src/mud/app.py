@@ -53,6 +53,7 @@ class App:
 		parser.add_argument(*MODIFIED_ATTR, action='store_true', help='Filters modified repositories.')
 		parser.add_argument(*DIVERGED_ATTR, action='store_true', help='Filters repositories with diverged branches.')
 		parser.add_argument(*ASYNC_ATTR, action='store_true', help='Switches asynchronous run feature.')
+		parser.add_argument(*PLAIN_ATTR, action='store_true', help='Removes all decorations.')
 		parser.add_argument(SET_GLOBAL[0], help=f'Sets {BOLD}.mudconfig{RESET} in the current repository as your fallback {BOLD}.mudconfig{RESET}.', action='store_true')
 		parser.add_argument('catch_all', help='Type any commands to execute among repositories.', nargs='*')
 		return parser
@@ -202,6 +203,9 @@ class App:
 				self.table = not self.table
 			elif arg in ASYNC_ATTR:
 				self.run_async = not self.run_async
+			elif arg in PLAIN_ATTR:
+				utils.settings.config['mud']['nerd_fonts'] = 'False'
+				plain()
 			elif any(arg.startswith(prefix) for prefix in COMMAND_ATTR):
 				self.command = arg.split('=', 1)[1]
 			else:
