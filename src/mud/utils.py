@@ -96,12 +96,12 @@ def table_to_str(table: PrettyTable) -> str:
 
 def get_table(field_names: List[str]) -> PrettyTable:
 	def set_style(item: str) -> str:
-		return f'{DIM}{GRAY}{item}{RESET}'
+		return f'{DIM}{item}{RESET}'
 
 	borders = settings.config['mud'].getboolean('show_borders', fallback=False)
 	table = PrettyTable(border=borders, header=False, style=PLAIN_COLUMNS, align='l')
 	if borders:
-		table.horizontal_char = set_style('─')
+		table.horizontal_char = set_style(f'─')
 		table.vertical_char = set_style('│')
 		table.junction_char = set_style('┼')
 
