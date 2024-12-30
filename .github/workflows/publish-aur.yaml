@@ -27,5 +27,5 @@ jobs:
           commit_username: ${{ secrets.AUR_USERNAME }}
           commit_email: ${{ secrets.AUR_EMAIL }}
           ssh_private_key: ${{ secrets.AUR_SSH_KEY }}
-          commit_message: "Update AUR package to version ${latest_version}"
+          commit_message: "Update AUR package to version ${{ env.latest_version }}"
           ssh_keyscan_types: rsa,ecdsa,
