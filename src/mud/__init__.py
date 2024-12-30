@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from mud import utils, settings
-from mud.app import App
+from . import utils, settings
+from .app import App
 
 
 def run():
