@@ -124,7 +124,7 @@ class Runner:
 
 	# `mud log` command implementation
 	def log(self, repos: Dict[str, List[str]]) -> None:
-		table = utils.get_table(['Path', 'Branch', 'Author', 'Time', 'Message'])
+		table = utils.get_table(['Path', 'Branch', 'Hash', 'Author', 'Time', 'Message'])
 
 		for path in repos.keys():
 			formatted_path = self._get_formatted_path(path)
@@ -132,11 +132,15 @@ class Runner:
 			author = self._get_authors_name(path)
 			commit = self._get_commit_message(path)
 
+			# Commit hash
+			commit_hash_cmd = subprocess.run('git rev-parse --short HEAD', shell=True, text=True, cwd=path, capture_output=True)
+			commit_hash = commit_hash_cmd.stdout.strip()
+
 			# Commit time
 			commit_time_cmd = subprocess.run('git log -1 --pretty=format:%cd --date=relative', shell=True, text=True, cwd=path, capture_output=True)
 			commit_time = commit_time_cmd.stdout.strip()
 
-			table.add_row([formatted_path, branch, author, commit_time, commit])
+			table.add_row([formatted_path, branch, commit_hash, author, commit_time, commit])
 
 		utils.print_table(table)
 
