@@ -61,6 +61,11 @@ jobs:
             mud remove label_$i
           done
           mud lb
+      - name: Test prune command
+        run: |
+          echo "mud prune"
+          echo -e "test1_remove\ntest2_remove" > .mudconfig
+          mud prune
       - name: Add all repositories with labels
         run: |
           rm .mudconfig
@@ -83,9 +88,6 @@ jobs:
           mud branch
           echo "mud tags"
           mud tags
-          echo "mud prune"
-          echo -e "test1_remove\ntest2_remove" > .mudconfig
-          mud prune
       - name: Test custom command
         run: |
           mud echo "Hello world"
