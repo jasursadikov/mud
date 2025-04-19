@@ -45,6 +45,8 @@ class App:
 		remove_parser.add_argument('label', help='Label to remove from repository (optional).', nargs='?', default='', type=str)
 		remove_parser.add_argument('path', help='Repository to remove (optional).', nargs='?', type=str)
 
+		subparsers.add_parser(PRUNE[0], help='Removes invalid paths from .mudconfig.')
+
 		parser.add_argument(*COMMAND_ATTR, metavar='COMMAND', help=f'Explicit command argument. Use this when you want to run a command that has a special characters.', nargs='?', default='', type=str)
 		parser.add_argument(*TABLE_ATTR, metavar='TABLE', help=f'Switches table view, runs in table view it is disabled in {BOLD}.mudsettings{RESET}.', nargs='?', default='', type=str)
 		parser.add_argument(*LABEL_PREFIX, metavar='LABEL', help='Includes repositories with provided label.', nargs='?', default='', type=str)
@@ -68,18 +70,18 @@ class App:
 		# Sets global repository in .mudsettings
 		if sys.argv[1] in SET_GLOBAL:
 			if len(sys.argv) > 2:
-				config_path = sys.argv[2]
-				if not os.path.isabs(config_path):
-					config_path = os.path.abspath(config_path)
+				config_dir = sys.argv[2]
+				if not os.path.isabs(config_dir):
+					config_dir = os.path.abspath(config_dir)
 			else:
-				config_path = os.path.join(os.getcwd(), utils.CONFIG_FILE_NAME)
+				config_dir = os.path.join(os.getcwd(), utils.CONFIG_FILE_NAME)
 
-			if os.path.exists(config_path):
-				utils.settings.config.set('mud', 'config_path', config_path)
+			if os.path.exists(config_dir):
+				utils.settings.config.set('mud', 'config_path', config_dir)
 				utils.settings.save()
-				print(f'{config_path} set as a global.')
+				print(f'{config_dir} set as a global.')
 			else:
-				utils.print_error(f'File {config_path} not found')
+				utils.print_error(f'File {config_dir} not found')
 			return
 		# Runs configuration wizard
 		elif sys.argv[1] in CONFIGURE:
@@ -94,11 +96,15 @@ class App:
 			self.init(self.parser.parse_args())
 			return
 
-		config_path = self.config.find()
+		config_dir = self.config.find()
 
 		# Prints current config path
 		if sys.argv[1] in GET_CONFIG:
-			print(config_path)
+			print(config_dir)
+			return
+		elif sys.argv[1] in PRUNE:
+			self.config.prune(config_dir)
+			self.config.save(utils.CONFIG_FILE_NAME)
 			return
 
 		self._filter_with_arguments()

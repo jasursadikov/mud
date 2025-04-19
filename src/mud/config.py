@@ -2,7 +2,7 @@ import os
 import re
 import csv
 
-from typing import List, Dict
+from typing import List, Dict, Any
 
 from mud import utils
 from mud.styles import *
@@ -71,6 +71,9 @@ class Config:
 		return result
 
 	def add_label(self, path: str, label: str) -> None:
+		if path == '.':
+			conf_path = Config().find()
+			path = os.path.relpath(conf_path, os.getcwd())
 		if path is None:
 			path = label
 			label = None
@@ -81,6 +84,13 @@ class Config:
 			self.data[path] = []
 		if label is not None and label not in self.data[path]:
 			self.data[path].append(label)
+
+	def prune(self, config_dir: str):
+		for path, label in list(self.data.items()):
+			abs_path = path if os.path.abspath(path) else os.path.join(config_dir, path)
+			if not os.path.exists(abs_path):
+				del self.data[path]
+				print(f'Removing {path}')
 
 	def remove_path(self, path: str) -> None:
 		if path in self.data:

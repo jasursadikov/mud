@@ -1,6 +1,7 @@
 # Commands
 ADD = ['add', 'a']
 REMOVE = ['remove', 'rm']
+PRUNE = ['prune']
 LOG = ['log', 'l']
 INFO = ['info', 'i']
 INIT = ['init']
@@ -14,7 +15,7 @@ CONFIGURE = ['configure', 'config']
 GET_CONFIG = ['get-config']
 SET_GLOBAL = ['set-global']
 
-COMMANDS = [ADD, REMOVE, LOG, INFO, INIT, TAGS, LABELS, STATUS, BRANCHES, REMOTE_BRANCHES, HELP, CONFIGURE, SET_GLOBAL, GET_CONFIG]
+COMMANDS = [ADD, REMOVE, PRUNE, LOG, INFO, INIT, TAGS, LABELS, STATUS, BRANCHES, REMOTE_BRANCHES, HELP, CONFIGURE, SET_GLOBAL, GET_CONFIG]
 
 # Filters
 ASYNC_ATTR = '-a', '--async'
