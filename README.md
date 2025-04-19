@@ -35,6 +35,7 @@ All entries are stored in `.mudconfig` in TSV format. After making your first en
 
 - `mud set-global` - sets the current `.mudconfig` as a global configuration so it will be used as a fallback configuration to run from any directory.
 - `mud get-config` - prints the closest `.mudconfig` location.
+- `mud prune` - removes all invalid repositories from `.mudconfig`.
 
 `mud <FILTER> <COMMAND>` will execute a bash command across all repositories. To filter repositories, check the [arguments](#arguments) section.
 - `mud info`/`mud i` - displays branch divergence and working directory changes.

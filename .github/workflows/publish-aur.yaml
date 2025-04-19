@@ -16,11 +16,14 @@ jobs:
       - name: Update PKGBUILD with Tag Version
         run: |
           version=$(git describe --tags --abbrev=0 | sed 's/^v//')
+          echo "latest_version=$version" >> $GITHUB_ENV
           sed -i "s/^pkgver=.*/pkgver=${version}/" PKGBUILD
           cat PKGBUILD
 
       - name: Publish AUR package
         uses: KSXGitHub/github-actions-deploy-aur@v3.0.1
+        env:
+          latest_version: ${{ env.latest_version }}
         with:
           pkgname: mud-git
           pkgbuild: ./PKGBUILD
