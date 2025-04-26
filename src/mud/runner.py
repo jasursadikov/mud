@@ -133,8 +133,8 @@ class Runner:
 			commit = self._get_commit_message(path)
 
 			# Commit hash
-			commit_hash_cmd = subprocess.run('git rev-parse --short HEAD', shell=True, text=True, cwd=path, capture_output=True)
-			commit_hash = commit_hash_cmd.stdout.strip()
+			commit_hash_cmd = subprocess.run('git rev-parse --short=8 HEAD', shell=True, text=True, cwd=path, capture_output=True)
+			commit_hash = f'{YELLOW}{commit_hash_cmd.stdout.strip()}{RESET}'
 
 			# Commit time
 			commit_time_cmd = subprocess.run('git log -1 --pretty=format:%cd --date=relative', shell=True, text=True, cwd=path, capture_output=True)
