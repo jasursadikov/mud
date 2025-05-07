@@ -40,6 +40,7 @@ def configure() -> None:
 		settings.config['mud']['nerd_fonts'] = str(ask(f'Do you want to use {BOLD}nerd-fonts{RESET}?'))
 		settings.config['mud']['show_borders'] = str(ask(f'Do you want to see borders in table view?'))
 		settings.config['mud']['collapse_paths'] = str(ask(f'Do you want to collapse paths, such as directory paths and branches? (ex. {BOLD}feature/name{RESET} -> {BOLD}f/name{RESET}'))
+		settings.config['mud']['display_absolute_paths'] = str(ask(f'Do you want to display absolute paths for directories? (ex. {BOLD}~/Documents/repo{RESET} -> {BOLD}/home/user/Documents/repo{RESET}'))
 	except KeyboardInterrupt:
 		return
 
@@ -96,12 +97,12 @@ def table_to_str(table: PrettyTable) -> str:
 
 def get_table(field_names: List[str]) -> PrettyTable:
 	def set_style(item: str) -> str:
-		return f'{DIM}{item}{RESET}'
+		return f'{GRAY}{item}{RESET}'
 
 	borders = settings.config['mud'].getboolean('show_borders', fallback=False)
 	table = PrettyTable(border=borders, header=False, style=PLAIN_COLUMNS, align='l')
 	if borders:
-		table.horizontal_char = set_style(f'─')
+		table.horizontal_char = set_style('─')
 		table.vertical_char = set_style('│')
 		table.junction_char = set_style('┼')
 
@@ -110,10 +111,10 @@ def get_table(field_names: List[str]) -> PrettyTable:
 		table.left_junction_char = set_style('├')
 		table.right_junction_char = set_style('┤')
 
-		table.top_left_junction_char = set_style('╭')
-		table.top_right_junction_char = set_style('╮')
-		table.bottom_left_junction_char = set_style('╰')
-		table.bottom_right_junction_char = set_style('╯')
+		table.top_left_junction_char = set_style('┌')
+		table.top_right_junction_char = set_style('┐')
+		table.bottom_left_junction_char = set_style('└')
+		table.bottom_right_junction_char = set_style('┘')
 
 	table.field_names = field_names
 
@@ -121,6 +122,6 @@ def get_table(field_names: List[str]) -> PrettyTable:
 
 
 def print_error(text: str, code: int = 255, exit: bool = False) -> None:
-	print(f'{BKG_RED}{BRIGHT_WHITE}{glyphs("space")}Error {code}{glyphs("space")}{RESET}{RED}{glyphs(")")}{RESET} {text}')
+	print(f'{RED}Error [{code}]{RESET} {text}')
 	if exit:
 		sys.exit(code)

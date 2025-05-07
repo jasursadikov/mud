@@ -90,7 +90,7 @@ class Config:
 			abs_path = path if os.path.abspath(path) else os.path.join(config_dir, path)
 			if not os.path.exists(abs_path):
 				del self.data[path]
-				print(f'Removing {path}')
+				print(path)
 
 	def remove_path(self, path: str) -> None:
 		if path in self.data:

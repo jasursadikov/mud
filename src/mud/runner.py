@@ -410,8 +410,9 @@ class Runner:
 		print(f'{command}{code}{path}')
 
 	@staticmethod
-	def _get_formatted_path(path: str, color: str = None) -> str:
+	def _get_formatted_path(path: str, file_system: bool = True, color: str = None) -> str:
 		collapse_paths = utils.settings.config['mud'].getboolean('collapse_paths', fallback=False)
+		abs_path = utils.settings.config['mud'].getboolean('display_absolute_paths', fallback=False)
 
 		if color is None:
 			color = ''
@@ -424,6 +425,9 @@ class Runner:
 
 		def apply_styles(text: str) -> str:
 			return color + quote + text + quote + RESET
+
+		if file_system and abs_path:
+			return apply_styles(os.path.abspath(path))
 
 		if os.path.isabs(path):
 			home = os.path.expanduser('~')
@@ -477,7 +481,7 @@ class Runner:
 		for branch in branches:
 			prefix = f'{BOLD}{RED}*{RESET}' if current_branch == branch else ''
 			icon = Runner._get_branch_icon(branch.split('/')[0])
-			branch = Runner._get_formatted_path(branch)
+			branch = Runner._get_formatted_path(branch, False)
 			output += f'{icon}{glyphs("space")}{prefix}{branch}{RESET} '
 		return output
 

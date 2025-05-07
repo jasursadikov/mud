@@ -38,12 +38,12 @@ class App:
 		subparsers.add_parser(GET_CONFIG[0], aliases=GET_CONFIG[1:], help='Prints current .mudconfig path.')
 
 		add_parser = subparsers.add_parser(ADD[0], aliases=ADD[1:], help='Adds repository or labels an existing repository.')
+		add_parser.add_argument('path', help='Repository to add.', nargs='?', type=str)
 		add_parser.add_argument('label', help='The label to add (optional).', nargs='?', default='', type=str)
-		add_parser.add_argument('path', help='Repository to add (optional).', nargs='?', type=str)
 
 		remove_parser = subparsers.add_parser(REMOVE[0], aliases=REMOVE[1:], help='Removes repository or removes the label from an existing repository.')
+		remove_parser.add_argument('path', help='Repository to remove.', nargs='?', type=str)
 		remove_parser.add_argument('label', help='Label to remove from repository (optional).', nargs='?', default='', type=str)
-		remove_parser.add_argument('path', help='Repository to remove (optional).', nargs='?', type=str)
 
 		subparsers.add_parser(PRUNE[0], help='Removes invalid paths from .mudconfig.')
 
@@ -180,9 +180,9 @@ class App:
 		self.config.save(utils.CONFIG_FILE_NAME)
 
 	def remove(self, args) -> None:
-		if args.path:
+		if args.label and args.path:
 			self.config.remove_label(args.path, args.label)
-		elif args.label:
+		elif args.path:
 			self.config.remove_path(args.label)
 		else:
 			utils.print_error(f'Invalid input. Please provide a value to remove.', 4)
