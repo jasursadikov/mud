@@ -73,9 +73,10 @@ Settings are stored in your home directory in the `.mudsettings` file.
 
 - `run_async = 0/1` - enables asynchronous commands.
 - `run_table = 0/1` - enables table view for asynchronous commands. Requires `run_async`.
-- `nerd_fonts = 0/1` - enables nerd fonts in the output 💅.
+- `nerd_fonts = 0/1` - enables nerd fonts in the output.
 - `show_borders = 0/1` - enables borders in the table view.
 - `collapse_paths = 0/1` - simplifies branch names in the branch view.
+- `display_absolute_paths = 0/1` - displays absolute paths for directories.
 - `config_path = /home/user/path/.mudconfig` - this is set by the `mud set-global` command.
 
 ### Aliases
