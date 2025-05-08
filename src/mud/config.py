@@ -36,12 +36,12 @@ class Config:
 			current_path = os.path.dirname(current_path)
 
 		if utils.settings.mud_settings['config_path'] != '' and os.path.exists(utils.settings.mud_settings['config_path']):
-			directory = os.path.dirname(utils.settings.mud_settings['config_path'])
+			config_path = utils.settings.mud_settings['config_path']
+			directory = os.path.dirname(config_path)
 			os.chdir(directory)
-			os.environ['PWD'] = directory
-			return current_path
+			return directory
 
-		return ''
+		return '/'
 
 	def load(self, file_path: str) -> None:
 		self.data = {}
