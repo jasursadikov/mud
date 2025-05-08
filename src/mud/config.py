@@ -14,7 +14,7 @@ class Config:
 
 	def save(self, file_path: str) -> None:
 		print(file_path)
-		
+
 		def _filter_labels(label: str):
 			return bool(re.match(r'^\w+$', label))
 
@@ -70,7 +70,7 @@ class Config:
 	def add(self, path: str, label: str) -> None:
 		if path == '.':
 			current_path = os.getcwd()
-			config_path = Config().find()
+			config_path = os.path.join(Config().find(), utils.CONFIG_FILE_NAME)
 			path = os.path.relpath(current_path, config_path)
 		if path is None:
 			path = label

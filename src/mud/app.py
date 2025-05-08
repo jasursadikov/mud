@@ -89,7 +89,7 @@ class App:
 		current_directory = os.getcwd()
 		self.config = config.Config()
 
-		config_path = self.config.find()
+		config_path = os.path.join(self.config.find(), utils.CONFIG_FILE_NAME)
 
 		# Prints current config path
 		if sys.argv[1] in GET_CONFIG:
