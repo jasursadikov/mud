@@ -41,11 +41,8 @@ jobs:
               git commit -m "Initial commit"
               cd ..
           done
-
-          echo $PWD
       - name: Initialize
         run: |
-          echo $PWD
           mud init
       - name: Test remove by path
         run: |

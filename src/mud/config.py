@@ -13,10 +13,10 @@ class Config:
 		self.data = {}
 
 	def save(self, file_path: str) -> None:
-		print(os.path.abspath(file_path))
-
 		def _filter_labels(label: str):
 			return bool(re.match(r'^\w+$', label))
+
+		print(file_path)
 
 		with open(file_path, 'w', newline='') as tsvfile:
 			writer = csv.writer(tsvfile, delimiter='\t')

@@ -89,12 +89,8 @@ class App:
 		current_directory = os.getcwd()
 		self.config = config.Config()
 
-		config_path = os.path.join(self.config.find(), utils.CONFIG_FILE_NAME)
-
-		# Prints current config path
-		if sys.argv[1] in GET_CONFIG:
-			print(config_path)
-			return
+		config_directory = self.config.find()
+		config_path = utils.CONFIG_FILE_NAME if config_directory != '' or '/' else os.path.join(config_directory, utils.CONFIG_FILE_NAME)
 
 		runner = Runner(self.config)
 
@@ -102,7 +98,11 @@ class App:
 		if len(sys.argv) > 1 and sys.argv[1] in [cmd for group in COMMANDS for cmd in group]:
 			args = self.parser.parse_args()
 
-			if args.command in INIT + ADD + REMOVE + PRUNE:
+			if args.command in INIT + ADD + REMOVE + PRUNE + GET_CONFIG:
+				if args.command in GET_CONFIG:
+					print(config_path)
+					return
+
 				os.chdir(current_directory)
 				if args.command in INIT:
 					if config_path == current_directory:
@@ -173,8 +173,6 @@ class App:
 		self.repos = self.config.data
 		self.table = utils.settings.config['mud'].getboolean('run_table', fallback=True)
 		self.run_async = utils.settings.config['mud'].getboolean('run_async', fallback=True)
-
-		print(self.run_async)
 
 		for path, labels in self.config.filter_label('ignore', self.config.data).items():
 			del self.repos[path]
