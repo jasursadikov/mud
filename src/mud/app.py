@@ -86,11 +86,11 @@ class App:
 			utils.configure()
 			return
 
-		current_directory = os.getcwd()
 		self.config = config.Config()
 
+		current_directory = os.getcwd()
 		config_directory = self.config.find()
-		config_path = os.path.abspath(utils.CONFIG_FILE_NAME) if config_directory != '' or '/' else os.path.join(config_directory, utils.CONFIG_FILE_NAME)
+		config_path = os.path.join(current_directory, utils.CONFIG_FILE_NAME) if config_directory != '' or '/' else os.path.join(config_directory, utils.CONFIG_FILE_NAME)
 
 		runner = Runner(self.config)
 
