@@ -11,12 +11,10 @@ from mud import utils
 from mud.runner import Runner
 from mud.styles import *
 from mud.commands import *
-from mud.utils import glyphs
 
 
 class App:
 	def __init__(self):
-		self.cmd_runner = None
 		self.command = None
 		self.config = None
 		self.parser = self._create_parser()
@@ -48,9 +46,9 @@ class App:
 		subparsers.add_parser(PRUNE[0], help='Removes invalid paths from .mudconfig.')
 
 		parser.add_argument(*COMMAND_ATTR, metavar='COMMAND', help=f'Explicit command argument. Use this when you want to run a command that has a special characters.', nargs='?', default='', type=str)
-		parser.add_argument(*TABLE_ATTR, metavar='TABLE', help=f'Switches table view, runs in table view it is disabled in {BOLD}.mudsettings{RESET}.', nargs='?', default='', type=str)
+		parser.add_argument(*TABLE_ATTR, metavar='TABLE', help=f'Switches table view, runs in table view it is disabled in .mudsettings.', nargs='?', default='', type=str)
 		parser.add_argument(*LABEL_PREFIX, metavar='LABEL', help='Includes repositories with provided label.', nargs='?', default='', type=str)
-		parser.add_argument(*NOT_LABEL_PREFIX, metavar='NOT_LABEL', help=f'Excludes repositories with provided label..', nargs='?', default='', type=str)
+		parser.add_argument(*NOT_LABEL_PREFIX, metavar='NOT_LABEL', help=f'Excludes repositories with provided label.', nargs='?', default='', type=str)
 		parser.add_argument(*BRANCH_PREFIX, metavar='BRANCH', help='Includes repositories on a provided branch.', nargs='?', default='', type=str)
 		parser.add_argument(*NOT_BRANCH_PREFIX, metavar='NOT_BRANCH', help='Excludes repositories on a provided branch.', nargs='?', default='', type=str)
 		parser.add_argument(*MODIFIED_ATTR, action='store_true', help='Filters modified repositories.')
@@ -70,76 +68,88 @@ class App:
 		# Sets global repository in .mudsettings
 		if sys.argv[1] in SET_GLOBAL:
 			if len(sys.argv) > 2:
-				config_dir = sys.argv[2]
-				if not os.path.isabs(config_dir):
-					config_dir = os.path.abspath(config_dir)
+				config_path = sys.argv[2]
+				if not os.path.isabs(config_path):
+					config_path = os.path.abspath(config_path)
 			else:
-				config_dir = os.path.join(os.getcwd(), utils.CONFIG_FILE_NAME)
+				config_path = os.path.join(os.getcwd(), utils.CONFIG_FILE_NAME)
 
-			if os.path.exists(config_dir):
-				utils.settings.config.set('mud', 'config_path', config_dir)
+			if os.path.exists(config_path):
+				utils.settings.config.set('mud', 'config_path', config_path)
 				utils.settings.save()
-				print(f'{config_dir} set as a global.')
+				print(f'{config_path} set as a global.')
 			else:
-				utils.print_error(f'File {config_dir} not found')
+				utils.print_error(f'File {config_path} not found')
 			return
 		# Runs configuration wizard
 		elif sys.argv[1] in CONFIGURE:
 			utils.configure()
 			return
 
-		current_directory = os.getcwd()
 		self.config = config.Config()
 
-		# Discovers repositories in current directory
-		if sys.argv[1] in INIT:
-			self.init(self.parser.parse_args())
-			return
+		current_directory = os.getcwd()
+		config_directory = self.config.find()
+		config_path = os.path.join(current_directory, utils.CONFIG_FILE_NAME) if config_directory != '' or '/' else os.path.join(config_directory, utils.CONFIG_FILE_NAME)
 
-		config_dir = self.config.find()
+		runner = Runner(self.config)
 
-		# Prints current config path
-		if sys.argv[1] in GET_CONFIG:
-			print(config_dir)
-			return
-		elif sys.argv[1] in PRUNE:
-			self.config.prune(config_dir)
-			self.config.save(utils.CONFIG_FILE_NAME)
-			return
-
-		self._filter_with_arguments()
-
-		self.cmd_runner = Runner(self.config)
 		# Handling commands
 		if len(sys.argv) > 1 and sys.argv[1] in [cmd for group in COMMANDS for cmd in group]:
 			args = self.parser.parse_args()
-			if args.command in INIT:
-				os.chdir(current_directory)
-				self.init(args)
-			elif args.command in ADD:
-				self.add(args)
-			elif args.command in REMOVE:
-				self.remove(args)
-			else:
-				if len(self.repos) == 0:
-					utils.print_error('No repositories are matching this filter.', 1)
+
+			if args.command in INIT + ADD + REMOVE + PRUNE + GET_CONFIG:
+				if args.command in GET_CONFIG:
+					print(config_path)
 					return
-				if args.command in INFO:
-					self.cmd_runner.info(self.repos)
-				elif args.command in LOG:
-					self.cmd_runner.log(self.repos)
-				elif args.command in REMOTE_BRANCHES:
-					self.cmd_runner.remote_branches(self.repos)
-				elif args.command in BRANCHES:
-					self.cmd_runner.branches(self.repos)
-				elif args.command in LABELS:
-					self.cmd_runner.labels(self.repos)
-				elif args.command in TAGS:
-					self.cmd_runner.tags(self.repos)
-				elif args.command in STATUS:
-					self.cmd_runner.status(self.repos)
+
+				os.chdir(current_directory)
+				if args.command in INIT:
+					if config_path == current_directory:
+						self.config.load(config_path)
+					self.config.init()
+					self.config.save(config_path)
+					return
+
+				self.config.load(config_path)
+				if args.command in ADD:
+					self.config.add(args.path, args.label)
+				elif args.command in REMOVE:
+					self.config.remove(args.label, args.path)
+				elif args.command in PRUNE:
+					self.config.prune(config_path)
+				self.config.save(config_path)
+				return
+
+			if config_path == '':
+				utils.print_error(f'{BOLD}{utils.CONFIG_FILE_NAME}{RESET} was not found. Run \'mud init\' to create a configuration file.', 11, exit=True)
+
+			self.config.load(config_path)
+			self._filter_with_arguments()
+
+			if len(self.repos) == 0:
+				utils.print_error('No repositories are matching this filter.', 1)
+				return
+
+			if args.command in INFO:
+				runner.info(self.repos)
+			elif args.command in LOG:
+				runner.log(self.repos)
+			elif args.command in REMOTE_BRANCHES:
+				runner.remote_branches(self.repos)
+			elif args.command in BRANCHES:
+				runner.branches(self.repos)
+			elif args.command in LABELS:
+				runner.labels(self.repos)
+			elif args.command in TAGS:
+				runner.tags(self.repos)
+			elif args.command in STATUS:
+				runner.status(self.repos)
 		# Handling subcommands
 		else:
+			self.config.load(config_path)
+			self._filter_with_arguments()
+
 			del sys.argv[0]
 			if self.command is None:
 				if len(sys.argv) == 0:
@@ -150,43 +160,13 @@ class App:
 			try:
 				if self.run_async:
 					if self.table:
-						asyncio.run(self.cmd_runner.run_async_table_view(self.repos.keys(), self.command))
+						asyncio.run(runner.run_async_table_view(self.repos.keys(), self.command))
 					else:
-						asyncio.run(self.cmd_runner.run_async(self.repos.keys(), self.command))
+						asyncio.run(runner.run_async(self.repos.keys(), self.command))
 				else:
-					self.cmd_runner.run_ordered(self.repos.keys(), self.command)
+					runner.run_ordered(self.repos.keys(), self.command)
 			except Exception as exception:
 				utils.print_error(f'Invalid command. {exception}', 2)
-
-	def init(self, args) -> None:
-		table = utils.get_table(['Path', 'Status'])
-		self.config.data = {}
-		index = 0
-		directories = [d for d in os.listdir('.') if os.path.isdir(d) and os.path.isdir(os.path.join(d, '.git'))]
-		for directory in directories:
-			if directory in self.config.paths():
-				continue
-			self.config.add_label(directory, getattr(args, 'label', ''))
-			index += 1
-			table.add_row([f'{DIM}{directory}{RESET}', f'{GREEN}{glyphs("added")}{RESET}'])
-		if index == 0:
-			utils.print_error('No git repositories were found in this directory.', 3)
-			return
-		self.config.save(utils.CONFIG_FILE_NAME)
-		utils.print_table(table)
-
-	def add(self, args) -> None:
-		self.config.add_label(args.path, args.label)
-		self.config.save(utils.CONFIG_FILE_NAME)
-
-	def remove(self, args) -> None:
-		if args.label and args.path:
-			self.config.remove_label(args.path, args.label)
-		elif args.path:
-			self.config.remove_path(args.label)
-		else:
-			utils.print_error(f'Invalid input. Please provide a value to remove.', 4)
-		self.config.save(utils.CONFIG_FILE_NAME)
 
 	# Filter out repositories if user provided filters
 	def _filter_with_arguments(self) -> None:
