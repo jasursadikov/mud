@@ -90,7 +90,7 @@ class App:
 		self.config = config.Config()
 
 		config_directory = self.config.find()
-		config_path = utils.CONFIG_FILE_NAME if config_directory != '' or '/' else os.path.join(config_directory, utils.CONFIG_FILE_NAME)
+		config_path = os.path.abspath(utils.CONFIG_FILE_NAME) if config_directory != '' or '/' else os.path.join(config_directory, utils.CONFIG_FILE_NAME)
 
 		runner = Runner(self.config)
 
