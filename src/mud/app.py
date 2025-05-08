@@ -110,7 +110,7 @@ class App:
 					if config_path == current_directory:
 						self.config.load(config_path)
 					self.config.init()
-					self.config.save(os.path.join(config_path, utils.CONFIG_FILE_NAME))
+					self.config.save(config_path)
 					return
 
 				self.config.load(config_path)
@@ -120,7 +120,7 @@ class App:
 					self.config.remove(args.label, args.path)
 				elif args.command in PRUNE:
 					self.config.prune(config_path)
-				self.config.save(os.path.join(config_path, utils.CONFIG_FILE_NAME))
+				self.config.save(config_path)
 				return
 
 			if config_path == '':
