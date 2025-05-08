@@ -115,7 +115,7 @@ class Config:
 		else:
 			utils.print_error(f'Invalid input. Please provide a value to remove.', 4)
 
-	def prune(self, config_dir: str):
+	def prune(self):
 		for path, label in list(self.data.items()):
 			if not os.path.exists(path):
 				del self.data[path]
