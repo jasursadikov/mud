@@ -77,9 +77,9 @@ class App:
 			if os.path.exists(config_path):
 				utils.settings.config.set('mud', 'config_path', config_path)
 				utils.settings.save()
-				print(f'{config_path} set as a global.')
+				print(config_path)
 			else:
-				utils.print_error(f'File {config_path} not found')
+				utils.print_error(f'File {config_path} not found', 5)
 			return
 		# Runs configuration wizard
 		elif sys.argv[1] in CONFIGURE:
@@ -110,13 +110,16 @@ class App:
 
 				os.chdir(current_directory)
 				if args.command in INIT:
-					if os.path.dirname(config_path) == current_directory:
+					if current_directory.startswith(os.path.dirname(config_path)) and os.path.exists(config_path):
 						self.config.load(config_path)
 					else:
 						config_path = os.path.join(current_directory, utils.CONFIG_FILE_NAME)
 					self.config.init()
 					self.config.save(config_path)
 					return
+
+				if not os.path.exists(config_path):
+					utils.print_error('.mudconfig not found', 5)
 
 				self.config.load(config_path)
 				if args.command in ADD:
