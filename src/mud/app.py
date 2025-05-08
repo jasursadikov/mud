@@ -96,8 +96,6 @@ class App:
 			print(config_path)
 			return
 
-		self._filter_with_arguments()
-
 		runner = Runner(self.config)
 
 		# Handling commands
@@ -127,6 +125,7 @@ class App:
 				utils.print_error(f'{BOLD}{utils.CONFIG_FILE_NAME}{RESET} was not found. Run \'mud init\' to create a configuration file.', 11, exit=True)
 
 			self.config.load(config_path)
+			self._filter_with_arguments()
 
 			if len(self.repos) == 0:
 				utils.print_error('No repositories are matching this filter.', 1)
@@ -148,6 +147,9 @@ class App:
 				runner.status(self.repos)
 		# Handling subcommands
 		else:
+			self.config.load(config_path)
+			self._filter_with_arguments()
+
 			del sys.argv[0]
 			if self.command is None:
 				if len(sys.argv) == 0:
@@ -171,6 +173,8 @@ class App:
 		self.repos = self.config.data
 		self.table = utils.settings.config['mud'].getboolean('run_table', fallback=True)
 		self.run_async = utils.settings.config['mud'].getboolean('run_async', fallback=True)
+
+		print(self.run_async)
 
 		for path, labels in self.config.filter_label('ignore', self.config.data).items():
 			del self.repos[path]
