@@ -110,8 +110,10 @@ class App:
 
 				os.chdir(current_directory)
 				if args.command in INIT:
-					if config_path == current_directory:
+					if os.path.dirname(config_path) == current_directory:
 						self.config.load(config_path)
+					else:
+						config_path = os.path.join(current_directory, utils.CONFIG_FILE_NAME)
 					self.config.init()
 					self.config.save(config_path)
 					return
