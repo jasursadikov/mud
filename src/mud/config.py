@@ -13,6 +13,8 @@ class Config:
 		self.data = {}
 
 	def save(self, file_path: str) -> None:
+		print(file_path)
+		
 		def _filter_labels(label: str):
 			return bool(re.match(r'^\w+$', label))
 
