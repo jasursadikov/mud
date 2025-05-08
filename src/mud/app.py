@@ -91,10 +91,7 @@ class App:
 		current_directory = os.getcwd()
 		config_directory = self.config.find()
 
-		if config_directory == '' or config_directory == '/':
-			target_directory = current_directory
-		else:
-			target_directory = config_directory
+		target_directory = current_directory if config_directory in ('', '/') else config_directory
 
 		config_path = os.path.join(target_directory, utils.CONFIG_FILE_NAME)
 
