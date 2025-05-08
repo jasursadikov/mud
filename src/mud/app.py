@@ -68,18 +68,18 @@ class App:
 		# Sets global repository in .mudsettings
 		if sys.argv[1] in SET_GLOBAL:
 			if len(sys.argv) > 2:
-				config_dir = sys.argv[2]
-				if not os.path.isabs(config_dir):
-					config_dir = os.path.abspath(config_dir)
+				config_path = sys.argv[2]
+				if not os.path.isabs(config_path):
+					config_path = os.path.abspath(config_path)
 			else:
-				config_dir = os.path.join(os.getcwd(), utils.CONFIG_FILE_NAME)
+				config_path = os.path.join(os.getcwd(), utils.CONFIG_FILE_NAME)
 
-			if os.path.exists(config_dir):
-				utils.settings.config.set('mud', 'config_path', config_dir)
+			if os.path.exists(config_path):
+				utils.settings.config.set('mud', 'config_path', config_path)
 				utils.settings.save()
-				print(f'{config_dir} set as a global.')
+				print(f'{config_path} set as a global.')
 			else:
-				utils.print_error(f'File {config_dir} not found')
+				utils.print_error(f'File {config_path} not found')
 			return
 		# Runs configuration wizard
 		elif sys.argv[1] in CONFIGURE:
@@ -89,11 +89,11 @@ class App:
 		current_directory = os.getcwd()
 		self.config = config.Config()
 
-		config_dir = self.config.find()
+		config_path = self.config.find()
 
 		# Prints current config path
 		if sys.argv[1] in GET_CONFIG:
-			print(config_dir)
+			print(config_path)
 			return
 
 		self._filter_with_arguments()
@@ -107,17 +107,23 @@ class App:
 			if args.command in INIT + ADD + REMOVE + PRUNE:
 				os.chdir(current_directory)
 				if args.command in INIT:
+					if config_path == current_directory:
+						self.config.load(config_path)
 					self.config.init()
-				elif args.command in ADD:
+					self.config.save(os.path.join(config_path, utils.CONFIG_FILE_NAME))
+					return
+
+				self.config.load(config_path)
+				if args.command in ADD:
 					self.config.add(args.path, args.label)
 				elif args.command in REMOVE:
 					self.config.remove(args.label, args.path)
 				elif args.command in PRUNE:
-					self.config.prune(config_dir)
-				self.config.save(utils.CONFIG_FILE_NAME)
+					self.config.prune(config_path)
+				self.config.save(os.path.join(config_path, utils.CONFIG_FILE_NAME))
 				return
 
-			if config_dir == '':
+			if config_path == '':
 				utils.print_error(f'{BOLD}{utils.CONFIG_FILE_NAME}{RESET} was not found. Run \'mud init\' to create a configuration file.', 11, exit=True)
 
 			if len(self.repos) == 0:

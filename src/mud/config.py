@@ -30,7 +30,6 @@ class Config:
 		while os.path.dirname(current_path) != current_path:
 			os.chdir(current_path)
 			if os.path.exists(utils.CONFIG_FILE_NAME):
-				self.load(utils.CONFIG_FILE_NAME)
 				return current_path
 			current_path = os.path.dirname(current_path)
 
@@ -38,7 +37,6 @@ class Config:
 			directory = os.path.dirname(utils.settings.mud_settings['config_path'])
 			os.chdir(directory)
 			os.environ['PWD'] = directory
-			self.load(utils.CONFIG_FILE_NAME)
 			return current_path
 
 		return ''
@@ -70,8 +68,8 @@ class Config:
 	def add(self, path: str, label: str) -> None:
 		if path == '.':
 			current_path = os.getcwd()
-			conf_path = Config().find()
-			path = os.path.relpath(current_path, conf_path)
+			config_path = Config().find()
+			path = os.path.relpath(current_path, config_path)
 		if path is None:
 			path = label
 			label = None
