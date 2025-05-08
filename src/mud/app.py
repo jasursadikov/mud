@@ -90,10 +90,13 @@ class App:
 
 		current_directory = os.getcwd()
 		config_directory = self.config.find()
-		target_directory = config_directory if config_directory != '' or '/' else current_directory
+
+		target_directory = current_directory if config_directory in ('', '/') else config_directory
+
 		config_path = os.path.join(target_directory, utils.CONFIG_FILE_NAME)
 
 		os.environ['PWD'] = target_directory
+		print(config_directory != '' or '/')
 
 		runner = Runner(self.config)
 
@@ -120,7 +123,7 @@ class App:
 				elif args.command in REMOVE:
 					self.config.remove(args.label, args.path)
 				elif args.command in PRUNE:
-					self.config.prune(config_path)
+					self.config.prune()
 				self.config.save(config_path)
 				return
 
