@@ -126,6 +126,8 @@ class App:
 			if config_path == '':
 				utils.print_error(f'{BOLD}{utils.CONFIG_FILE_NAME}{RESET} was not found. Run \'mud init\' to create a configuration file.', 11, exit=True)
 
+			self.config.load(config_path)
+
 			if len(self.repos) == 0:
 				utils.print_error('No repositories are matching this filter.', 1)
 				return
