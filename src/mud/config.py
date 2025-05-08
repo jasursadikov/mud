@@ -2,7 +2,7 @@ import os
 import re
 import csv
 
-from typing import List, Dict, Any
+from typing import List, Dict
 
 from mud import utils
 from mud.styles import *
@@ -15,8 +15,6 @@ class Config:
 	def save(self, file_path: str) -> None:
 		def _filter_labels(label: str):
 			return bool(re.match(r'^\w+$', label))
-
-		print(file_path)
 
 		with open(file_path, 'w', newline='') as tsvfile:
 			writer = csv.writer(tsvfile, delimiter='\t')
@@ -119,8 +117,7 @@ class Config:
 
 	def prune(self, config_dir: str):
 		for path, label in list(self.data.items()):
-			abs_path = path if os.path.abspath(path) else os.path.join(config_dir, path)
-			if not os.path.exists(abs_path) or os.path.relpath(self.data[path]) in self.data.keys():
+			if not os.path.exists(path):
 				del self.data[path]
 				print(path)
 

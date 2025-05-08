@@ -90,8 +90,10 @@ class App:
 
 		current_directory = os.getcwd()
 		config_directory = self.config.find()
-		os.environ['PWD'] = config_directory
-		config_path = os.path.join(current_directory, utils.CONFIG_FILE_NAME) if config_directory != '' or '/' else os.path.join(config_directory, utils.CONFIG_FILE_NAME)
+		target_directory = config_directory if config_directory != '' or '/' else current_directory
+		config_path = os.path.join(target_directory, utils.CONFIG_FILE_NAME)
+
+		os.environ['PWD'] = target_directory
 
 		runner = Runner(self.config)
 
