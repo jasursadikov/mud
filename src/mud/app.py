@@ -96,7 +96,6 @@ class App:
 		config_path = os.path.join(target_directory, utils.CONFIG_FILE_NAME)
 
 		os.environ['PWD'] = target_directory
-		print(config_directory != '' or '/')
 
 		runner = Runner(self.config)
 
