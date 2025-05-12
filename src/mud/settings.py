@@ -48,5 +48,6 @@ class Settings:
 			self.alias_settings = self.config[ALIAS_SCOPE]
 
 	def save(self) -> None:
+		os.makedirs(os.path.dirname(self.settings_file), exist_ok=True)
 		with open(self.settings_file, 'w') as config_file:
 			self.config.write(config_file)
