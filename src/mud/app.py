@@ -113,6 +113,7 @@ class App:
 					elif config_path != '' and os.path.exists(config_path):
 						self.config.load(config_path)
 					self.config.init()
+					print(config_path)
 					self.config.save(config_path)
 					return
 
