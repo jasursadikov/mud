@@ -110,8 +110,6 @@ class App:
 				if args.command in INIT:
 					if fallback:
 						config_path = os.path.join(current_directory, utils.CONFIG_FILE_NAME)
-					else:
-						self.config.load(config_path)
 					self.config.init()
 					self.config.save(config_path)
 					return
