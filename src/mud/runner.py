@@ -452,7 +452,7 @@ class Runner:
 	@staticmethod
 	def _get_authors_name(path: str) -> str:
 		cmd = subprocess.run('git log -1 --pretty=format:%an', shell=True, text=True, cwd=path, capture_output=True)
-		git_config_user_cmd = subprocess.run('git config user.name', text=True, capture_output=True)
+		git_config_user_cmd = subprocess.run('git config user.name', shell=True, text=True, capture_output=True)
 		committer_color = '' if cmd.stdout.strip() == git_config_user_cmd.stdout.strip() else DIM
 		return f'{committer_color}{cmd.stdout.strip()}{RESET}'
 
