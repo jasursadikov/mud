@@ -79,7 +79,7 @@ class App:
 				utils.settings.save()
 				print(config_path)
 			else:
-				utils.print_error(f'File {config_path} not found', 5)
+				utils.print_error(5)
 			return
 		# Runs configuration wizard
 		elif sys.argv[1] in CONFIGURE:
@@ -89,13 +89,11 @@ class App:
 		self.config = config.Config()
 
 		current_directory = os.getcwd()
-		config_directory = self.config.find()
+		config_directory, fallback = self.config.find()
 
-		target_directory = current_directory if config_directory in ('', '/') else config_directory
+		config_path = os.path.join(config_directory, utils.CONFIG_FILE_NAME)
 
-		config_path = os.path.join(target_directory, utils.CONFIG_FILE_NAME)
-
-		os.environ['PWD'] = target_directory
+		os.environ['PWD'] = config_directory
 
 		runner = Runner(self.config)
 
@@ -110,16 +108,16 @@ class App:
 
 				os.chdir(current_directory)
 				if args.command in INIT:
-					if current_directory.startswith(os.path.dirname(config_path)) and os.path.exists(config_path):
-						self.config.load(config_path)
-					else:
+					if fallback:
 						config_path = os.path.join(current_directory, utils.CONFIG_FILE_NAME)
+					else:
+						self.config.load(config_path)
 					self.config.init()
 					self.config.save(config_path)
 					return
 
 				if not os.path.exists(config_path):
-					utils.print_error('.mudconfig not found', 5)
+					utils.print_error(5, exit=True)
 
 				self.config.load(config_path)
 				if args.command in ADD:
@@ -131,14 +129,17 @@ class App:
 				self.config.save(config_path)
 				return
 
+			if not os.path.exists(config_path):
+				utils.print_error(5, exit=True)
+
 			if config_path == '':
-				utils.print_error(f'{BOLD}{utils.CONFIG_FILE_NAME}{RESET} was not found. Run \'mud init\' to create a configuration file.', 11, exit=True)
+				utils.print_error(5, exit=True)
 
 			self.config.load(config_path)
 			self._filter_with_arguments()
 
 			if len(self.repos) == 0:
-				utils.print_error('No repositories are matching this filter.', 1)
+				utils.print_error(1)
 				return
 
 			if args.command in INFO:
@@ -175,8 +176,8 @@ class App:
 						asyncio.run(runner.run_async(self.repos.keys(), self.command))
 				else:
 					runner.run_ordered(self.repos.keys(), self.command)
-			except Exception as exception:
-				utils.print_error(f'Invalid command. {exception}', 2)
+			except Exception:
+				utils.print_error(2)
 
 	# Filter out repositories if user provided filters
 	def _filter_with_arguments(self) -> None:
@@ -226,11 +227,11 @@ class App:
 			abs_path = os.path.join(directory, repo)
 
 			if not os.path.isdir(abs_path):
-				utils.print_error(f'Invalid path {BOLD}{repo}{RESET}.', 12, False)
+				utils.print_error(12, meta=repo)
 				to_delete.append(repo)
 				continue
 			elif not os.path.isdir(os.path.join(abs_path, '.git')):
-				utils.print_error(f'{BOLD}.git{RESET} directory not found at target "{repo}".', 13, False)
+				utils.print_error(13, meta=repo)
 				to_delete.append(repo)
 				continue
 

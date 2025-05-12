@@ -121,7 +121,31 @@ def get_table(field_names: List[str]) -> PrettyTable:
 	return table
 
 
-def print_error(text: str, code: int = 255, exit: bool = False) -> None:
+def print_error(code: int, exit: bool = False, meta: str = '') -> None:
+	text = ''
+
+	match code:
+		case 0:
+			text = 'Stopped by user'
+		case 1:
+			text = 'No repositories are matching this filter'
+		case 2:
+			text = 'Invalid command'
+		case 3:
+			text = 'No git repositories were found in this directory'
+		case 4:
+			text = 'Invalid input. Please provide a value to remove'
+		case 5:
+			text = '.mudconfig not found'
+		case 6:
+			text = f'Item "{meta}" not found in .mudconfig'
+		case 12:
+			text = f'Invalid path {meta}'
+		case 13:
+			text = f'.git directory not found at target "{meta}"'
+		case 14:
+			text = 'Invalid path'
+
 	print(f'{RED}Error [{code}]{RESET} {text}')
 	if exit:
 		sys.exit(code)

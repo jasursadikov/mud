@@ -2,10 +2,9 @@ import os
 import re
 import csv
 
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 from mud import utils
-from mud.styles import *
 
 
 class Config:
@@ -24,22 +23,22 @@ class Config:
 				formatted_labels = ','.join(valid_labels) if valid_labels else ''
 				writer.writerow([path, formatted_labels])
 
-	def find(self) -> str:
+	def find(self) -> Tuple[str, bool]:
 		directory = os.getcwd()
 		current_path = directory
 		while os.path.dirname(current_path) != current_path:
 			os.chdir(current_path)
 			if os.path.exists(utils.CONFIG_FILE_NAME):
-				return current_path
+				return current_path, False
 			current_path = os.path.dirname(current_path)
 
 		if utils.settings.mud_settings['config_path'] != '' and os.path.exists(utils.settings.mud_settings['config_path']):
 			config_path = utils.settings.mud_settings['config_path']
 			directory = os.path.dirname(config_path)
 			os.chdir(directory)
-			return directory
+			return directory, True
 
-		return '/'
+		return '', False
 
 	def load(self, file_path: str) -> None:
 		self.data = {}
@@ -65,22 +64,6 @@ class Config:
 				result[path] = labels
 		return result
 
-	def add(self, path: str, label: str) -> None:
-		if path == '.':
-			current_path = os.getcwd()
-			config_path = os.path.join(Config().find(), utils.CONFIG_FILE_NAME)
-			path = os.path.relpath(current_path, config_path)
-		if path is None:
-			path = label
-			label = None
-		if not os.path.isdir(path):
-			utils.print_error(f'Invalid path {BOLD}{path}{RESET}. Remember that path should be relative.', 14)
-			return
-		if path not in self.data:
-			self.data[path] = []
-		if label is not None and label not in self.data[path]:
-			self.data[path].append(label)
-
 	def init(self):
 		if self.data is None:
 			self.data = {}
@@ -104,16 +87,37 @@ class Config:
 			index += 1
 			print(repo)
 		if index == 0 and len(self.data) == 0:
-			utils.print_error('No git repositories were found in this directory.', 3)
+			utils.print_error(3)
 			return
+
+	def add(self, path: str, label: str) -> None:
+		if path == '.':
+			current_path = os.getcwd()
+			config_dir = Config().find()[0]
+
+			if config_dir == '':
+				utils.print_error(5)
+
+			config_path = os.path.join(config_dir, utils.CONFIG_FILE_NAME)
+			path = os.path.relpath(current_path, config_path)
+		if path is None:
+			path = label
+			label = None
+		if not os.path.isdir(path):
+			utils.print_error(14)
+			return
+		if path not in self.data:
+			self.data[path] = []
+		if label is not None and label not in self.data[path]:
+			self.data[path].append(label)
 
 	def remove(self, label: str, path: str):
 		if path and label:
 			self.remove_label(path, label)
 		elif path:
-			self.remove_path(label)
+			self.remove_path(path)
 		else:
-			utils.print_error(f'Invalid input. Please provide a value to remove.', 4)
+			utils.print_error(4)
 
 	def prune(self):
 		for path, label in list(self.data.items()):
@@ -122,9 +126,11 @@ class Config:
 				print(path)
 
 	def remove_path(self, path: str) -> None:
-		if path in self.data:
+		if path in self.data.keys():
 			del self.data[path]
 			print(path)
+		else:
+			utils.print_error(6, meta=path)
 
 	def remove_label(self, path: str, label: str) -> None:
 		if path in self.data and label in self.data[path]:
@@ -132,3 +138,6 @@ class Config:
 			if not self.data[path]:
 				del self.data[path]
 				print(f'{label}\t{path}')
+				return
+
+		utils.print_error(6, meta=f'{path}:{label}')
