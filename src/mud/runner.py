@@ -410,12 +410,9 @@ class Runner:
 		print(f'{command}{code}{path}')
 
 	@staticmethod
-	def _get_formatted_path(path: str, file_system: bool = True, color: str = None) -> str:
+	def _get_formatted_path(path: str, file_system: bool = True, color: str = '') -> str:
 		collapse_paths = utils.settings.config['mud'].getboolean('collapse_paths', fallback=False)
 		abs_path = utils.settings.config['mud'].getboolean('display_absolute_paths', fallback=False)
-
-		if color is None:
-			color = ''
 
 		in_quotes = path.startswith('\"') and path.endswith('\"')
 		quote = '\"' if in_quotes else ''
