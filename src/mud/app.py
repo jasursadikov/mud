@@ -97,6 +97,9 @@ class App:
 
 		runner = Runner(self.config)
 
+		if config_directory != '':
+			os.chdir(config_directory)
+
 		# Handling commands
 		if len(sys.argv) > 1 and sys.argv[1] in [cmd for group in COMMANDS for cmd in group]:
 			args = self.parser.parse_args()
@@ -106,15 +109,12 @@ class App:
 					print(config_path)
 					return
 
-				os.chdir(current_directory)
 				if args.command in INIT:
 					if fallback:
 						config_path = os.path.join(current_directory, utils.CONFIG_FILE_NAME)
 					elif config_path != '' and os.path.exists(config_path):
 						self.config.load(config_path)
 					self.config.init()
-					print(fallback)
-					print(config_path)
 					self.config.save(config_path)
 					return
 

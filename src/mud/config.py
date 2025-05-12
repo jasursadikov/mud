@@ -27,7 +27,6 @@ class Config:
 		directory = os.getcwd()
 		current_path = directory
 		while os.path.dirname(current_path) != current_path:
-			os.chdir(current_path)
 			if os.path.exists(utils.CONFIG_FILE_NAME):
 				return current_path, False
 			current_path = os.path.dirname(current_path)
@@ -35,7 +34,6 @@ class Config:
 		if utils.settings.mud_settings['config_path'] != '' and os.path.exists(utils.settings.mud_settings['config_path']):
 			config_path = utils.settings.mud_settings['config_path']
 			directory = os.path.dirname(config_path)
-			os.chdir(directory)
 			if os.path.exists(config_path):
 				return directory, True
 
