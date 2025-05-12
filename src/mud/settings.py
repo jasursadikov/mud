@@ -11,7 +11,7 @@ class Settings:
 		self.mud_settings = None
 		self.alias_settings = None
 		self.config = configparser.ConfigParser()
-		self.settings_file = os.path.join(os.path.expanduser('~' if os.path.exists(os.path.join(os.path.expanduser('~'), self.file_name)) else '~/.config/mud/'), self.file_name)
+		self.settings_file = os.path.join(os.path.expanduser('~/.config/mud/' if os.path.exists(os.path.join(os.path.expanduser('~'), self.file_name)) else '~'), self.file_name)
 		self.defaults = {
 			'mud': {
 				'config_path': '',
