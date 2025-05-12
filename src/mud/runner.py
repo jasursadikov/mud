@@ -105,7 +105,7 @@ class Runner:
 				else:
 					color = CYAN
 
-				colored_output.append(self._get_formatted_path(file[3:].strip(), color))
+				colored_output.append(self._get_formatted_path(file[3:].strip(), False, color))
 
 			table.add_row([formatted_path, branch, origin_sync, status, ', '.join(colored_output)])
 
@@ -410,12 +410,9 @@ class Runner:
 		print(f'{command}{code}{path}')
 
 	@staticmethod
-	def _get_formatted_path(path: str, file_system: bool = True, color: str = None) -> str:
+	def _get_formatted_path(path: str, file_system: bool = True, color: str = '') -> str:
 		collapse_paths = utils.settings.config['mud'].getboolean('collapse_paths', fallback=False)
 		abs_path = utils.settings.config['mud'].getboolean('display_absolute_paths', fallback=False)
-
-		if color is None:
-			color = ''
 
 		in_quotes = path.startswith('\"') and path.endswith('\"')
 		quote = '\"' if in_quotes else ''
@@ -429,6 +426,7 @@ class Runner:
 		if file_system and abs_path:
 			return apply_styles(os.path.abspath(path))
 
+		# TODO: Has some issues with coloring here
 		if os.path.isabs(path):
 			home = os.path.expanduser('~')
 			if path.startswith(home):
@@ -452,7 +450,7 @@ class Runner:
 	@staticmethod
 	def _get_authors_name(path: str) -> str:
 		cmd = subprocess.run('git log -1 --pretty=format:%an', shell=True, text=True, cwd=path, capture_output=True)
-		git_config_user_cmd = subprocess.run('git config user.name', text=True, capture_output=True)
+		git_config_user_cmd = subprocess.run('git config user.name', shell=True, text=True, capture_output=True)
 		committer_color = '' if cmd.stdout.strip() == git_config_user_cmd.stdout.strip() else DIM
 		return f'{committer_color}{cmd.stdout.strip()}{RESET}'
 

@@ -11,7 +11,7 @@ def run():
 		app = App()
 		app.run()
 	except KeyboardInterrupt:
-		utils.print_error('Stopped by user.', 0)
+		utils.print_error(0)
 
 
 if __name__ == '__main__':
