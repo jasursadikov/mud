@@ -36,7 +36,8 @@ class Config:
 			config_path = utils.settings.mud_settings['config_path']
 			directory = os.path.dirname(config_path)
 			os.chdir(directory)
-			return directory, True
+			if os.path.exists(config_path):
+				return directory, True
 
 		return '', False
 
