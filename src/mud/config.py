@@ -27,7 +27,7 @@ class Config:
 		directory = os.getcwd()
 		current_path = directory
 		while os.path.dirname(current_path) != current_path:
-			if os.path.exists(utils.CONFIG_FILE_NAME):
+			if os.path.exists(os.path.join(current_path, utils.CONFIG_FILE_NAME)):
 				return current_path, False
 			current_path = os.path.dirname(current_path)
 
