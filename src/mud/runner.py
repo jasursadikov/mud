@@ -105,7 +105,7 @@ class Runner:
 				else:
 					color = CYAN
 
-				colored_output.append(self._get_formatted_path(file[3:].strip(), color))
+				colored_output.append(self._get_formatted_path(file[3:].strip(), False, color))
 
 			table.add_row([formatted_path, branch, origin_sync, status, ', '.join(colored_output)])
 
@@ -426,6 +426,7 @@ class Runner:
 		if file_system and abs_path:
 			return apply_styles(os.path.abspath(path))
 
+		# TODO: Has some issues with coloring here
 		if os.path.isabs(path):
 			home = os.path.expanduser('~')
 			if path.startswith(home):
