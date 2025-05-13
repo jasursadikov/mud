@@ -47,10 +47,11 @@ All entries are stored in `.mudconfig` in TSV format. After making your first en
 - `mud tags`/`mud t` - displays git tags in repositories.
 
 ### Arguments
+- `-n=<str>` or `--name=<str>` - includes repositories that contains provided string.
 - `-l=<label>` or `--label=<label>` - includes repositories with the provided label.
-- `-nl=<label>` or `--not-label=<label>` - excludes repositories with the provided label.
+- `-L=<label>` or `--not-label=<label>` - excludes repositories with the provided label.
 - `-b=<branch>` or `--branch=<branch>` - includes repositories with the provided branch.
-- `-nb=<branch>` or `--not-branch=<branch>` - excludes repositories with the provided branch.
+- `-B=<branch>` or `--not-branch=<branch>` - excludes repositories with the provided branch.
 - `-c` or `--command` - explicit command argument. Use this whenever you're trying to run a complex command.
 - `-m` or `--modified` - filters out modified repositories.
 - `-d` or `--diverged` - filters repositories with diverged branches.
