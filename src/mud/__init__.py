@@ -6,7 +6,7 @@ from .app import App
 
 def run():
 	try:
-		utils.settings = settings.Settings(utils.SETTINGS_FILE_NAME)
+		utils.settings = settings.Settings(utils.SETTINGS_FILE_NAME, utils.OLD_SETTINGS_FILE_NAME)
 
 		app = App()
 		app.run()

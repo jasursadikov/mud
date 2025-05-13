@@ -9,7 +9,8 @@ from prettytable import PrettyTable, PLAIN_COLUMNS
 from mud.settings import *
 from mud.styles import *
 
-SETTINGS_FILE_NAME = '.mudsettings'
+SETTINGS_FILE_NAME = 'settings.ini'
+OLD_SETTINGS_FILE_NAME = '.mudsettings'
 CONFIG_FILE_NAME = '.mudconfig'
 
 settings: Settings
@@ -100,6 +101,7 @@ def get_table(field_names: List[str]) -> PrettyTable:
 		return f'{GRAY}{item}{RESET}'
 
 	borders = settings.config['mud'].getboolean('show_borders', fallback=False)
+	round_corners = settings.config['mud'].getboolean('round_corners', fallback=False)
 	table = PrettyTable(border=borders, header=False, style=PLAIN_COLUMNS, align='l')
 	if borders:
 		table.horizontal_char = set_style('─')
@@ -111,10 +113,16 @@ def get_table(field_names: List[str]) -> PrettyTable:
 		table.left_junction_char = set_style('├')
 		table.right_junction_char = set_style('┤')
 
-		table.top_left_junction_char = set_style('┌')
-		table.top_right_junction_char = set_style('┐')
-		table.bottom_left_junction_char = set_style('└')
-		table.bottom_right_junction_char = set_style('┘')
+		if round_corners:
+			table.top_left_junction_char = set_style('╭')
+			table.top_right_junction_char = set_style('╮')
+			table.bottom_left_junction_char = set_style('╰')
+			table.bottom_right_junction_char = set_style('╯')
+		else:
+			table.top_left_junction_char = set_style('┌')
+			table.top_right_junction_char = set_style('┐')
+			table.bottom_left_junction_char = set_style('└')
+			table.bottom_right_junction_char = set_style('┘')
 
 	table.field_names = field_names
 
@@ -122,7 +130,7 @@ def get_table(field_names: List[str]) -> PrettyTable:
 
 
 def print_error(code: int, exit: bool = False, meta: str = '') -> None:
-	text = ''
+	text = 'Unknown error code'
 
 	match code:
 		case 0:
@@ -139,12 +147,10 @@ def print_error(code: int, exit: bool = False, meta: str = '') -> None:
 			text = '.mudconfig not found'
 		case 6:
 			text = f'Item "{meta}" not found in .mudconfig'
-		case 12:
-			text = f'Invalid path {meta}'
-		case 13:
+		case 7:
+			text = f'Invalid path "{meta}"'
+		case 8:
 			text = f'.git directory not found at target "{meta}"'
-		case 14:
-			text = 'Invalid path'
 
 	print(f'{RED}Error [{code}]{RESET} {text}')
 	if exit:

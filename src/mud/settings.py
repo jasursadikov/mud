@@ -6,23 +6,27 @@ ALIAS_SCOPE = 'alias'
 
 
 class Settings:
-	def __init__(self, file_name: str) -> None:
-		self.file_name = file_name
+	def __init__(self, file_name: str, old_file_name: str) -> None:
+		use_old = os.path.exists(os.path.join(os.path.expanduser('~'), old_file_name))
+		file_name = old_file_name if use_old else file_name
+		directory = os.path.expanduser('~' if use_old else '~/.config/mud')
+
 		self.mud_settings = None
 		self.alias_settings = None
 		self.config = configparser.ConfigParser()
-		self.settings_file = os.path.join(os.path.expanduser('~' if os.path.exists(os.path.join(os.path.expanduser('~'), self.file_name)) else '~/.config/mud'), self.file_name)
+		self.settings_file = os.path.join(directory, file_name)
 		self.defaults = {
 			'mud': {
 				'config_path': '',
 				'nerd_fonts': True,
 				'run_async': True,
 				'run_table': True,
+				'show_borders': True,
+				'round_corners': False,
 				'simplify_branches': True,
 				'display_absolute_paths': False
 			},
 			'alias': {
-				'to': 'git checkout',
 				'fetch': 'git fetch',
 				'pull': 'git pull',
 				'push': 'git push'

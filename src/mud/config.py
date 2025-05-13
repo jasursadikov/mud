@@ -11,6 +11,28 @@ class Config:
 	def __init__(self):
 		self.data = {}
 
+	@staticmethod
+	def find() -> Tuple[str, bool]:
+		directory = os.getcwd()
+		current_path = directory
+		while os.path.dirname(current_path) != current_path:
+			if os.path.exists(os.path.join(current_path, utils.CONFIG_FILE_NAME)):
+				return current_path, False
+			current_path = os.path.dirname(current_path)
+
+		config_path = utils.settings.mud_settings['config_path']
+		print(config_path)
+
+		if config_path.startswith('~'):
+			config_path = os.path.expanduser(config_path)
+
+		if config_path != '' and os.path.exists(config_path):
+			directory = os.path.dirname(config_path)
+			if os.path.exists(config_path):
+				return directory, True
+
+		return '', False
+
 	def save(self, file_path: str) -> None:
 		def _filter_labels(label: str):
 			return bool(re.match(r'^\w+$', label))
@@ -22,22 +44,6 @@ class Config:
 				valid_labels = [label for label in labels if _filter_labels(label)]
 				formatted_labels = ','.join(valid_labels) if valid_labels else ''
 				writer.writerow([path, formatted_labels])
-
-	def find(self) -> Tuple[str, bool]:
-		directory = os.getcwd()
-		current_path = directory
-		while os.path.dirname(current_path) != current_path:
-			if os.path.exists(os.path.join(current_path, utils.CONFIG_FILE_NAME)):
-				return current_path, False
-			current_path = os.path.dirname(current_path)
-
-		if utils.settings.mud_settings['config_path'] != '' and os.path.exists(utils.settings.mud_settings['config_path']):
-			config_path = utils.settings.mud_settings['config_path']
-			directory = os.path.dirname(config_path)
-			if os.path.exists(config_path):
-				return directory, True
-
-		return '', False
 
 	def load(self, file_path: str) -> None:
 		self.data = {}
@@ -103,7 +109,7 @@ class Config:
 			path = label
 			label = None
 		if not os.path.isdir(path):
-			utils.print_error(14)
+			utils.print_error(7, meta=path)
 			return
 		if path not in self.data:
 			self.data[path] = []
@@ -138,5 +144,4 @@ class Config:
 				del self.data[path]
 				print(f'{label}\t{path}')
 				return
-
 		utils.print_error(6, meta=f'{path}:{label}')

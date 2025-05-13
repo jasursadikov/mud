@@ -9,7 +9,6 @@ from argparse import ArgumentParser
 from mud import config
 from mud import utils
 from mud.runner import Runner
-from mud.styles import *
 from mud.commands import *
 
 
@@ -47,6 +46,7 @@ class App:
 
 		parser.add_argument(*COMMAND_ATTR, metavar='COMMAND', help=f'Explicit command argument. Use this when you want to run a command that has a special characters.', nargs='?', default='', type=str)
 		parser.add_argument(*TABLE_ATTR, metavar='TABLE', help=f'Switches table view, runs in table view it is disabled in .mudsettings.', nargs='?', default='', type=str)
+		parser.add_argument(*NAME_PREFIX, metavar='NAME', help='Includes repositories where name contains provided value.', nargs='?', default='', type=str)
 		parser.add_argument(*LABEL_PREFIX, metavar='LABEL', help='Includes repositories with provided label.', nargs='?', default='', type=str)
 		parser.add_argument(*NOT_LABEL_PREFIX, metavar='NOT_LABEL', help=f'Excludes repositories with provided label.', nargs='?', default='', type=str)
 		parser.add_argument(*BRANCH_PREFIX, metavar='BRANCH', help='Includes repositories on a provided branch.', nargs='?', default='', type=str)
@@ -100,8 +100,20 @@ class App:
 		if config_directory != '':
 			os.chdir(config_directory)
 
+		native_command = False
+		for index, arg in enumerate(sys.argv[1:]):
+			if any(arg.startswith(prefix) for prefix in COMMAND_ATTR):
+				native_command = False
+				break
+			if arg.startswith('-'):
+				continue
+			elif index + 1 == len(sys.argv) - 1 and arg in [cmd for group in COMMANDS for cmd in group]:
+				native_command = True
+			else:
+				break
+
 		# Handling commands
-		if len(sys.argv) > 1 and sys.argv[1] in [cmd for group in COMMANDS for cmd in group]:
+		if native_command:
 			args = self.parser.parse_args()
 
 			if args.command in INIT + ADD + REMOVE + PRUNE + GET_CONFIG:
@@ -191,6 +203,7 @@ class App:
 			del self.repos[path]
 		include_labels = []
 		exclude_labels = []
+		contains_strings = []
 		include_branches = []
 		exclude_branches = []
 		modified = False
@@ -208,6 +221,8 @@ class App:
 				include_branches.append(arg.split('=', 1)[1])
 			elif any(arg.startswith(prefix) for prefix in NOT_BRANCH_PREFIX):
 				exclude_branches.append(arg.split('=', 1)[1])
+			elif any(arg.startswith(prefix) for prefix in NAME_PREFIX):
+				contains_strings.append(arg.split('=', 1)[1])
 			elif arg in MODIFIED_ATTR:
 				modified = True
 			elif arg in DIVERGED_ATTR:
@@ -222,6 +237,7 @@ class App:
 				index += 1
 				continue
 			del sys.argv[index]
+
 		directory = os.getcwd()
 		to_delete = []
 
@@ -229,11 +245,11 @@ class App:
 			abs_path = os.path.join(directory, repo)
 
 			if not os.path.isdir(abs_path):
-				utils.print_error(12, meta=repo)
+				utils.print_error(7, meta=repo)
 				to_delete.append(repo)
 				continue
 			elif not os.path.isdir(os.path.join(abs_path, '.git')):
-				utils.print_error(13, meta=repo)
+				utils.print_error(8, meta=repo)
 				to_delete.append(repo)
 				continue
 
@@ -243,6 +259,8 @@ class App:
 			if any(include_labels) and not any(item in include_labels for item in labels):
 				delete = True
 			if any(exclude_labels) and any(item in exclude_labels for item in labels):
+				delete = True
+			if any(contains_strings) and not any(substr in repo for substr in contains_strings):
 				delete = True
 
 			if not delete:
