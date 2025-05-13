@@ -21,7 +21,6 @@ class Config:
 			current_path = os.path.dirname(current_path)
 
 		config_path = utils.settings.mud_settings['config_path']
-		print(config_path)
 
 		if config_path.startswith('~'):
 			config_path = os.path.expanduser(config_path)
