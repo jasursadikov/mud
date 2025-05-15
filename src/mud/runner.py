@@ -66,15 +66,13 @@ class Runner:
 
 		for path, labels in repos.items():
 			repo: Repository = Repository(path)
-			origin_url: object = repo.remotes('origin')
 
-			if origin_url is None:
-				origin_url: str = ''
+			origin_url: str = '' if repo.head_is_unborn else repo.remotes[0].url
 
 			walker = repo.walk(repo.head.target, pygit2.GIT_SORT_TOPOLOGICAL)
 			total_commits_count = sum(1 for _ in walker)
 
-			user_name = repo.config.get('user.name')
+			user_name = repo.config['user.name']
 			if user_name is not None:
 				walker = repo.walk(repo.head.target, pygit2.GIT_SORT_TOPOLOGICAL)
 				user_commits_count = sum(1 for c in walker if c.author.name == user_name)
