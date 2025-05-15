@@ -7,6 +7,8 @@ from datetime import datetime, timezone, timedelta
 from typing import List, Dict
 from collections import Counter
 
+from prettytable import PrettyTable
+from pygit2 import Repository
 from pygit2.enums import FileStatus
 
 from mud import utils
@@ -15,27 +17,27 @@ from mud.styles import *
 
 
 class Runner:
-	_force_color_env = {"GIT_PAGER": "cat", "TERM": "xterm-256color", "GIT_CONFIG_PARAMETERS": "'color.ui=always'"}
+	_force_color_env: dict[str, str] = {"GIT_PAGER": "cat", "TERM": "xterm-256color", "GIT_CONFIG_PARAMETERS": "'color.ui=always'"}
 	_label_color_cache = {}
-	_current_color_index = 0
+	_current_color_index: int = 0
 
 	def __init__(self, repos):
-		self._force_color_env = self._force_color_env | os.environ.copy()
-		self._last_printed_lines = 0
-		self.repos = repos
+		self._force_color_env: dict[str, str] = self._force_color_env | os.environ.copy()
+		self._printed_lines_count: int = 0
+		self.repos: list[str] = repos
 
 	# `mud info` command implementation
 	def info(self, repos: Dict[str, List[str]]) -> None:
-		def get_directory_size(directory):
-			total_size = 0
+		def get_directory_size(directory: str) -> int:
+			total_size: int = 0
 			for directory_path, directory_names, file_names in os.walk(directory):
 				for f in file_names:
-					fp = os.path.join(directory_path, f)
+					fp: str = str(os.path.join(directory_path, f))
 					if os.path.isfile(fp):
 						total_size += os.path.getsize(fp)
 			return total_size
 
-		def format_size(size_in_bytes):
+		def format_size(size_in_bytes: int) -> str:
 			if size_in_bytes >= 1024 ** 3:
 				return f'{BOLD}{size_in_bytes / (1024 ** 3):.2f}{RESET} GB{glyphs("space")}{RED}{glyphs("weight")}{RESET}'
 			elif size_in_bytes >= 1024 ** 2:
@@ -45,7 +47,7 @@ class Runner:
 			else:
 				return f'{BOLD}{size_in_bytes}{RESET} Bytes{glyphs("space")}{BLUE}{glyphs("weight")}{RESET}'
 
-		def get_git_origin_host_icon(url: str):
+		def get_git_origin_host_icon(url: str) -> str:
 			if 'azure' in url or 'visualstudio' in url:
 				return BLUE + glyphs('azure') + RESET
 			elif 'github' in url:
@@ -57,17 +59,17 @@ class Runner:
 			else:
 				return YELLOW + glyphs('git') + RESET
 
-		table = utils.get_table(['Path', 'Commits', 'User Commits', 'Size', 'Labels'])
+		table: PrettyTable = utils.get_table(['Path', 'Commits', 'User Commits', 'Size', 'Labels'])
 		table.align['Commits'] = 'r'
 		table.align['User Commits'] = 'r'
 		table.align['Size'] = 'r'
 
 		for path, labels in repos.items():
-			repo = pygit2.Repository(path)
-			origin_url = repo.remotes.get('origin')
+			repo: Repository = Repository(path)
+			origin_url: object = repo.remotes('origin')
 
 			if origin_url is None:
-				origin_url = ''
+				origin_url: str = ''
 
 			walker = repo.walk(repo.head.target, pygit2.GIT_SORT_TOPOLOGICAL)
 			total_commits_count = sum(1 for _ in walker)
@@ -94,7 +96,7 @@ class Runner:
 		table = utils.get_table(['Path', 'Branch', 'Origin Sync', 'Status', 'Edits'])
 
 		for path, labels in repos.items():
-			repo = pygit2.Repository(os.path.abspath(path))
+			repo = Repository(os.path.abspath(path))
 			status = repo.status()
 			modified = status.items()
 
@@ -145,13 +147,17 @@ class Runner:
 		table = utils.get_table(['Path', 'Branch', 'Hash', 'Author', 'Time', 'Message'])
 
 		for path in repos.keys():
-			repo = pygit2.Repository(path)
+			repo: Repository = Repository(path)
+			author: str
+			commit_hash: str
+			time: str
+			message: str
 
 			if repo.head_is_unborn:
 				author, commit_hash, time, message = '', '', '', ''
 			else:
 				commit = repo.revparse_single('HEAD')
-				author = f'{WHITE if commit.author.name == repo.config.__getitem__('user.name') else GRAY}{commit.author.name}{RESET}'
+				author = f'{BOLD if commit.author.name == repo.config.__getitem__('user.name') else DIM}{commit.author.name}{RESET}'
 				commit_hash = f'{YELLOW}{str(commit.id)[-8:]}{RESET}'
 				time = datetime.fromtimestamp(commit.commit_time, timezone(timedelta(minutes=commit.commit_time_offset))).strftime("%Y-%m-%d %H:%M:%S")
 				message = commit.message.splitlines()[0]
@@ -214,7 +220,7 @@ class Runner:
 				all_branches[branch] += 1
 		branch_counter = Counter(all_branches)
 
-		for path, labels in repos.items():
+		for path in repos.keys():
 			formatted_path = self._get_formatted_path(path)
 			branches = subprocess.check_output('git branch -r --color=never', shell=True, text=True, cwd=path).splitlines()
 			current_branch = next((branch.lstrip('* ') for branch in branches if branch.startswith('*')), None)
@@ -245,11 +251,22 @@ class Runner:
 		table = utils.get_table(['Path', 'Tags'])
 
 		for path, labels in repos.items():
+			repo = Repository(path)
+
+			if repo.head_is_unborn:
+				tags = []
+			else:
+				tags = [
+					ref.replace('refs/tags/', '', 1)
+					for ref in repo.references
+					if ref.startswith('refs/tags/')
+				]
+				tags.sort()
+
 			formatted_path = self._get_formatted_path(path)
-			tags = sorted([line.strip() for line in subprocess.check_output('git tag', shell=True, text=True, cwd=path).splitlines() if line.strip()], reverse=True)
+
 			tags = [f'{assign_color(tag)}{glyphs("tag")} {RESET}{tag}' for tag in tags]
-			tags = ' '.join(tags)
-			table.add_row([formatted_path, tags])
+			table.add_row([formatted_path, ' '.join(tags)])
 
 		utils.print_table(table)
 
@@ -326,22 +343,14 @@ class Runner:
 		num_lines = table_str.count('\n') + 1
 		self._clear_printed_lines()
 		utils.print_table(table)
-		self._last_printed_lines = num_lines
+		self._printed_lines_count = num_lines
 
 	def _clear_printed_lines(self) -> None:
-		if self._last_printed_lines > 0:
-			for _ in range(self._last_printed_lines):
+		if self._printed_lines_count > 0:
+			for _ in range(self._printed_lines_count):
 				# Clear previous line
 				print('\033[A\033[K', end='')
-			self._last_printed_lines = 0
-
-	@staticmethod
-	def _get_status_porcelain(path: str) -> str:
-		try:
-			output = subprocess.check_output('git status --porcelain', shell=True, text=True, cwd=path)
-			return output
-		except Exception as e:
-			return str(e)
+			self._printed_lines_count = 0
 
 	@staticmethod
 	def _get_status_string(files: Dict[str, int]) -> str:

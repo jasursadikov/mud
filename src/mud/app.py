@@ -4,7 +4,8 @@ import asyncio
 import argparse
 import subprocess
 
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
+from typing import Any
 
 from mud import config
 from mud import utils
@@ -14,9 +15,9 @@ from mud.commands import *
 
 class App:
 	def __init__(self):
-		self.command = None
-		self.config = None
-		self.parser = self._create_parser()
+		self.command: str = ''
+		self.config: config = None
+		self.parser: ArgumentParser = self._create_parser()
 
 	@staticmethod
 	def _create_parser() -> ArgumentParser:
@@ -88,33 +89,34 @@ class App:
 
 		self.config = config.Config()
 
-		current_directory = os.getcwd()
+		current_directory: str = os.getcwd()
+		fallback: bool
+		config_directory: str
 		config_directory, fallback = self.config.find()
-
-		config_path = os.path.join(config_directory, utils.CONFIG_FILE_NAME)
+		config_path: str = os.path.join(config_directory, utils.CONFIG_FILE_NAME)
 
 		os.environ['PWD'] = config_directory
 
-		runner = Runner(self.config)
+		runner: Runner = Runner(self.config)
 
 		if config_directory != '':
 			os.chdir(config_directory)
 
-		native_command = False
+		native_command: bool = False
 		for index, arg in enumerate(sys.argv[1:]):
 			if any(arg.startswith(prefix) for prefix in COMMAND_ATTR):
 				native_command = False
 				break
 			if arg.startswith('-'):
 				continue
-			elif arg in [cmd for group in COMMANDS for cmd in group]:
+			elif arg in COMMANDS:
 				native_command = True
 			else:
 				break
 
 		# Handling commands
 		if native_command:
-			args = self.parser.parse_args()
+			args: Namespace = self.parser.parse_args()
 
 			if args.command in INIT + ADD + REMOVE + PRUNE + GET_CONFIG:
 				if args.command in GET_CONFIG:
@@ -176,7 +178,7 @@ class App:
 			self._filter_with_arguments()
 
 			del sys.argv[0]
-			if self.command is None:
+			if self.command == '':
 				if len(sys.argv) == 0:
 					self.parser.print_help()
 					return
@@ -201,8 +203,8 @@ class App:
 
 		for path, labels in self.config.filter_label('ignore', self.config.data).items():
 			del self.repos[path]
-		include_labels = []
-		exclude_labels = []
+		include_labels: list[str] = []
+		exclude_labels: list[str] = []
 		contains_strings = []
 		include_branches = []
 		exclude_branches = []
@@ -238,11 +240,11 @@ class App:
 				continue
 			del sys.argv[index]
 
-		directory = os.getcwd()
-		to_delete = []
+		directory: str = os.getcwd()
+		to_delete: list[Any] = []
 
 		for repo, labels in self.repos.items():
-			abs_path = os.path.join(directory, repo)
+			abs_path: str = os.path.join(directory, repo)
 
 			if not os.path.isdir(abs_path):
 				utils.print_error(7, meta=repo)
@@ -254,7 +256,7 @@ class App:
 				continue
 
 			os.chdir(abs_path)
-			delete = False
+			delete: bool = False
 
 			if any(include_labels) and not any(item in include_labels for item in labels):
 				delete = True
@@ -274,12 +276,12 @@ class App:
 					delete = True
 
 			if not delete and modified:
-				status_output = subprocess.check_output('git status --porcelain', shell=True, stderr=subprocess.DEVNULL)
+				status_output: bytes = subprocess.check_output('git status --porcelain', shell=True, stderr=subprocess.DEVNULL)
 				if not status_output:
 					delete = True
 
 			if not delete and diverged:
-				branch_status = subprocess.check_output('git status --branch --porcelain', shell=True, text=True).splitlines()
+				branch_status: list[str] = subprocess.check_output('git status --branch --porcelain', shell=True, text=True).splitlines()
 				if not any('ahead' in line or 'behind' in line for line in branch_status if line.startswith('##')):
 					delete = True
 
@@ -295,7 +297,7 @@ class App:
 		if utils.settings.alias_settings is None:
 			return
 		for alias, command in dict(utils.settings.alias_settings).items():
-			args = self.command.split(' ')
+			args: list[str] = self.command.split(' ')
 			if args[0] == alias:
 				del args[0]
 				self.command = ' '.join(command.split(' ') + args)
