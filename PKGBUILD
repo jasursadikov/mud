@@ -12,6 +12,7 @@ conflicts=("${pkgname}")
 depends=(
     'python' 
     'python-prettytable' 
+    'python-pygit2'
     'git')
 makedepends=(
     'python-build'

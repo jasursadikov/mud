@@ -263,7 +263,7 @@ class App:
 			if any(contains_strings) and not any(substr in repo for substr in contains_strings):
 				delete = True
 
-			if not delete:
+			if not delete and (any(include_branches) or any(exclude_branches)):
 				try:
 					branch = subprocess.check_output('git rev-parse --abbrev-ref HEAD', shell=True, text=True, stderr=subprocess.DEVNULL).splitlines()[0]
 				except subprocess.CalledProcessError:

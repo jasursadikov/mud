@@ -1,9 +1,12 @@
 import os
 import asyncio
 import subprocess
+import pygit2
 
 from typing import List, Dict
 from collections import Counter
+
+from pygit2.enums import FileStatus
 
 from mud import utils
 from mud.utils import glyphs
@@ -82,32 +85,38 @@ class Runner:
 		table = utils.get_table(['Path', 'Branch', 'Origin Sync', 'Status', 'Edits'])
 
 		for path, labels in repos.items():
-			output = self._get_status_porcelain(path)
-			files = output.splitlines()
+			repo = pygit2.Repository(os.path.abspath(path))
+			status = repo.status()
+			modified = status.items()
 
 			formatted_path = self._get_formatted_path(path)
-			branch = self._get_branch_status(path)
-			origin_sync = self._get_origin_sync(path)
-			status = self._get_status_string(files)
 
+			if repo.head_is_detached:
+				branch = repo.head.target.hex
+			elif repo.head_is_unborn:
+				branch = ''
+			else:
+				branch = repo.head.shorthand
+
+			origin_sync = self._get_origin_sync(path)
+			mini_status = self._get_status_string(modified)
+			branch = f'{self._get_branch_icon(branch.split('/')[0])} {branch}'
 			colored_output = []
 
-			for file in files:
-				file_status = file[:2].strip()
-				if file_status.startswith('M') or file_status.startswith('U'):
+			for file, flag in modified:
+				if flag == FileStatus.WT_MODIFIED or flag == FileStatus.WT_TYPECHANGE or flag == FileStatus.INDEX_MODIFIED or flag == FileStatus.INDEX_TYPECHANGE:
 					color = YELLOW
-				elif file_status.startswith('A') or file_status.startswith('C') or file_status.startswith('??') or file_status.startswith('!!'):
+				elif flag == FileStatus.WT_NEW or flag == FileStatus.INDEX_NEW:
 					color = BRIGHT_GREEN
-				elif file_status.startswith('D'):
+				elif flag == FileStatus.WT_DELETED or flag == FileStatus.INDEX_DELETED:
 					color = RED
-				elif file_status.startswith('R'):
+				elif flag == FileStatus.WT_RENAMED or flag == FileStatus.INDEX_RENAMED:
 					color = BLUE
 				else:
 					color = CYAN
+				colored_output.append(self._get_formatted_path(file, False, color))
 
-				colored_output.append(self._get_formatted_path(file[3:].strip(), False, color))
-
-			table.add_row([formatted_path, branch, origin_sync, status, ', '.join(colored_output)])
+			table.add_row([formatted_path, branch, origin_sync, mini_status, ', '.join(colored_output)])
 
 		utils.print_table(table)
 
@@ -325,28 +334,27 @@ class Runner:
 			return str(e)
 
 	@staticmethod
-	def _get_status_string(files: List[str]) -> str:
-		modified, added, removed, moved = 0, 0, 0, 0
+	def _get_status_string(files: Dict[str, int]) -> str:
+		modified, new, deleted, moved = 0, 0, 0, 0
 
-		for file in files:
-			file = file.lstrip()
-			if file.startswith('M') or file.startswith('U'):
+		for file, status in files:
+			if status == FileStatus.WT_MODIFIED or status == FileStatus.WT_TYPECHANGE or status == FileStatus.INDEX_MODIFIED or status == FileStatus.INDEX_TYPECHANGE:
 				modified += 1
-			elif file.startswith('A') or file.startswith('C') or file.startswith('??') or file.startswith('!!'):
-				added += 1
-			elif file.startswith('D'):
-				removed += 1
-			elif file.startswith('R'):
+			elif status == FileStatus.WT_NEW or status == FileStatus.INDEX_NEW:
+				new += 1
+			elif status == FileStatus.WT_DELETED or status == FileStatus.WT_DELETED:
+				deleted += 1
+			elif status == FileStatus.WT_RENAMED or status == FileStatus.INDEX_RENAMED:
 				moved += 1
 		status = ''
-		if added:
-			status += f'{BRIGHT_GREEN}{added} {glyphs("added")}{RESET} '
+		if new:
+			status += f'{BRIGHT_GREEN}{new} {glyphs("added")}{RESET} '
 		if modified:
 			status += f'{YELLOW}{modified} {glyphs("modified")}{RESET} '
 		if moved:
 			status += f'{BLUE}{moved} {glyphs("moved")}{RESET} '
-		if removed:
-			status += f'{RED}{removed} {glyphs("removed")}{RESET} '
+		if deleted:
+			status += f'{RED}{deleted} {glyphs("removed")}{RESET} '
 		if not files:
 			status = f'{GREEN}{glyphs("clear")}{RESET}'
 		return status
