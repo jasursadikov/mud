@@ -3,6 +3,7 @@ import asyncio
 import subprocess
 import pygit2
 
+from datetime import datetime, timezone, timedelta
 from typing import List, Dict
 from collections import Counter
 
@@ -45,19 +46,16 @@ class Runner:
 				return f'{BOLD}{size_in_bytes}{RESET} Bytes{glyphs("space")}{BLUE}{glyphs("weight")}{RESET}'
 
 		def get_git_origin_host_icon(url: str):
-			icon = YELLOW + glyphs('git')
-
 			if 'azure' in url or 'visualstudio' in url:
-				icon = BLUE + glyphs('azure')
+				return BLUE + glyphs('azure') + RESET
 			elif 'github' in url:
-				icon = GRAY + glyphs('github')
+				return GRAY + glyphs('github') + RESET
 			elif 'gitlab' in url:
-				icon = YELLOW + glyphs('gitlab')
+				return YELLOW + glyphs('gitlab') + RESET
 			elif 'bitbucket' in url:
-				icon = CYAN + glyphs('bitbucket')
-
-			icon += RESET + glyphs('space')
-			return icon
+				return CYAN + glyphs('bitbucket') + RESET
+			else:
+				return YELLOW + glyphs('git') + RESET
 
 		table = utils.get_table(['Path', 'Commits', 'User Commits', 'Size', 'Labels'])
 		table.align['Commits'] = 'r'
@@ -65,18 +63,29 @@ class Runner:
 		table.align['Size'] = 'r'
 
 		for path, labels in repos.items():
-			try:
-				origin_url = subprocess.check_output('git remote get-url origin', shell=True, text=True, cwd=path).strip()
-			except Exception:
+			repo = pygit2.Repository(path)
+			origin_url = repo.remotes.get('origin')
+
+			if origin_url is None:
 				origin_url = ''
 
-			formatted_path = f'{get_git_origin_host_icon(origin_url)}{self._get_formatted_path(path)}'
+			walker = repo.walk(repo.head.target, pygit2.GIT_SORT_TOPOLOGICAL)
+			total_commits_count = sum(1 for _ in walker)
+
+			user_name = repo.config.get('user.name')
+			if user_name is not None:
+				walker = repo.walk(repo.head.target, pygit2.GIT_SORT_TOPOLOGICAL)
+				user_commits_count = sum(1 for c in walker if c.author.name == user_name)
+			else:
+				user_commits_count = 0
+
+			formatted_path = f'{get_git_origin_host_icon(origin_url)}{glyphs('space')}{self._get_formatted_path(path)}'
 			size = format_size(get_directory_size(path))
-			commits = f'{BOLD}{subprocess.check_output("git rev-list --count HEAD", shell=True, text=True, cwd=path).strip()}{RESET} {DIM}commits{RESET}'
-			user_commits = f'{GREEN}{BOLD}{subprocess.check_output("git rev-list --count --author=\"$(git config user.name)\" HEAD", shell=True, text=True, cwd=path).strip()}{RESET} {DIM}by you{RESET}'
+			total_commits = f'{BOLD}{total_commits_count}{RESET} {DIM}commits{RESET}'
+			user_commits = f'{GREEN}{BOLD}{user_commits_count}{RESET} {DIM}by you{RESET}'
 			colored_labels = self._get_formatted_labels(labels)
 
-			table.add_row([formatted_path, commits, user_commits, size, colored_labels])
+			table.add_row([formatted_path, total_commits, user_commits, size, colored_labels])
 
 		utils.print_table(table)
 
@@ -91,10 +100,10 @@ class Runner:
 
 			formatted_path = self._get_formatted_path(path)
 
-			if repo.head_is_detached:
-				branch = repo.head.target.hex
-			elif repo.head_is_unborn:
+			if repo.head_is_unborn:
 				branch = ''
+			elif repo.head_is_detached:
+				branch = repo.head.target[8:]
 			else:
 				branch = repo.head.shorthand
 
@@ -136,20 +145,21 @@ class Runner:
 		table = utils.get_table(['Path', 'Branch', 'Hash', 'Author', 'Time', 'Message'])
 
 		for path in repos.keys():
+			repo = pygit2.Repository(path)
+
+			if repo.head_is_unborn:
+				author, commit_hash, time, message = '', '', '', ''
+			else:
+				commit = repo.revparse_single('HEAD')
+				author = f'{WHITE if commit.author.name == repo.config.__getitem__('user.name') else GRAY}{commit.author.name}{RESET}'
+				commit_hash = f'{YELLOW}{str(commit.id)[-8:]}{RESET}'
+				time = datetime.fromtimestamp(commit.commit_time, timezone(timedelta(minutes=commit.commit_time_offset))).strftime("%Y-%m-%d %H:%M:%S")
+				message = commit.message.splitlines()[0]
+
 			formatted_path = self._get_formatted_path(path)
 			branch = self._get_branch_status(path)
-			author = self._get_authors_name(path)
-			commit = self._get_commit_message(path)
 
-			# Commit hash
-			commit_hash_cmd = subprocess.run('git rev-parse --short=8 HEAD', shell=True, text=True, cwd=path, capture_output=True)
-			commit_hash = f'{YELLOW}{commit_hash_cmd.stdout.strip()}{RESET}'
-
-			# Commit time
-			commit_time_cmd = subprocess.run('git log -1 --pretty=format:%cd --date=relative', shell=True, text=True, cwd=path, capture_output=True)
-			commit_time = commit_time_cmd.stdout.strip()
-
-			table.add_row([formatted_path, branch, commit_hash, author, commit_time, commit])
+			table.add_row([formatted_path, branch, commit_hash, author, time, message])
 
 		utils.print_table(table)
 
@@ -454,18 +464,6 @@ class Runner:
 			return apply_styles((DIM + '/'.join([p[0] for p in parts[:-1]] + [END_DIM + parts[-1]])))
 		else:
 			return apply_styles((DIM + '/'.join(parts[:-1]) + '/' + END_DIM + parts[-1]))
-
-	@staticmethod
-	def _get_authors_name(path: str) -> str:
-		cmd = subprocess.run('git log -1 --pretty=format:%an', shell=True, text=True, cwd=path, capture_output=True)
-		git_config_user_cmd = subprocess.run('git config user.name', shell=True, text=True, capture_output=True)
-		committer_color = '' if cmd.stdout.strip() == git_config_user_cmd.stdout.strip() else DIM
-		return f'{committer_color}{cmd.stdout.strip()}{RESET}'
-
-	@staticmethod
-	def _get_commit_message(path: str) -> str:
-		cmd = subprocess.run('git log -1 --pretty=format:%s', shell=True, text=True, cwd=path, capture_output=True)
-		return cmd.stdout.strip()
 
 	@staticmethod
 	def _get_formatted_labels(labels: List[str]) -> str:
