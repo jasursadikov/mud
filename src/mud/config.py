@@ -133,14 +133,11 @@ class Config:
 		if path in self.data.keys():
 			del self.data[path]
 			print(path)
-		else:
-			utils.print_error(6, meta=path)
+			return
+		utils.print_error(6, meta=path)
 
 	def remove_label(self, path: str, label: str) -> None:
 		if path in self.data and label in self.data[path]:
 			self.data[path].remove(label)
-			if not self.data[path]:
-				del self.data[path]
-				print(f'{label}\t{path}')
-				return
+			return
 		utils.print_error(6, meta=f'{path}:{label}')

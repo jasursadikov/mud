@@ -107,7 +107,7 @@ class App:
 				break
 			if arg.startswith('-'):
 				continue
-			elif index + 1 == len(sys.argv) - 1 and arg in [cmd for group in COMMANDS for cmd in group]:
+			elif arg in [cmd for group in COMMANDS for cmd in group]:
 				native_command = True
 			else:
 				break
