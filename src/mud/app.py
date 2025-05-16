@@ -4,8 +4,9 @@ import asyncio
 import argparse
 import subprocess
 
-from argparse import ArgumentParser, Namespace
-from typing import Any
+from argparse import ArgumentParser
+
+from pygit2 import Repository
 
 from mud import config
 from mud import utils
@@ -89,20 +90,18 @@ class App:
 
 		self.config = config.Config()
 
-		current_directory: str = os.getcwd()
-		fallback: bool
-		config_directory: str
+		current_directory = os.getcwd()
 		config_directory, fallback = self.config.find()
-		config_path: str = os.path.join(config_directory, utils.CONFIG_FILE_NAME)
+		config_path = os.path.join(config_directory, utils.CONFIG_FILE_NAME)
 
 		os.environ['PWD'] = config_directory
 
-		runner: Runner = Runner(self.config)
+		runner = Runner(self.config)
 
 		if config_directory != '':
 			os.chdir(config_directory)
 
-		native_command: bool = False
+		native_command = False
 		for index, arg in enumerate(sys.argv[1:]):
 			if any(arg.startswith(prefix) for prefix in COMMAND_ATTR):
 				native_command = False
@@ -116,7 +115,7 @@ class App:
 
 		# Handling commands
 		if native_command:
-			args: Namespace = self.parser.parse_args()
+			args = self.parser.parse_args()
 
 			if args.command in INIT + ADD + REMOVE + PRUNE + GET_CONFIG:
 				if args.command in GET_CONFIG:
@@ -203,8 +202,8 @@ class App:
 
 		for path, labels in self.config.filter_label('ignore', self.config.data).items():
 			del self.repos[path]
-		include_labels: list[str] = []
-		exclude_labels: list[str] = []
+		include_labels = []
+		exclude_labels = []
 		contains_strings = []
 		include_branches = []
 		exclude_branches = []
@@ -240,44 +239,41 @@ class App:
 				continue
 			del sys.argv[index]
 
-		directory: str = os.getcwd()
-		to_delete: list[Any] = []
+		directory = os.getcwd()
+		to_delete = []
 
-		for repo, labels in self.repos.items():
-			abs_path: str = os.path.join(directory, repo)
+		for path, labels in self.repos.items():
+			abs_path = os.path.join(directory, path)
+			repo = Repository(abs_path)
 
 			if not os.path.isdir(abs_path):
-				utils.print_error(7, meta=repo)
-				to_delete.append(repo)
+				utils.print_error(7, meta=path)
+				to_delete.append(path)
 				continue
 			elif not os.path.isdir(os.path.join(abs_path, '.git')):
-				utils.print_error(8, meta=repo)
-				to_delete.append(repo)
+				utils.print_error(8, meta=path)
+				to_delete.append(path)
 				continue
 
 			os.chdir(abs_path)
-			delete: bool = False
+			delete = False
 
 			if any(include_labels) and not any(item in include_labels for item in labels):
 				delete = True
 			if any(exclude_labels) and any(item in exclude_labels for item in labels):
 				delete = True
-			if any(contains_strings) and not any(substr in repo for substr in contains_strings):
+			if any(contains_strings) and not any(substr in path for substr in contains_strings):
 				delete = True
 
 			if not delete and (any(include_branches) or any(exclude_branches)):
-				try:
-					branch = subprocess.check_output('git rev-parse --abbrev-ref HEAD', shell=True, text=True, stderr=subprocess.DEVNULL).splitlines()[0]
-				except subprocess.CalledProcessError:
-					branch = 'NA'
+				branch = '' if repo.head_is_unborn else repo.head.name
 				if any(include_branches) and branch not in include_branches:
 					delete = True
 				if any(exclude_branches) and branch in exclude_branches:
 					delete = True
 
 			if not delete and modified:
-				status_output: bytes = subprocess.check_output('git status --porcelain', shell=True, stderr=subprocess.DEVNULL)
-				if not status_output:
+				if not repo.head_is_unborn and not repo.status():
 					delete = True
 
 			if not delete and diverged:
@@ -286,10 +282,10 @@ class App:
 					delete = True
 
 			if delete:
-				to_delete.append(repo)
+				to_delete.append(path)
 
-		for repo in to_delete:
-			del self.repos[repo]
+		for path in to_delete:
+			del self.repos[path]
 
 		os.chdir(directory)
 
@@ -297,7 +293,7 @@ class App:
 		if utils.settings.alias_settings is None:
 			return
 		for alias, command in dict(utils.settings.alias_settings).items():
-			args: list[str] = self.command.split(' ')
+			args = self.command.split(' ')
 			if args[0] == alias:
 				del args[0]
 				self.command = ' '.join(command.split(' ') + args)

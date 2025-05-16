@@ -3,12 +3,13 @@ import asyncio
 import subprocess
 import pygit2
 
+from asyncio import Semaphore
 from datetime import datetime, timezone, timedelta
 from typing import List, Dict
 from collections import Counter
 
 from prettytable import PrettyTable
-from pygit2 import Repository
+from pygit2 import Repository, Commit
 from pygit2.enums import FileStatus
 
 from mud import utils
@@ -18,18 +19,18 @@ from mud.styles import *
 
 class Runner:
 	_force_color_env: dict[str, str] = {"GIT_PAGER": "cat", "TERM": "xterm-256color", "GIT_CONFIG_PARAMETERS": "'color.ui=always'"}
-	_label_color_cache = {}
 	_current_color_index: int = 0
+	_label_color_cache = {}
 
 	def __init__(self, repos):
-		self._force_color_env: dict[str, str] = self._force_color_env | os.environ.copy()
-		self._printed_lines_count: int = 0
-		self.repos: list[str] = repos
+		self._force_color_env = self._force_color_env | os.environ.copy()
+		self._printed_lines_count = 0
+		self.repos = repos
 
 	# `mud info` command implementation
 	def info(self, repos: Dict[str, List[str]]) -> None:
 		def get_directory_size(directory: str) -> int:
-			total_size: int = 0
+			total_size = 0
 			for directory_path, directory_names, file_names in os.walk(directory):
 				for f in file_names:
 					fp: str = str(os.path.join(directory_path, f))
@@ -65,10 +66,8 @@ class Runner:
 		table.align['Size'] = 'r'
 
 		for path, labels in repos.items():
-			repo: Repository = Repository(path)
-
-			origin_url: str = '' if repo.head_is_unborn else repo.remotes[0].url
-
+			repo = Repository(path)
+			origin_url = '' if repo.head_is_unborn else repo.remotes[0].url
 			walker = repo.walk(repo.head.target, pygit2.GIT_SORT_TOPOLOGICAL)
 			total_commits_count = sum(1 for _ in walker)
 
@@ -145,16 +144,12 @@ class Runner:
 		table = utils.get_table(['Path', 'Branch', 'Hash', 'Author', 'Time', 'Message'])
 
 		for path in repos.keys():
-			repo: Repository = Repository(path)
-			author: str
-			commit_hash: str
-			time: str
-			message: str
+			repo = Repository(path)
 
 			if repo.head_is_unborn:
 				author, commit_hash, time, message = '', '', '', ''
 			else:
-				commit = repo.revparse_single('HEAD')
+				commit: Commit = repo.revparse_single('HEAD')
 				author = f'{BOLD if commit.author.name == repo.config.__getitem__('user.name') else DIM}{commit.author.name}{RESET}'
 				commit_hash = f'{YELLOW}{str(commit.id)[-8:]}{RESET}'
 				time = datetime.fromtimestamp(commit.commit_time, timezone(timedelta(minutes=commit.commit_time_offset))).strftime("%Y-%m-%d %H:%M:%S")
@@ -280,7 +275,7 @@ class Runner:
 
 	# `mud <COMMAND>` when run_async = 1 and run_table = 0
 	async def run_async(self, repos: List[str], command: str) -> None:
-		sem = asyncio.Semaphore(len(repos))
+		sem: Semaphore = Semaphore(len(repos))
 
 		async def run_process(path: str) -> None:
 			async with sem:
@@ -296,7 +291,7 @@ class Runner:
 
 	# `mud <COMMAND>` when run_async = 1 and run_table = 1
 	async def run_async_table_view(self, repos: List[str], command: str) -> None:
-		sem = asyncio.Semaphore(len(repos))
+		sem: Semaphore = Semaphore(len(repos))
 		table = {repo: ['', ''] for repo in repos}
 
 		async def task(repo: str) -> None:
@@ -332,7 +327,7 @@ class Runner:
 		self._print_process(table)
 
 	def _print_process(self, info: Dict[str, List[str]]) -> None:
-		table = utils.get_table(['Path', 'Status', 'Output'])
+		table: PrettyTable = utils.get_table(['Path', 'Status', 'Output'])
 		for path, (line, status) in info.items():
 			formatted_path = self._get_formatted_path(path)
 			table.add_row([formatted_path, status, line])
