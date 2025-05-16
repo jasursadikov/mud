@@ -8,7 +8,7 @@
 
 ![Demo](./img.png)
 
-mud is CLI utility that allows you to run git commands in multiple repositories. It has multiple powerful filtering tools, native commands with a informative terminal output and support of aliasing. This tool is not limited to git commands only; you can run any commands you wish. However, this tool was primarily designed to be used with git, so each referenced directory should have a `.git` directory.
+mud is CLI utility that allows you to run git commands in multiple repositories. It has multiple powerful filtering tools, native commands with an informative terminal output and support of aliasing. This tool is not limited to git commands only; you can run any commands you wish. However, this tool was primarily designed to be used with git, so each referenced directory should have a `.git` directory.
 
 ## Installing
 **PyPI**
@@ -20,6 +20,8 @@ pip install mud-git
 paru -S mud-git
 ```
 
+For requirements check [requirements.txt](requirements.txt).
+
 ## Getting started
 
 1. Run `mud config` to start an interactive wizard that helps you set the preferred settings. Check the [settings](#settings) section for more details. At the end, a `.mudsettings` file will appear in your home directory, which you can modify in the future.
@@ -29,34 +31,50 @@ paru -S mud-git
 
 All entries are stored in `.mudconfig` in TSV format. After making your first entry, you can open `.mudconfig` in a text editor and modify it according to your needs.
 
+Now you're able to run any command. Some examples:
+```bash
+# Fetch all repositories
+mud git fetch
+# Switching all repositories to a "master" branch
+mud git checkout master
+# Alternatively, you can filter only repos on non-master branch and switch them to master
+mud --not-branch=master git checkout master
+# Pull all diverged branches
+mud --diverged git pull
+```
+
 ## Using
 
 ### Commands
-
-- `mud set-global` - sets the current `.mudconfig` as a global configuration so it will be used as a fallback configuration to run from any directory.
-- `mud get-config` - prints the closest `.mudconfig` location.
-- `mud prune` - removes all invalid repositories from the `.mudconfig`.
-
-`mud <FLAG> <COMMAND>` will execute a bash command across all repositories. To filter repositories, check the [flags](#flags) section.
-- `mud info`/`mud i` - displays branch divergence and working directory changes.
-- `mud status`/`mud st` - displays working directory changes.
-- `mud log`/`mud l` - displays the latest commit message, its time, and its author.
-- `mud labels`/`mud lb` - displays mud labels across repositories.
-- `mud branches`/`mud br` - displays all branches in repositories.
-- `mud remote-branches`/`mud rbr` - displays all remote branches in repositories.
-- `mud tags`/`mud t` - displays git tags in repositories.
+| Command                         | Description                                                                                                                       |
+|---------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
+| `mud set-global`                | sets the current `.mudconfig` as a global configuration so it will be used as a fallback configuration to run from any directory. |
+| `mud get-config`                | prints the current `.mudconfig` location.                                                                                         |
+| `mud prune`                     | removes all invalid repositories from the `.mudconfig`.                                                                           |
+| `mud info`/`mud i`              | displays branch divergence and working directory changes.                                                                         |
+| `mud status`/`mud st`           | displays working directory changes.                                                                                               |
+| `mud log`/`mud l`               | displays the latest commit message, its time, and its author.                                                                     |
+| `mud labels`/`mud lb`           | displays mud labels across repositories.                                                                                          |
+| `mud branches`/`mud br`         | displays all branches in repositories.                                                                                            |
+| `mud remote-branches`/`mud rbr` | displays all remote branches in repositories.                                                                                     |
+| `mud tags`/`mud t`              | displays git tags in repositories.                                                                                                |
 
 ### Flags
-- `-n=<str>` or `--name=<str>` - includes repositories that contains provided string.
-- `-l=<label>` or `--label=<label>` - includes repositories with the provided label.
-- `-L=<label>` or `--not-label=<label>` - excludes repositories with the provided label.
-- `-b=<branch>` or `--branch=<branch>` - includes repositories with the provided branch.
-- `-B=<branch>` or `--not-branch=<branch>` - excludes repositories with the provided branch.
-- `-c` or `--command` - explicit command argument. Use this whenever you're trying to run a complex command.
-- `-m` or `--modified` - filters out modified repositories.
-- `-d` or `--diverged` - filters repositories with diverged branches.
-- `-t` or `--table` - toggles the default table view setting for execution.
-- `-a` or `--async` - toggles the asynchronous execution feature.
+
+`mud <FLAG> <COMMAND>` will execute a bash command across all repositories.
+
+| Flag                                     | Description                                                                          |
+|------------------------------------------|--------------------------------------------------------------------------------------|
+| `-n=<str>` or `--name=<str>`             | includes repositories that contains provided string.                                 |
+| `-l=<label>` or `--label=<label>`        | includes repositories with the provided label.                                       |
+| `-L=<label>` or `--not-label=<label>`    | excludes repositories with the provided label.                                       |
+| `-b=<branch>` or `--branch=<branch>`     | includes repositories with the provided branch.                                      |
+| `-B=<branch>` or `--not-branch=<branch>` | excludes repositories with the provided branch.                                      |
+| `-c` or `--command`                      | explicit command argument. Use this whenever you're trying to run a complex command. |
+| `-m` or `--modified`                     | filters out modified repositories.                                                   |
+| `-d` or `--diverged`                     | filters repositories with diverged branches.                                         |
+| `-t` or `--table`                        | toggles the default table view setting for execution.                                |
+| `-a` or `--async`                        | toggles the asynchronous execution feature.                                          |
 
 Example:
 
@@ -72,14 +90,16 @@ mud -B=master -l=personal -L=work git fetch
 
 Settings are stored at `~/.config/mud/settings.ini`.
 
-- `run_async = 0/1` - enables asynchronous commands.
-- `run_table = 0/1` - enables table view for asynchronous commands. Requires `run_async`.
-- `nerd_fonts = 0/1` - enables nerd fonts in the output.
-- `show_borders = 0/1` - enables borders in the table view.
-- `round_corners = 0/1` - enables round corners for the table view. Requires `show_borders` to be enabled.
-- `collapse_paths = 0/1` - simplifies branch names in the branch view.
-- `display_absolute_paths = 0/1` - displays absolute paths for directories.
-- `config_path = /home/user/path/.mudconfig` - this is set by the `mud set-global` command.
+| Key                      | Value                    | Description                                                                      |
+|--------------------------|--------------------------|----------------------------------------------------------------------------------|
+| `run_async`              | `True`/`False`           | enables asynchronous commands.                                                   |
+| `run_table`              | `True`/`False`           | enables table view for asynchronous commands. Requires `run_async`.              |
+| `nerd_fonts`             | `True`/`False`           | enables nerd fonts in the output.                                                |
+| `show_borders`           | `True`/`False`           | enables borders in the table view.                                               |
+| `round_corners`          | `True`/`False`           | enables round corners for the table view. Requires `show_borders` to be enabled. |
+| `collapse_paths`         | `True`/`False`           | simplifies branch names in the branch view.                                      |
+| `display_absolute_paths` | `True`/`False`           | displays absolute paths for directories.                                         |
+| `config_path`            | `~/Documents/.mudconfig` | this is set by the `mud set-global` command.                                     |
 
 ### Aliases
 
@@ -96,13 +116,9 @@ push = git push
 
 You can modify your `.mudconfig` file using the following commands:
 
-### Adding and labeling repositories
-
--   `mud add <path>` - adds a path without a label.
--   `mud add <path> <label>` - adds a path with an optional label.
-
-### Removing labels and repositories
-
--   `mud remove <label>` - removes the label from all directories.
--   `mud remove <path>` - removes the directory with the specified path.
--   `mud remove <path> <label>` - removes the label from a directory.
+| Command                     | Description                                    |
+|-----------------------------|------------------------------------------------|
+| `mud add <path>`            | adds a path without a label.                   |
+| `mud add <path> <label>`    | adds a path with an optional label.            |
+| `mud remove <path>`         | removes the directory with the specified path. |
+| `mud remove <path> <label>` | removes the label from a directory.            |

@@ -1,26 +1,24 @@
 import os
 import sys
 import asyncio
-import argparse
-import subprocess
 
-from argparse import ArgumentParser
-
-from mud import config
 from mud import utils
-from mud.runner import Runner
 from mud.commands import *
+from mud.runner import Runner
+from mud.config import Config
+from argparse import ArgumentParser
+from pygit2 import Repository
 
 
 class App:
 	def __init__(self):
-		self.command = None
-		self.config = None
-		self.parser = self._create_parser()
+		self.command: str | None = None
+		self.config: Config | None = None
+		self.parser: ArgumentParser = self._create_parser()
 
 	@staticmethod
 	def _create_parser() -> ArgumentParser:
-		parser = argparse.ArgumentParser(description=f'mud allows you to run commands in multiple repositories.')
+		parser = ArgumentParser(description=f'mud allows you to run commands in multiple repositories.')
 		subparsers = parser.add_subparsers(dest='command')
 
 		subparsers.add_parser(LOG[0], aliases=LOG[1:], help='Displays log of latest commit messages for all repositories in a table view.')
@@ -86,11 +84,10 @@ class App:
 			utils.configure()
 			return
 
-		self.config = config.Config()
+		self.config = Config()
 
 		current_directory = os.getcwd()
 		config_directory, fallback = self.config.find()
-
 		config_path = os.path.join(config_directory, utils.CONFIG_FILE_NAME)
 
 		os.environ['PWD'] = config_directory
@@ -107,7 +104,7 @@ class App:
 				break
 			if arg.startswith('-'):
 				continue
-			elif arg in [cmd for group in COMMANDS for cmd in group]:
+			elif arg in COMMANDS:
 				native_command = True
 			else:
 				break
@@ -161,9 +158,9 @@ class App:
 			elif args.command in LOG:
 				runner.log(self.repos)
 			elif args.command in REMOTE_BRANCHES:
-				runner.remote_branches(self.repos)
+				runner.branches(self.repos, True)
 			elif args.command in BRANCHES:
-				runner.branches(self.repos)
+				runner.branches(self.repos, False)
 			elif args.command in LABELS:
 				runner.labels(self.repos)
 			elif args.command in TAGS:
@@ -190,7 +187,8 @@ class App:
 						asyncio.run(runner.run_async(self.repos.keys(), self.command))
 				else:
 					runner.run_ordered(self.repos.keys(), self.command)
-			except Exception:
+			except Exception as ex:
+				print(ex)
 				utils.print_error(2)
 
 	# Filter out repositories if user provided filters
@@ -241,16 +239,18 @@ class App:
 		directory = os.getcwd()
 		to_delete = []
 
-		for repo, labels in self.repos.items():
-			abs_path = os.path.join(directory, repo)
+		for path, labels in self.repos.items():
+			os.chdir(directory)
+			abs_path = os.path.join(directory, path)
+			repo = Repository(path)
 
 			if not os.path.isdir(abs_path):
-				utils.print_error(7, meta=repo)
-				to_delete.append(repo)
+				utils.print_error(7, meta=path)
+				to_delete.append(path)
 				continue
 			elif not os.path.isdir(os.path.join(abs_path, '.git')):
-				utils.print_error(8, meta=repo)
-				to_delete.append(repo)
+				utils.print_error(8, meta=path)
+				to_delete.append(path)
 				continue
 
 			os.chdir(abs_path)
@@ -260,34 +260,32 @@ class App:
 				delete = True
 			if any(exclude_labels) and any(item in exclude_labels for item in labels):
 				delete = True
-			if any(contains_strings) and not any(substr in repo for substr in contains_strings):
+			if any(contains_strings) and not any(substr in path for substr in contains_strings):
 				delete = True
 
-			if not delete:
-				try:
-					branch = subprocess.check_output('git rev-parse --abbrev-ref HEAD', shell=True, text=True, stderr=subprocess.DEVNULL).splitlines()[0]
-				except subprocess.CalledProcessError:
-					branch = 'NA'
-				if any(include_branches) and branch not in include_branches:
+			if not delete and not repo.head_is_unborn and (any(include_branches) or any(exclude_branches)):
+				if any(include_branches) and repo.head.shorthand not in include_branches:
 					delete = True
-				if any(exclude_branches) and branch in exclude_branches:
+				if any(exclude_branches) and repo.head.shorthand in exclude_branches:
 					delete = True
 
 			if not delete and modified:
-				status_output = subprocess.check_output('git status --porcelain', shell=True, stderr=subprocess.DEVNULL)
-				if not status_output:
+				if not repo.head_is_unborn and not repo.status():
 					delete = True
 
-			if not delete and diverged:
-				branch_status = subprocess.check_output('git status --branch --porcelain', shell=True, text=True).splitlines()
-				if not any('ahead' in line or 'behind' in line for line in branch_status if line.startswith('##')):
-					delete = True
+			if not delete and diverged and not repo.head_is_unborn:
+				local_ref = repo.branches[repo.head.shorthand]
+				upstream = local_ref.upstream
+				if upstream:
+					ahead, behind = repo.ahead_behind(local_ref.target, upstream.target)
+					if ahead == 0 and behind == 0:
+						delete = True
 
 			if delete:
-				to_delete.append(repo)
+				to_delete.append(path)
 
-		for repo in to_delete:
-			del self.repos[repo]
+		for path in to_delete:
+			del self.repos[path]
 
 		os.chdir(directory)
 

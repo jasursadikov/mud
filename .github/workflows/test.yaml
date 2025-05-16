@@ -43,26 +43,32 @@ jobs:
           done
       - name: Initialize
         run: |
+          echo "mud init"
           mud init
       - name: Test remove by path
         run: |
           for i in {1..3}; do
+            echo "mud remove repo_$i"
             mud remove repo_$i
           done
       - name: Test add with label
         run: |
           for i in {1..3}; do
-            mud add label_$i repo_$i
+            echo "mud add repo_$i label_$i" 
+            mud add repo_$i label_$i
           done
-          mud lb
-      - name: Test remove label
+          echo "mud labels"
+      - name: Test remove path
         run: |
           for i in {1..3}; do
-            mud remove label_$i
+            echo "mud remove repo_$i"
+            mud remove repo_$i
           done
-          mud lb
+          echo "mud labels"
       - name: Test prune command
         run: |
+          mud init
+          echo "test" > .mudconfig
           echo "mud prune"
           echo -e "test1_remove\ntest2_remove" > .mudconfig
           mud prune
@@ -73,9 +79,9 @@ jobs:
           for i in {1..3}; do
             mud add label_$i repo_$i
           done
-          mud lb
       - name: Test default commands
         run: |
+          cat .mudconfig
           echo "mud labels"
           mud labels
           echo "mud status"

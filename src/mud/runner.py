@@ -1,79 +1,91 @@
-import os
 import asyncio
 import subprocess
+import pygit2
 
-from typing import List, Dict
+from typing import Dict
+from asyncio import Semaphore
+from datetime import datetime, timezone, timedelta
 from collections import Counter
 
+from pygit2 import Repository, Commit
+from pygit2.enums import FileStatus
+
 from mud import utils
-from mud.utils import glyphs
+from mud.utils import *
 from mud.styles import *
 
 
 class Runner:
-	_force_color_env = {"GIT_PAGER": "cat", "TERM": "xterm-256color", "GIT_CONFIG_PARAMETERS": "'color.ui=always'"}
+	_force_color_env: dict[str, str] = {'GIT_PAGER': 'cat', 'TERM': 'xterm-256color', 'GIT_CONFIG_PARAMETERS': '\'color.ui=always\''}
+	_current_color_index: int = 0
 	_label_color_cache = {}
-	_current_color_index = 0
 
 	def __init__(self, repos):
 		self._force_color_env = self._force_color_env | os.environ.copy()
-		self._last_printed_lines = 0
+		self._printed_lines_count = 0
 		self.repos = repos
 
 	# `mud info` command implementation
 	def info(self, repos: Dict[str, List[str]]) -> None:
-		def get_directory_size(directory):
+		def get_directory_size(directory: str) -> int:
 			total_size = 0
 			for directory_path, directory_names, file_names in os.walk(directory):
 				for f in file_names:
-					fp = os.path.join(directory_path, f)
+					fp: str = str(os.path.join(directory_path, f))
 					if os.path.isfile(fp):
 						total_size += os.path.getsize(fp)
 			return total_size
 
-		def format_size(size_in_bytes):
+		def format_size(size_in_bytes: int) -> str:
 			if size_in_bytes >= 1024 ** 3:
-				return f'{BOLD}{size_in_bytes / (1024 ** 3):.2f}{RESET} GB{glyphs("space")}{RED}{glyphs("weight")}{RESET}'
+				return f'{BOLD}{size_in_bytes / (1024 ** 3):.2f}{RESET} GB{glyphs('space')}{RED}{glyphs('weight')}{RESET}'
 			elif size_in_bytes >= 1024 ** 2:
-				return f'{BOLD}{size_in_bytes / (1024 ** 2):.2f}{RESET} MB{glyphs("space")}{YELLOW}{glyphs("weight")}{RESET}'
+				return f'{BOLD}{size_in_bytes / (1024 ** 2):.2f}{RESET} MB{glyphs('space')}{YELLOW}{glyphs('weight')}{RESET}'
 			elif size_in_bytes >= 1024:
-				return f'{BOLD}{size_in_bytes / 1024:.2f}{RESET} KB{glyphs("space")}{GREEN}{glyphs("weight")}{RESET}'
+				return f'{BOLD}{size_in_bytes / 1024:.2f}{RESET} KB{glyphs('space')}{GREEN}{glyphs('weight')}{RESET}'
 			else:
-				return f'{BOLD}{size_in_bytes}{RESET} Bytes{glyphs("space")}{BLUE}{glyphs("weight")}{RESET}'
+				return f'{BOLD}{size_in_bytes}{RESET} Bytes{glyphs('space')}{BLUE}{glyphs('weight')}{RESET}'
 
-		def get_git_origin_host_icon(url: str):
-			icon = YELLOW + glyphs('git')
-
+		def get_git_origin_host_icon(url: str) -> str:
 			if 'azure' in url or 'visualstudio' in url:
-				icon = BLUE + glyphs('azure')
+				return BLUE + glyphs('azure') + RESET
 			elif 'github' in url:
-				icon = GRAY + glyphs('github')
+				return GRAY + glyphs('github') + RESET
 			elif 'gitlab' in url:
-				icon = YELLOW + glyphs('gitlab')
+				return YELLOW + glyphs('gitlab') + RESET
 			elif 'bitbucket' in url:
-				icon = CYAN + glyphs('bitbucket')
+				return CYAN + glyphs('bitbucket') + RESET
+			else:
+				return YELLOW + glyphs('git') + RESET
 
-			icon += RESET + glyphs('space')
-			return icon
-
-		table = utils.get_table(['Path', 'Commits', 'User Commits', 'Size', 'Labels'])
+		table: PrettyTable = utils.get_table(['Path', 'Commits', 'User Commits', 'Size', 'Labels'])
 		table.align['Commits'] = 'r'
 		table.align['User Commits'] = 'r'
 		table.align['Size'] = 'r'
 
 		for path, labels in repos.items():
-			try:
-				origin_url = subprocess.check_output('git remote get-url origin', shell=True, text=True, cwd=path).strip()
-			except Exception:
-				origin_url = ''
+			repo = Repository(path)
+			origin_url = '' if repo.head_is_unborn or len(repo.remotes) == 0 else repo.remotes[0].url
+			if repo.head_is_unborn:
+				total_commits_count = None
+			else:
+				walker = repo.walk(repo.head.target, pygit2.GIT_SORT_TOPOLOGICAL)
+				total_commits_count = sum(1 for _ in walker)
 
-			formatted_path = f'{get_git_origin_host_icon(origin_url)}{self._get_formatted_path(path)}'
+			user_name = repo.config['user.name']
+			if repo.head_is_unborn or user_name is None:
+				user_commits_count = None
+			else:
+				walker = repo.walk(repo.head.target, pygit2.GIT_SORT_TOPOLOGICAL)
+				user_commits_count = sum(1 for c in walker if c.author.name == user_name)
+
+			formatted_path = f'{get_git_origin_host_icon(origin_url)}{glyphs('space')}{self._get_formatted_path(path)}'
 			size = format_size(get_directory_size(path))
-			commits = f'{BOLD}{subprocess.check_output("git rev-list --count HEAD", shell=True, text=True, cwd=path).strip()}{RESET} {DIM}commits{RESET}'
-			user_commits = f'{GREEN}{BOLD}{subprocess.check_output("git rev-list --count --author=\"$(git config user.name)\" HEAD", shell=True, text=True, cwd=path).strip()}{RESET} {DIM}by you{RESET}'
+			total_commits = '' if total_commits_count is None else f'{BOLD}{total_commits_count}{RESET} {DIM}commits{RESET}'
+			user_commits = '' if user_commits_count is None else f'{GREEN}{BOLD}{user_commits_count}{RESET} {DIM}by you{RESET}'
 			colored_labels = self._get_formatted_labels(labels)
 
-			table.add_row([formatted_path, commits, user_commits, size, colored_labels])
+			table.add_row([formatted_path, total_commits, user_commits, size, colored_labels])
 
 		utils.print_table(table)
 
@@ -82,32 +94,29 @@ class Runner:
 		table = utils.get_table(['Path', 'Branch', 'Origin Sync', 'Status', 'Edits'])
 
 		for path, labels in repos.items():
-			output = self._get_status_porcelain(path)
-			files = output.splitlines()
-
+			repo = Repository(os.path.abspath(path))
+			status = repo.status()
+			modified = status.items()
 			formatted_path = self._get_formatted_path(path)
-			branch = self._get_branch_status(path)
-			origin_sync = self._get_origin_sync(path)
-			status = self._get_status_string(files)
-
+			origin_sync = self._get_origin_sync(repo)
+			mini_status = self._get_status_string(modified)
+			head_info = self._get_head_info(repo)
 			colored_output = []
 
-			for file in files:
-				file_status = file[:2].strip()
-				if file_status.startswith('M') or file_status.startswith('U'):
+			for file, flag in modified:
+				if flag == FileStatus.WT_MODIFIED or flag == FileStatus.WT_TYPECHANGE or flag == FileStatus.INDEX_MODIFIED or flag == FileStatus.INDEX_TYPECHANGE:
 					color = YELLOW
-				elif file_status.startswith('A') or file_status.startswith('C') or file_status.startswith('??') or file_status.startswith('!!'):
+				elif flag == FileStatus.WT_NEW or flag == FileStatus.INDEX_NEW:
 					color = BRIGHT_GREEN
-				elif file_status.startswith('D'):
+				elif flag == FileStatus.WT_DELETED or flag == FileStatus.INDEX_DELETED:
 					color = RED
-				elif file_status.startswith('R'):
+				elif flag == FileStatus.WT_RENAMED or flag == FileStatus.INDEX_RENAMED:
 					color = BLUE
 				else:
 					color = CYAN
+				colored_output.append(self._get_formatted_path(file, False, color))
 
-				colored_output.append(self._get_formatted_path(file[3:].strip(), False, color))
-
-			table.add_row([formatted_path, branch, origin_sync, status, ', '.join(colored_output)])
+			table.add_row([formatted_path, head_info, origin_sync, mini_status, ', '.join(colored_output)])
 
 		utils.print_table(table)
 
@@ -127,79 +136,43 @@ class Runner:
 		table = utils.get_table(['Path', 'Branch', 'Hash', 'Author', 'Time', 'Message'])
 
 		for path in repos.keys():
+			repo = Repository(path)
+
+			if repo.head_is_unborn:
+				author, commit_hash, time, message = '', '', '', ''
+			else:
+				commit: Commit = repo.revparse_single('HEAD')
+				author = f'{BOLD if commit.author.name == repo.config.__getitem__('user.name') else DIM}{commit.author.name}{RESET}'
+				commit_hash = f'{YELLOW}{str(commit.id)[-8:]}{RESET}'
+				time = datetime.fromtimestamp(commit.commit_time, timezone(timedelta(minutes=commit.commit_time_offset))).strftime('%Y-%m-%d %H:%M:%S')
+				message = commit.message.splitlines()[0]
+
 			formatted_path = self._get_formatted_path(path)
-			branch = self._get_branch_status(path)
-			author = self._get_authors_name(path)
-			commit = self._get_commit_message(path)
+			head_info = self._get_head_info(repo)
 
-			# Commit hash
-			commit_hash_cmd = subprocess.run('git rev-parse --short=8 HEAD', shell=True, text=True, cwd=path, capture_output=True)
-			commit_hash = f'{YELLOW}{commit_hash_cmd.stdout.strip()}{RESET}'
-
-			# Commit time
-			commit_time_cmd = subprocess.run('git log -1 --pretty=format:%cd --date=relative', shell=True, text=True, cwd=path, capture_output=True)
-			commit_time = commit_time_cmd.stdout.strip()
-
-			table.add_row([formatted_path, branch, commit_hash, author, commit_time, commit])
+			table.add_row([formatted_path, head_info, commit_hash, author, time, message])
 
 		utils.print_table(table)
 
 	# `mud branch` command implementation
-	def branches(self, repos: Dict[str, List[str]]) -> None:
+	def branches(self, paths: Dict[str, List[str]], remote: bool) -> None:
 		table = utils.get_table(['Path', 'Branches'])
 		all_branches = {}
+		repos = [[path, Repository(path)] for path in paths]
+		prefix = 'refs/remotes/' if remote else 'refs/heads/'
 
 		# Preparing branches for sorting to display them in the right order.
-		for path in repos.keys():
-			raw_branches = [line.strip() for line in subprocess.check_output('git branch', shell=True, text=True, cwd=path).split('\n') if line.strip()]
-			for branch in raw_branches:
-				branch = branch.replace(' ', '').replace('*', '')
+		for path, repo in repos:
+			for branch in [ref.replace(prefix + (repo.remotes[0].name + '/' if remote else ''), '') for ref in repo.references if ref.startswith(prefix + (repo.remotes[0].name + '/' if remote else ''))]:
 				if branch not in all_branches:
 					all_branches[branch] = 0
 				all_branches[branch] += 1
 		branch_counter = Counter(all_branches)
 
-		for path, labels in repos.items():
+		for path, repo in repos:
 			formatted_path = self._get_formatted_path(path)
-			branches = subprocess.check_output('git branch --color=never', shell=True, text=True, cwd=path).splitlines()
-			current_branch = next((branch.lstrip('* ') for branch in branches if branch.startswith('*')), None)
-			branches = [branch.lstrip('* ') for branch in branches]
-			sorted_branches = sorted(branches, key=lambda x: branch_counter.get(x, 0), reverse=True)
-
-			if current_branch and current_branch in sorted_branches:
-				sorted_branches.remove(current_branch)
-				sorted_branches.insert(0, current_branch)
-
-			formatted_branches = self._get_formatted_branches(sorted_branches, current_branch)
-			table.add_row([formatted_path, formatted_branches])
-
-		utils.print_table(table)
-
-	# `mud branch` command implementation
-	def remote_branches(self, repos: Dict[str, List[str]]) -> None:
-		# TODO: merge with branches() function
-		table = utils.get_table(['Path', 'Branches'])
-		all_branches = {}
-
-		# Preparing branches for sorting to display them in the right order.
-		for path in repos.keys():
-			raw_branches = [
-				line.lstrip('* ').removeprefix('origin/')
-				for line in subprocess.check_output('git branch -r', shell=True, text=True, cwd=path).split('\n')
-				if line.strip() and '->' not in line
-			]
-			for branch in raw_branches:
-				branch = branch.replace(' ', '').replace('*', '')
-				if branch not in all_branches:
-					all_branches[branch] = 0
-				all_branches[branch] += 1
-		branch_counter = Counter(all_branches)
-
-		for path, labels in repos.items():
-			formatted_path = self._get_formatted_path(path)
-			branches = subprocess.check_output('git branch -r --color=never', shell=True, text=True, cwd=path).splitlines()
-			current_branch = next((branch.lstrip('* ') for branch in branches if branch.startswith('*')), None)
-			branches = [branch.lstrip('* ').removeprefix('origin/') for branch in branches if '->' not in branch]
+			branches = [ref.replace(prefix + (repo.remotes[0].name + '/' if remote else ''), '') for ref in repo.references if ref.startswith(prefix + (repo.remotes[0].name + '/' if remote else ''))]
+			current_branch = '' if repo.head_is_unborn or repo.head_is_detached else repo.head.shorthand
 			sorted_branches = sorted(branches, key=lambda x: branch_counter.get(x, 0), reverse=True)
 
 			if current_branch and current_branch in sorted_branches:
@@ -226,11 +199,22 @@ class Runner:
 		table = utils.get_table(['Path', 'Tags'])
 
 		for path, labels in repos.items():
+			repo = Repository(path)
+
+			if repo.head_is_unborn:
+				tags = []
+			else:
+				tags = [
+					ref.replace('refs/tags/', '', 1)
+					for ref in repo.references
+					if ref.startswith('refs/tags/')
+				]
+				tags.sort()
+
 			formatted_path = self._get_formatted_path(path)
-			tags = sorted([line.strip() for line in subprocess.check_output('git tag', shell=True, text=True, cwd=path).splitlines() if line.strip()], reverse=True)
-			tags = [f'{assign_color(tag)}{glyphs("tag")} {RESET}{tag}' for tag in tags]
-			tags = ' '.join(tags)
-			table.add_row([formatted_path, tags])
+
+			tags = [f'{assign_color(tag)}{glyphs('tag')} {RESET}{tag}' for tag in tags]
+			table.add_row([formatted_path, ' '.join(tags)])
 
 		utils.print_table(table)
 
@@ -246,7 +230,7 @@ class Runner:
 
 	# `mud <COMMAND>` when run_async = 1 and run_table = 0
 	async def run_async(self, repos: List[str], command: str) -> None:
-		sem = asyncio.Semaphore(len(repos))
+		sem: Semaphore = Semaphore(len(repos))
 
 		async def run_process(path: str) -> None:
 			async with sem:
@@ -262,7 +246,7 @@ class Runner:
 
 	# `mud <COMMAND>` when run_async = 1 and run_table = 1
 	async def run_async_table_view(self, repos: List[str], command: str) -> None:
-		sem = asyncio.Semaphore(len(repos))
+		sem: Semaphore = Semaphore(len(repos))
 		table = {repo: ['', ''] for repo in repos}
 
 		async def task(repo: str) -> None:
@@ -274,7 +258,7 @@ class Runner:
 
 	async def _run_process(self, path: str, table: Dict[str, List[str]], command: str) -> None:
 		process = await asyncio.create_subprocess_shell(command, cwd=path, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=self._force_color_env)
-		table[path] = ['', f'{YELLOW}{glyphs("running")}{RESET}']
+		table[path] = ['', f'{YELLOW}{glyphs('running')}{RESET}']
 
 		while True:
 			line = await process.stdout.readline()
@@ -284,21 +268,21 @@ class Runner:
 					break
 			line = line.decode().strip()
 			line = table[path][0] if not line.strip() else line
-			table[path] = [line, f'{YELLOW}{glyphs("running")}{RESET}']
+			table[path] = [line, f'{YELLOW}{glyphs('running')}{RESET}']
 			self._print_process(table)
 
 		return_code = await process.wait()
 
 		if return_code == 0:
-			status = f'{GREEN}{glyphs("finished")}{RESET}'
+			status = f'{GREEN}{glyphs('finished')}{RESET}'
 		else:
-			status = f'{RED}{glyphs("failed")} Code: {return_code}{RESET}'
+			status = f'{RED}{glyphs('failed')} Code: {return_code}{RESET}'
 
 		table[path] = [table[path][0], status]
 		self._print_process(table)
 
 	def _print_process(self, info: Dict[str, List[str]]) -> None:
-		table = utils.get_table(['Path', 'Status', 'Output'])
+		table: PrettyTable = utils.get_table(['Path', 'Status', 'Output'])
 		for path, (line, status) in info.items():
 			formatted_path = self._get_formatted_path(path)
 			table.add_row([formatted_path, status, line])
@@ -307,106 +291,90 @@ class Runner:
 		num_lines = table_str.count('\n') + 1
 		self._clear_printed_lines()
 		utils.print_table(table)
-		self._last_printed_lines = num_lines
+		self._printed_lines_count = num_lines
 
 	def _clear_printed_lines(self) -> None:
-		if self._last_printed_lines > 0:
-			for _ in range(self._last_printed_lines):
+		if self._printed_lines_count > 0:
+			for _ in range(self._printed_lines_count):
 				# Clear previous line
 				print('\033[A\033[K', end='')
-			self._last_printed_lines = 0
+			self._printed_lines_count = 0
 
 	@staticmethod
-	def _get_status_porcelain(path: str) -> str:
-		try:
-			output = subprocess.check_output('git status --porcelain', shell=True, text=True, cwd=path)
-			return output
-		except Exception as e:
-			return str(e)
+	def _get_status_string(files: Dict[str, int]) -> str:
+		modified, new, deleted, moved = 0, 0, 0, 0
 
-	@staticmethod
-	def _get_status_string(files: List[str]) -> str:
-		modified, added, removed, moved = 0, 0, 0, 0
-
-		for file in files:
-			file = file.lstrip()
-			if file.startswith('M') or file.startswith('U'):
+		for file, status in files:
+			if status == FileStatus.WT_MODIFIED or status == FileStatus.WT_TYPECHANGE or status == FileStatus.INDEX_MODIFIED or status == FileStatus.INDEX_TYPECHANGE:
 				modified += 1
-			elif file.startswith('A') or file.startswith('C') or file.startswith('??') or file.startswith('!!'):
-				added += 1
-			elif file.startswith('D'):
-				removed += 1
-			elif file.startswith('R'):
+			elif status == FileStatus.WT_NEW or status == FileStatus.INDEX_NEW:
+				new += 1
+			elif status == FileStatus.WT_DELETED or status == FileStatus.WT_DELETED:
+				deleted += 1
+			elif status == FileStatus.WT_RENAMED or status == FileStatus.INDEX_RENAMED:
 				moved += 1
 		status = ''
-		if added:
-			status += f'{BRIGHT_GREEN}{added} {glyphs("added")}{RESET} '
+		if new:
+			status += f'{BRIGHT_GREEN}{new} {glyphs('added')}{RESET} '
 		if modified:
-			status += f'{YELLOW}{modified} {glyphs("modified")}{RESET} '
+			status += f'{YELLOW}{modified} {glyphs('modified')}{RESET} '
 		if moved:
-			status += f'{BLUE}{moved} {glyphs("moved")}{RESET} '
-		if removed:
-			status += f'{RED}{removed} {glyphs("removed")}{RESET} '
+			status += f'{BLUE}{moved} {glyphs('moved')}{RESET} '
+		if deleted:
+			status += f'{RED}{deleted} {glyphs('removed')}{RESET} '
 		if not files:
-			status = f'{GREEN}{glyphs("clear")}{RESET}'
+			return ''
 		return status
 
 	@staticmethod
-	def _get_branch_status(path: str) -> str:
-		try:
-			branch_cmd = subprocess.run('git rev-parse --abbrev-ref HEAD', shell=True, text=True, cwd=path, capture_output=True)
-			branch_stdout = branch_cmd.stdout.strip()
-		except subprocess.CalledProcessError:
-			branch_stdout = 'NA'
-		if '/' in branch_stdout:
-			branch_path = branch_stdout.split('/')
-			icon = Runner._get_branch_icon(branch_path[0])
-			return f'{icon}{RESET}{glyphs("space")}{branch_path[0]}{RESET}/{BOLD}{("/".join(branch_path[1:]))}{RESET}'
-		elif branch_stdout == 'HEAD':
-			# check if we are on tag
-			glyph = glyphs('tag')
-			color = BRIGHT_MAGENTA
-			info_cmd = subprocess.run('git describe --tags --exact-match', shell=True, text=True, cwd=path, capture_output=True)
-			info_cmd = info_cmd.stdout.strip()
-
-			if not info_cmd.strip():
-				glyph = glyphs("branch")
-				color = CYAN
-				info_cmd = subprocess.run('git rev-parse --short HEAD', shell=True, text=True, cwd=path, capture_output=True)
-				info_cmd = info_cmd.stdout.strip()
-
-			return f'{color}{glyph}{RESET}{glyphs("space")}{DIM}{branch_stdout}{RESET}:{info_cmd}'
+	def _get_head_info(repo: Repository) -> str:
+		if not repo.head_is_unborn:
+			if repo.head_is_detached:
+				for ref_name in repo.references:
+					if not ref_name.startswith('refs/tags/'):
+						continue
+					ref = repo.references.get(ref_name)
+					obj = repo[ref.target]
+					commit_oid = obj.target if isinstance(obj, pygit2.Tag) else ref.target
+					if commit_oid == ref.target:
+						branch = ref_name.replace('refs/tags/', '')
+						return f'{BRIGHT_MAGENTA}{glyphs('tag')}{RESET}{glyphs('space')}{branch}{RESET}'
+				commit_id = str(repo.revparse_single('HEAD').id)
+				return f'{CYAN}{glyphs('commit')}{RESET}{glyphs('space')}{commit_id[-8:]}'
+			else:
+				branch = repo.head.shorthand
+				if '/' in branch:
+					branch_path = branch.split('/')
+					icon = Runner._get_branch_icon(branch_path[0])
+					return f'{icon}{RESET}{glyphs('space')}{branch_path[0]}{RESET}/{BOLD}{('/'.join(branch_path[1:]))}{RESET}'
+				return f'{Runner._get_branch_icon(branch)}{RESET}{glyphs('space')}{branch}'
 		else:
-			return f'{Runner._get_branch_icon(branch_stdout)}{RESET}{glyphs("space")}{branch_stdout}'
+			return ''
 
 	@staticmethod
-	def _get_origin_sync(path: str) -> str:
-		try:
-			ahead_behind_cmd = subprocess.run('git rev-list --left-right --count HEAD...@{upstream}', shell=True, text=True, cwd=path, capture_output=True)
-			stdout = ahead_behind_cmd.stdout.strip().split()
-		except subprocess.CalledProcessError:
-			stdout = ['0', '0']
+	def _get_origin_sync(repo: Repository) -> str:
+		sync_str = ''
 
-		origin_sync = ''
-		if len(stdout) >= 2:
-			ahead, behind = stdout[0], stdout[1]
-			if ahead and ahead != '0':
-				origin_sync += f'{BRIGHT_GREEN}{glyphs("ahead")} {ahead}{RESET}'
-			if behind and behind != '0':
-				if origin_sync:
-					origin_sync += ' '
-				origin_sync += f'{BRIGHT_BLUE}{glyphs("behind")} {behind}{RESET}'
+		if not repo.head_is_unborn and not repo.head_is_detached:
+			local_ref = repo.branches[repo.head.shorthand]
+			upstream = local_ref.upstream
+			if upstream:
+				ahead, behind = repo.ahead_behind(local_ref.target, upstream.target)
+				if ahead != 0:
+					sync_str += f'{BRIGHT_GREEN}{glyphs('ahead')} {ahead}{RESET}'
+				if behind != 0:
+					sync_str += f'{BRIGHT_BLUE}{glyphs('behind')} {behind}{RESET}'
+				if ahead == 0 and behind == 0:
+					sync_str = f'{GREEN}{glyphs('synced')}{RESET}'
+			return sync_str
 
-		if not origin_sync.strip():
-			origin_sync = f'{BLUE}{glyphs("synced")}{RESET}'
-
-		return origin_sync
+		return f'{RED}{glyphs('question')}{RESET}'
 
 	@staticmethod
 	def _print_process_header(path: str, command: str, failed: bool, code: int) -> None:
-		command = f'{BKG_WHITE}{BLACK}{glyphs("space")}{glyphs("terminal")} {BOLD}{command} {END_BOLD}{WHITE}{RESET}'
-		code = f'{WHITE}{BKG_RED if failed else BKG_GREEN}{glyphs(")")} {glyphs("failed") if failed else glyphs("finished")} {f"{BOLD}{code}" if failed else ""}{glyphs("space")}{RESET}'
-		path = f'{BKG_BLACK}{RED if failed else GREEN}{glyphs(")")}{RESET}{BKG_BLACK}{glyphs("space")}{WHITE}{glyphs("directory")}{END_DIM} {Runner._get_formatted_path(path)}{BKG_BLACK} {RESET}{BLACK}{glyphs(")")}{RESET}'
+		command = f'{BKG_WHITE}{BLACK}{glyphs('space')}{glyphs('terminal')} {BOLD}{command} {END_BOLD}{WHITE}{RESET}'
+		code = f'{WHITE}{BKG_RED if failed else BKG_GREEN}{glyphs(')')} {glyphs('failed') if failed else glyphs('finished')} {f'{BOLD}{code}' if failed else ''}{glyphs('space')}{RESET}'
+		path = f'{BKG_BLACK}{RED if failed else GREEN}{glyphs(')')}{RESET}{BKG_BLACK}{glyphs('space')}{WHITE}{glyphs('directory')}{END_DIM} {Runner._get_formatted_path(path)}{BKG_BLACK} {RESET}{BLACK}{glyphs(')')}{RESET}'
 		print(f'{command}{code}{path}')
 
 	@staticmethod
@@ -414,11 +382,11 @@ class Runner:
 		collapse_paths = utils.settings.config['mud'].getboolean('collapse_paths', fallback=False)
 		abs_path = utils.settings.config['mud'].getboolean('display_absolute_paths', fallback=False)
 
-		in_quotes = path.startswith('\"') and path.endswith('\"')
-		quote = '\"' if in_quotes else ''
+		in_quotes = path.startswith('\'') and path.endswith('\'')
+		quote = '\'' if in_quotes else ''
 
 		if in_quotes:
-			path = path.replace('\"', '')
+			path = path.replace('\'', '')
 
 		def apply_styles(text: str) -> str:
 			return color + quote + text + quote + RESET
@@ -448,25 +416,13 @@ class Runner:
 			return apply_styles((DIM + '/'.join(parts[:-1]) + '/' + END_DIM + parts[-1]))
 
 	@staticmethod
-	def _get_authors_name(path: str) -> str:
-		cmd = subprocess.run('git log -1 --pretty=format:%an', shell=True, text=True, cwd=path, capture_output=True)
-		git_config_user_cmd = subprocess.run('git config user.name', shell=True, text=True, capture_output=True)
-		committer_color = '' if cmd.stdout.strip() == git_config_user_cmd.stdout.strip() else DIM
-		return f'{committer_color}{cmd.stdout.strip()}{RESET}'
-
-	@staticmethod
-	def _get_commit_message(path: str) -> str:
-		cmd = subprocess.run('git log -1 --pretty=format:%s', shell=True, text=True, cwd=path, capture_output=True)
-		return cmd.stdout.strip()
-
-	@staticmethod
 	def _get_formatted_labels(labels: List[str]) -> str:
 		if len(labels) == 0:
 			return ''
 		colored_labels = ''
 		for label in labels:
 			color_index = Runner._get_color_index(label) % len(TEXT)
-			colored_labels += f'{TEXT[(color_index + 3) % len(TEXT)]}{glyphs("label")}{glyphs("space")}{label}{RESET} '
+			colored_labels += f'{TEXT[(color_index + 3) % len(TEXT)]}{glyphs('label')}{glyphs('space')}{label}{RESET} '
 
 		return colored_labels.rstrip()
 
@@ -480,7 +436,7 @@ class Runner:
 			prefix = f'{BOLD}{RED}*{RESET}' if current_branch == branch else ''
 			icon = Runner._get_branch_icon(branch.split('/')[0])
 			branch = Runner._get_formatted_path(branch, False)
-			output += f'{icon}{glyphs("space")}{prefix}{branch}{RESET} '
+			output += f'{icon}{glyphs('space')}{prefix}{branch}{RESET} '
 		return output
 
 	@staticmethod

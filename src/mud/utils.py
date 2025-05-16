@@ -3,7 +3,7 @@ import sys
 import shutil
 import random
 
-from typing import List
+from typing import List, Any
 from prettytable import PrettyTable, PLAIN_COLUMNS
 
 from mud.settings import *
@@ -51,7 +51,7 @@ def configure() -> None:
 
 def ask(text: str) -> bool:
 	try:
-		answer = input(f"{text}? [Y/n]: ").strip().lower()
+		answer = input(f'{text} [Y/n]: ').strip().lower()
 		if answer in ('y', 'yes', ''):
 			return True
 		elif answer in ('n', 'no'):
@@ -79,6 +79,11 @@ def print_table(table: PrettyTable) -> None:
 				displayed_count += 1
 				i += 1
 		return i
+
+	for col in table.field_names[:]:
+		idx = table.field_names.index(col)
+		if all(row[idx] in (None, "") for row in table._rows):
+			table.del_column(col)
 
 	rows = table_to_str(table).split('\n')
 	for row in rows:
@@ -151,7 +156,9 @@ def print_error(code: int, exit: bool = False, meta: str = '') -> None:
 			text = f'Invalid path "{meta}"'
 		case 8:
 			text = f'.git directory not found at target "{meta}"'
+		case 9:
+			text = f'Repository "{meta}" exists in .mudconfig but directory was not found'
 
-	print(f'{RED}Error [{code}]{RESET} {text}')
+	print(f'{RED}Error {code}:{RESET} {text}')
 	if exit:
 		sys.exit(code)
