@@ -1,19 +1,17 @@
-import os
 import asyncio
 import subprocess
 import pygit2
 
+from typing import Dict
 from asyncio import Semaphore
 from datetime import datetime, timezone, timedelta
-from typing import List, Dict
 from collections import Counter
 
-from prettytable import PrettyTable
 from pygit2 import Repository, Commit
 from pygit2.enums import FileStatus
 
 from mud import utils
-from mud.utils import glyphs
+from mud.utils import *
 from mud.styles import *
 
 
@@ -96,19 +94,10 @@ class Runner:
 			repo = Repository(os.path.abspath(path))
 			status = repo.status()
 			modified = status.items()
-
 			formatted_path = self._get_formatted_path(path)
-
-			if repo.head_is_unborn:
-				branch = ''
-			elif repo.head_is_detached:
-				branch = repo.head.target[8:]
-			else:
-				branch = repo.head.shorthand
-
 			origin_sync = self._get_origin_sync(path)
 			mini_status = self._get_status_string(modified)
-			branch = f'{self._get_branch_icon(branch.split('/')[0])} {branch}'
+			branch = self._get_branch_status(repo)
 			colored_output = []
 
 			for file, flag in modified:
@@ -156,7 +145,7 @@ class Runner:
 				message = commit.message.splitlines()[0]
 
 			formatted_path = self._get_formatted_path(path)
-			branch = self._get_branch_status(path)
+			branch = self._get_branch_status(repo)
 
 			table.add_row([formatted_path, branch, commit_hash, author, time, message])
 
@@ -372,32 +361,31 @@ class Runner:
 		return status
 
 	@staticmethod
-	def _get_branch_status(path: str) -> str:
-		try:
-			branch_cmd = subprocess.run('git rev-parse --abbrev-ref HEAD', shell=True, text=True, cwd=path, capture_output=True)
-			branch_stdout = branch_cmd.stdout.strip()
-		except subprocess.CalledProcessError:
-			branch_stdout = 'NA'
-		if '/' in branch_stdout:
-			branch_path = branch_stdout.split('/')
-			icon = Runner._get_branch_icon(branch_path[0])
-			return f'{icon}{RESET}{glyphs("space")}{branch_path[0]}{RESET}/{BOLD}{("/".join(branch_path[1:]))}{RESET}'
-		elif branch_stdout == 'HEAD':
-			# check if we are on tag
-			glyph = glyphs('tag')
-			color = BRIGHT_MAGENTA
-			info_cmd = subprocess.run('git describe --tags --exact-match', shell=True, text=True, cwd=path, capture_output=True)
-			info_cmd = info_cmd.stdout.strip()
+	def _get_branch_status(repo: Repository) -> str:
+		branch = ''
 
-			if not info_cmd.strip():
-				glyph = glyphs("branch")
-				color = CYAN
-				info_cmd = subprocess.run('git rev-parse --short HEAD', shell=True, text=True, cwd=path, capture_output=True)
-				info_cmd = info_cmd.stdout.strip()
+		if not repo.head_is_unborn:
+			if repo.head_is_detached:
+				for ref_name in repo.references:
+					if not ref_name.startswith('refs/tags/'):
+						continue
+					ref = repo.references.get(ref_name)
+					obj = repo[ref.target]
+					commit_oid = obj.target if isinstance(obj, pygit2.Tag) else ref.target
+					if commit_oid == ref.target:
+						branch = ref_name.replace('refs/tags/', '')
+						return f'{BRIGHT_MAGENTA}{glyphs('tag')}{RESET}{glyphs("space")}{branch}{RESET}'
 
-			return f'{color}{glyph}{RESET}{glyphs("space")}{DIM}{branch_stdout}{RESET}:{info_cmd}'
+				return f'{CYAN}{glyphs("commit")}{RESET}{glyphs("space")}{DIM}{repo.revparse_single('HEAD').hex}'
+			else:
+				branch = repo.head.shorthand
+				if '/' in branch:
+					branch_path = branch.split('/')
+					icon = Runner._get_branch_icon(branch_path[0])
+					return f'{icon}{RESET}{glyphs("space")}{branch_path[0]}{RESET}/{BOLD}{("/".join(branch_path[1:]))}{RESET}'
+				return f'{Runner._get_branch_icon(branch)}{RESET}{glyphs("space")}{branch}'
 		else:
-			return f'{Runner._get_branch_icon(branch_stdout)}{RESET}{glyphs("space")}{branch_stdout}'
+			return ''
 
 	@staticmethod
 	def _get_origin_sync(path: str) -> str:

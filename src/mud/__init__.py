@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
-from . import utils, settings
+import mud.utils
+import mud.settings
+
 from .app import App
 
 

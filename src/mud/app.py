@@ -1,28 +1,24 @@
 import os
 import sys
 import asyncio
-import argparse
-import subprocess
 
-from argparse import ArgumentParser
-
-from pygit2 import Repository
-
-from mud import config
 from mud import utils
-from mud.runner import Runner
 from mud.commands import *
+from mud.runner import Runner
+from mud.config import Config
+from argparse import ArgumentParser
+from pygit2 import Repository
 
 
 class App:
 	def __init__(self):
-		self.command: str = ''
-		self.config: config = None
+		self.command: str | None = None
+		self.config: Config | None = None
 		self.parser: ArgumentParser = self._create_parser()
 
 	@staticmethod
 	def _create_parser() -> ArgumentParser:
-		parser = argparse.ArgumentParser(description=f'mud allows you to run commands in multiple repositories.')
+		parser = ArgumentParser(description=f'mud allows you to run commands in multiple repositories.')
 		subparsers = parser.add_subparsers(dest='command')
 
 		subparsers.add_parser(LOG[0], aliases=LOG[1:], help='Displays log of latest commit messages for all repositories in a table view.')
@@ -88,7 +84,7 @@ class App:
 			utils.configure()
 			return
 
-		self.config = config.Config()
+		self.config = Config()
 
 		current_directory = os.getcwd()
 		config_directory, fallback = self.config.find()
@@ -265,21 +261,23 @@ class App:
 			if any(contains_strings) and not any(substr in path for substr in contains_strings):
 				delete = True
 
-			if not delete and (any(include_branches) or any(exclude_branches)):
-				branch = '' if repo.head_is_unborn else repo.head.name
-				if any(include_branches) and branch not in include_branches:
+			if not delete and not repo.head_is_unborn and (any(include_branches) or any(exclude_branches)):
+				if any(include_branches) and repo.head.shorthand not in include_branches:
 					delete = True
-				if any(exclude_branches) and branch in exclude_branches:
+				if any(exclude_branches) and repo.head.shorthand in exclude_branches:
 					delete = True
 
 			if not delete and modified:
 				if not repo.head_is_unborn and not repo.status():
 					delete = True
 
-			if not delete and diverged:
-				branch_status: list[str] = subprocess.check_output('git status --branch --porcelain', shell=True, text=True).splitlines()
-				if not any('ahead' in line or 'behind' in line for line in branch_status if line.startswith('##')):
-					delete = True
+			if not delete and diverged and not repo.head_is_unborn:
+				local_ref = repo.branches[repo.head.shorthand]
+				upstream = local_ref.upstream
+				if upstream:
+					ahead, behind = repo.ahead_behind(local_ref.target, upstream.target)
+					if ahead == 0 and behind == 0:
+						delete = True
 
 			if delete:
 				to_delete.append(path)
