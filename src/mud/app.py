@@ -158,9 +158,9 @@ class App:
 			elif args.command in LOG:
 				runner.log(self.repos)
 			elif args.command in REMOTE_BRANCHES:
-				runner.remote_branches(self.repos)
+				runner.branches(self.repos, True)
 			elif args.command in BRANCHES:
-				runner.branches(self.repos)
+				runner.branches(self.repos, False)
 			elif args.command in LABELS:
 				runner.labels(self.repos)
 			elif args.command in TAGS:
@@ -173,7 +173,7 @@ class App:
 			self._filter_with_arguments()
 
 			del sys.argv[0]
-			if self.command == '':
+			if self.command is None:
 				if len(sys.argv) == 0:
 					self.parser.print_help()
 					return

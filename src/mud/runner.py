@@ -152,61 +152,24 @@ class Runner:
 		utils.print_table(table)
 
 	# `mud branch` command implementation
-	def branches(self, repos: Dict[str, List[str]]) -> None:
+	def branches(self, paths: Dict[str, List[str]], remote: bool) -> None:
 		table = utils.get_table(['Path', 'Branches'])
 		all_branches = {}
+		repos = [[path, Repository(path)] for path in paths]
+		prefix = 'refs/remotes/' if remote else 'refs/heads/'
 
 		# Preparing branches for sorting to display them in the right order.
-		for path in repos.keys():
-			raw_branches = [line.strip() for line in subprocess.check_output('git branch', shell=True, text=True, cwd=path).split('\n') if line.strip()]
-			for branch in raw_branches:
-				branch = branch.replace(' ', '').replace('*', '')
+		for path, repo in repos:
+			for branch in [ref.replace(prefix + (repo.remotes[0].name + '/' if remote else ''), '') for ref in repo.references if ref.startswith(prefix + (repo.remotes[0].name + '/' if remote else ''))]:
 				if branch not in all_branches:
 					all_branches[branch] = 0
 				all_branches[branch] += 1
 		branch_counter = Counter(all_branches)
 
-		for path, labels in repos.items():
+		for path, repo in repos:
 			formatted_path = self._get_formatted_path(path)
-			branches = subprocess.check_output('git branch --color=never', shell=True, text=True, cwd=path).splitlines()
-			current_branch = next((branch.lstrip('* ') for branch in branches if branch.startswith('*')), None)
-			branches = [branch.lstrip('* ') for branch in branches]
-			sorted_branches = sorted(branches, key=lambda x: branch_counter.get(x, 0), reverse=True)
-
-			if current_branch and current_branch in sorted_branches:
-				sorted_branches.remove(current_branch)
-				sorted_branches.insert(0, current_branch)
-
-			formatted_branches = self._get_formatted_branches(sorted_branches, current_branch)
-			table.add_row([formatted_path, formatted_branches])
-
-		utils.print_table(table)
-
-	# `mud branch` command implementation
-	def remote_branches(self, repos: Dict[str, List[str]]) -> None:
-		# TODO: merge with branches() function
-		table = utils.get_table(['Path', 'Branches'])
-		all_branches = {}
-
-		# Preparing branches for sorting to display them in the right order.
-		for path in repos.keys():
-			raw_branches = [
-				line.lstrip('* ').removeprefix('origin/')
-				for line in subprocess.check_output('git branch -r', shell=True, text=True, cwd=path).split('\n')
-				if line.strip() and '->' not in line
-			]
-			for branch in raw_branches:
-				branch = branch.replace(' ', '').replace('*', '')
-				if branch not in all_branches:
-					all_branches[branch] = 0
-				all_branches[branch] += 1
-		branch_counter = Counter(all_branches)
-
-		for path in repos.keys():
-			formatted_path = self._get_formatted_path(path)
-			branches = subprocess.check_output('git branch -r --color=never', shell=True, text=True, cwd=path).splitlines()
-			current_branch = next((branch.lstrip('* ') for branch in branches if branch.startswith('*')), None)
-			branches = [branch.lstrip('* ').removeprefix('origin/') for branch in branches if '->' not in branch]
+			branches = [ref.replace(prefix + (repo.remotes[0].name + '/' if remote else ''), '') for ref in repo.references if ref.startswith(prefix + (repo.remotes[0].name + '/' if remote else ''))]
+			current_branch = '' if repo.head_is_unborn or repo.head_is_detached else repo.head.shorthand
 			sorted_branches = sorted(branches, key=lambda x: branch_counter.get(x, 0), reverse=True)
 
 			if current_branch and current_branch in sorted_branches:
