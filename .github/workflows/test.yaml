@@ -48,13 +48,13 @@ jobs:
       - name: Test remove by path
         run: |
           for i in {1..3}; do
-            echo "mud remove repo_($i)"
+            echo "mud remove repo_$i"
             mud remove repo_$i
           done
       - name: Test add with label
         run: |
           for i in {1..3}; do
-            echo "mud add repo_($i) label_($i)" 
+            echo "mud add repo_$i label_$i" 
             mud add repo_$i label_$i
           done
           echo "mud labels"
@@ -62,7 +62,7 @@ jobs:
       - name: Test remove label
         run: |
           for i in {1..3}; do
-            echo "mud remove label_($i)"
+            echo "mud remove label_$i"
             mud remove label_$i
           done
           echo "mud labels"

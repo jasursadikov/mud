@@ -54,6 +54,10 @@ class Config:
 				if path.startswith('~'):
 					path = os.path.expanduser(path)
 
+				if not os.path.exists(path):
+					utils.print_error(9, exit=False, meta=path)
+					continue
+
 				labels = [label.strip() for label in row[1].split(',') if len(row) > 1 and label.strip()] if len(row) > 1 else []
 				self.data[path] = labels
 

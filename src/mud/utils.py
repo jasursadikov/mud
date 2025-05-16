@@ -156,7 +156,9 @@ def print_error(code: int, exit: bool = False, meta: str = '') -> None:
 			text = f'Invalid path "{meta}"'
 		case 8:
 			text = f'.git directory not found at target "{meta}"'
+		case 9:
+			text = f'Repository "{meta}" exists in .mudconfig but directory was not found'
 
-	print(f'{RED}Error [{code}]{RESET} {text}')
+	print(f'{RED}Error {code}:{RESET} {text}')
 	if exit:
 		sys.exit(code)
