@@ -65,21 +65,24 @@ class Runner:
 
 		for path, labels in repos.items():
 			repo = Repository(path)
-			origin_url = '' if repo.head_is_unborn and len(repo.remotes) == 0 else repo.remotes[0].url
-			walker = repo.walk(repo.head.target, pygit2.GIT_SORT_TOPOLOGICAL)
-			total_commits_count = sum(1 for _ in walker)
+			origin_url = '' if repo.head_is_unborn or len(repo.remotes) == 0 else repo.remotes[0].url
+			if repo.head_is_unborn:
+				total_commits_count = None
+			else:
+				walker = repo.walk(repo.head.target, pygit2.GIT_SORT_TOPOLOGICAL)
+				total_commits_count = sum(1 for _ in walker)
 
 			user_name = repo.config['user.name']
-			if user_name is not None:
+			if repo.head_is_unborn or user_name is None:
+				user_commits_count = None
+			else:
 				walker = repo.walk(repo.head.target, pygit2.GIT_SORT_TOPOLOGICAL)
 				user_commits_count = sum(1 for c in walker if c.author.name == user_name)
-			else:
-				user_commits_count = 0
 
 			formatted_path = f'{get_git_origin_host_icon(origin_url)}{glyphs('space')}{self._get_formatted_path(path)}'
 			size = format_size(get_directory_size(path))
-			total_commits = f'{BOLD}{total_commits_count}{RESET} {DIM}commits{RESET}'
-			user_commits = f'{GREEN}{BOLD}{user_commits_count}{RESET} {DIM}by you{RESET}'
+			total_commits = '' if total_commits_count is None else f'{BOLD}{total_commits_count}{RESET} {DIM}commits{RESET}'
+			user_commits = '' if user_commits_count is None else f'{GREEN}{BOLD}{user_commits_count}{RESET} {DIM}by you{RESET}'
 			colored_labels = self._get_formatted_labels(labels)
 
 			table.add_row([formatted_path, total_commits, user_commits, size, colored_labels])
