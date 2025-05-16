@@ -78,6 +78,7 @@ GLYPHS = {
 	'test':			['\uf0c3',	''],
 	'branch':		['\ue725',	''],
 	'commit':		['\ueafc', ''],
+	'question':		['\uf128', ''],
 	'failed':		['\uf00d',	'Failed'],
 	'finished':		['\uf00c',	'Finished'],
 	'running':		['\uf46a',	'Running'],

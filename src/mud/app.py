@@ -187,7 +187,8 @@ class App:
 						asyncio.run(runner.run_async(self.repos.keys(), self.command))
 				else:
 					runner.run_ordered(self.repos.keys(), self.command)
-			except Exception:
+			except Exception as ex:
+				print(ex)
 				utils.print_error(2)
 
 	# Filter out repositories if user provided filters

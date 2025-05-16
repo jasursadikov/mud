@@ -95,9 +95,9 @@ class Runner:
 			status = repo.status()
 			modified = status.items()
 			formatted_path = self._get_formatted_path(path)
-			origin_sync = self._get_origin_sync(path)
+			origin_sync = self._get_origin_sync(repo)
 			mini_status = self._get_status_string(modified)
-			branch = self._get_branch_status(repo)
+			head_info = self._get_head_info(repo)
 			colored_output = []
 
 			for file, flag in modified:
@@ -113,7 +113,7 @@ class Runner:
 					color = CYAN
 				colored_output.append(self._get_formatted_path(file, False, color))
 
-			table.add_row([formatted_path, branch, origin_sync, mini_status, ', '.join(colored_output)])
+			table.add_row([formatted_path, head_info, origin_sync, mini_status, ', '.join(colored_output)])
 
 		utils.print_table(table)
 
@@ -145,9 +145,9 @@ class Runner:
 				message = commit.message.splitlines()[0]
 
 			formatted_path = self._get_formatted_path(path)
-			branch = self._get_branch_status(repo)
+			head_info = self._get_head_info(repo)
 
-			table.add_row([formatted_path, branch, commit_hash, author, time, message])
+			table.add_row([formatted_path, head_info, commit_hash, author, time, message])
 
 		utils.print_table(table)
 
@@ -357,13 +357,11 @@ class Runner:
 		if deleted:
 			status += f'{RED}{deleted} {glyphs("removed")}{RESET} '
 		if not files:
-			status = f'{GREEN}{glyphs("clear")}{RESET}'
+			return ''
 		return status
 
 	@staticmethod
-	def _get_branch_status(repo: Repository) -> str:
-		branch = ''
-
+	def _get_head_info(repo: Repository) -> str:
 		if not repo.head_is_unborn:
 			if repo.head_is_detached:
 				for ref_name in repo.references:
@@ -375,8 +373,8 @@ class Runner:
 					if commit_oid == ref.target:
 						branch = ref_name.replace('refs/tags/', '')
 						return f'{BRIGHT_MAGENTA}{glyphs('tag')}{RESET}{glyphs("space")}{branch}{RESET}'
-
-				return f'{CYAN}{glyphs("commit")}{RESET}{glyphs("space")}{DIM}{repo.revparse_single('HEAD').hex}'
+				commit_id = str(repo.revparse_single('HEAD').id)
+				return f'{CYAN}{glyphs("commit")}{RESET}{glyphs("space")}{commit_id[-8:]}'
 			else:
 				branch = repo.head.shorthand
 				if '/' in branch:
@@ -388,27 +386,23 @@ class Runner:
 			return ''
 
 	@staticmethod
-	def _get_origin_sync(path: str) -> str:
-		try:
-			ahead_behind_cmd = subprocess.run('git rev-list --left-right --count HEAD...@{upstream}', shell=True, text=True, cwd=path, capture_output=True)
-			stdout = ahead_behind_cmd.stdout.strip().split()
-		except subprocess.CalledProcessError:
-			stdout = ['0', '0']
+	def _get_origin_sync(repo: Repository) -> str:
+		sync_str = ''
 
-		origin_sync = ''
-		if len(stdout) >= 2:
-			ahead, behind = stdout[0], stdout[1]
-			if ahead and ahead != '0':
-				origin_sync += f'{BRIGHT_GREEN}{glyphs("ahead")} {ahead}{RESET}'
-			if behind and behind != '0':
-				if origin_sync:
-					origin_sync += ' '
-				origin_sync += f'{BRIGHT_BLUE}{glyphs("behind")} {behind}{RESET}'
+		if not repo.head_is_unborn and not repo.head_is_detached:
+			local_ref = repo.branches[repo.head.shorthand]
+			upstream = local_ref.upstream
+			if upstream:
+				ahead, behind = repo.ahead_behind(local_ref.target, upstream.target)
+				if ahead != 0:
+					sync_str += f'{BRIGHT_GREEN}{glyphs("ahead")} {ahead}{RESET}'
+				if behind != 0:
+					sync_str += f'{BRIGHT_BLUE}{glyphs("behind")} {behind}{RESET}'
+				if ahead == 0 and behind == 0:
+					sync_str = f'{GREEN}{glyphs("synced")}{RESET}'
+			return sync_str
 
-		if not origin_sync.strip():
-			origin_sync = f'{BLUE}{glyphs("synced")}{RESET}'
-
-		return origin_sync
+		return f'{RED}{glyphs("question")}{RESET}'
 
 	@staticmethod
 	def _print_process_header(path: str, command: str, failed: bool, code: int) -> None:
