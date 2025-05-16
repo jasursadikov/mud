@@ -240,8 +240,9 @@ class App:
 		to_delete = []
 
 		for path, labels in self.repos.items():
+			os.chdir(directory)
 			abs_path = os.path.join(directory, path)
-			repo = Repository(abs_path)
+			repo = Repository(path)
 
 			if not os.path.isdir(abs_path):
 				utils.print_error(7, meta=path)
