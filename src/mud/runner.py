@@ -65,7 +65,7 @@ class Runner:
 
 		for path, labels in repos.items():
 			repo = Repository(path)
-			origin_url = '' if repo.head_is_unborn and len(repo.remotes) != 0 else repo.remotes[0].url
+			origin_url = '' if repo.head_is_unborn and len(repo.remotes) == 0 else repo.remotes[0].url
 			walker = repo.walk(repo.head.target, pygit2.GIT_SORT_TOPOLOGICAL)
 			total_commits_count = sum(1 for _ in walker)
 

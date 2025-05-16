@@ -120,6 +120,5 @@ You can modify your `.mudconfig` file using the following commands:
 |-----------------------------|------------------------------------------------|
 | `mud add <path>`            | adds a path without a label.                   |
 | `mud add <path> <label>`    | adds a path with an optional label.            |
-| `mud remove <label>`        | removes the label from all directories.        |
 | `mud remove <path>`         | removes the directory with the specified path. |
 | `mud remove <path> <label>` | removes the label from a directory.            |
