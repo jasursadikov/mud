@@ -16,7 +16,7 @@ from mud.styles import *
 
 
 class Runner:
-	_force_color_env: dict[str, str] = {"GIT_PAGER": "cat", "TERM": "xterm-256color", "GIT_CONFIG_PARAMETERS": "'color.ui=always'"}
+	_force_color_env: dict[str, str] = {'GIT_PAGER': 'cat', 'TERM': 'xterm-256color', 'GIT_CONFIG_PARAMETERS': '\'color.ui=always\''}
 	_current_color_index: int = 0
 	_label_color_cache = {}
 
@@ -38,13 +38,13 @@ class Runner:
 
 		def format_size(size_in_bytes: int) -> str:
 			if size_in_bytes >= 1024 ** 3:
-				return f'{BOLD}{size_in_bytes / (1024 ** 3):.2f}{RESET} GB{glyphs("space")}{RED}{glyphs("weight")}{RESET}'
+				return f'{BOLD}{size_in_bytes / (1024 ** 3):.2f}{RESET} GB{glyphs('space')}{RED}{glyphs('weight')}{RESET}'
 			elif size_in_bytes >= 1024 ** 2:
-				return f'{BOLD}{size_in_bytes / (1024 ** 2):.2f}{RESET} MB{glyphs("space")}{YELLOW}{glyphs("weight")}{RESET}'
+				return f'{BOLD}{size_in_bytes / (1024 ** 2):.2f}{RESET} MB{glyphs('space')}{YELLOW}{glyphs('weight')}{RESET}'
 			elif size_in_bytes >= 1024:
-				return f'{BOLD}{size_in_bytes / 1024:.2f}{RESET} KB{glyphs("space")}{GREEN}{glyphs("weight")}{RESET}'
+				return f'{BOLD}{size_in_bytes / 1024:.2f}{RESET} KB{glyphs('space')}{GREEN}{glyphs('weight')}{RESET}'
 			else:
-				return f'{BOLD}{size_in_bytes}{RESET} Bytes{glyphs("space")}{BLUE}{glyphs("weight")}{RESET}'
+				return f'{BOLD}{size_in_bytes}{RESET} Bytes{glyphs('space')}{BLUE}{glyphs('weight')}{RESET}'
 
 		def get_git_origin_host_icon(url: str) -> str:
 			if 'azure' in url or 'visualstudio' in url:
@@ -141,7 +141,7 @@ class Runner:
 				commit: Commit = repo.revparse_single('HEAD')
 				author = f'{BOLD if commit.author.name == repo.config.__getitem__('user.name') else DIM}{commit.author.name}{RESET}'
 				commit_hash = f'{YELLOW}{str(commit.id)[-8:]}{RESET}'
-				time = datetime.fromtimestamp(commit.commit_time, timezone(timedelta(minutes=commit.commit_time_offset))).strftime("%Y-%m-%d %H:%M:%S")
+				time = datetime.fromtimestamp(commit.commit_time, timezone(timedelta(minutes=commit.commit_time_offset))).strftime('%Y-%m-%d %H:%M:%S')
 				message = commit.message.splitlines()[0]
 
 			formatted_path = self._get_formatted_path(path)
@@ -210,7 +210,7 @@ class Runner:
 
 			formatted_path = self._get_formatted_path(path)
 
-			tags = [f'{assign_color(tag)}{glyphs("tag")} {RESET}{tag}' for tag in tags]
+			tags = [f'{assign_color(tag)}{glyphs('tag')} {RESET}{tag}' for tag in tags]
 			table.add_row([formatted_path, ' '.join(tags)])
 
 		utils.print_table(table)
@@ -255,7 +255,7 @@ class Runner:
 
 	async def _run_process(self, path: str, table: Dict[str, List[str]], command: str) -> None:
 		process = await asyncio.create_subprocess_shell(command, cwd=path, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=self._force_color_env)
-		table[path] = ['', f'{YELLOW}{glyphs("running")}{RESET}']
+		table[path] = ['', f'{YELLOW}{glyphs('running')}{RESET}']
 
 		while True:
 			line = await process.stdout.readline()
@@ -265,15 +265,15 @@ class Runner:
 					break
 			line = line.decode().strip()
 			line = table[path][0] if not line.strip() else line
-			table[path] = [line, f'{YELLOW}{glyphs("running")}{RESET}']
+			table[path] = [line, f'{YELLOW}{glyphs('running')}{RESET}']
 			self._print_process(table)
 
 		return_code = await process.wait()
 
 		if return_code == 0:
-			status = f'{GREEN}{glyphs("finished")}{RESET}'
+			status = f'{GREEN}{glyphs('finished')}{RESET}'
 		else:
-			status = f'{RED}{glyphs("failed")} Code: {return_code}{RESET}'
+			status = f'{RED}{glyphs('failed')} Code: {return_code}{RESET}'
 
 		table[path] = [table[path][0], status]
 		self._print_process(table)
@@ -312,13 +312,13 @@ class Runner:
 				moved += 1
 		status = ''
 		if new:
-			status += f'{BRIGHT_GREEN}{new} {glyphs("added")}{RESET} '
+			status += f'{BRIGHT_GREEN}{new} {glyphs('added')}{RESET} '
 		if modified:
-			status += f'{YELLOW}{modified} {glyphs("modified")}{RESET} '
+			status += f'{YELLOW}{modified} {glyphs('modified')}{RESET} '
 		if moved:
-			status += f'{BLUE}{moved} {glyphs("moved")}{RESET} '
+			status += f'{BLUE}{moved} {glyphs('moved')}{RESET} '
 		if deleted:
-			status += f'{RED}{deleted} {glyphs("removed")}{RESET} '
+			status += f'{RED}{deleted} {glyphs('removed')}{RESET} '
 		if not files:
 			return ''
 		return status
@@ -335,16 +335,16 @@ class Runner:
 					commit_oid = obj.target if isinstance(obj, pygit2.Tag) else ref.target
 					if commit_oid == ref.target:
 						branch = ref_name.replace('refs/tags/', '')
-						return f'{BRIGHT_MAGENTA}{glyphs('tag')}{RESET}{glyphs("space")}{branch}{RESET}'
+						return f'{BRIGHT_MAGENTA}{glyphs('tag')}{RESET}{glyphs('space')}{branch}{RESET}'
 				commit_id = str(repo.revparse_single('HEAD').id)
-				return f'{CYAN}{glyphs("commit")}{RESET}{glyphs("space")}{commit_id[-8:]}'
+				return f'{CYAN}{glyphs('commit')}{RESET}{glyphs('space')}{commit_id[-8:]}'
 			else:
 				branch = repo.head.shorthand
 				if '/' in branch:
 					branch_path = branch.split('/')
 					icon = Runner._get_branch_icon(branch_path[0])
-					return f'{icon}{RESET}{glyphs("space")}{branch_path[0]}{RESET}/{BOLD}{("/".join(branch_path[1:]))}{RESET}'
-				return f'{Runner._get_branch_icon(branch)}{RESET}{glyphs("space")}{branch}'
+					return f'{icon}{RESET}{glyphs('space')}{branch_path[0]}{RESET}/{BOLD}{('/'.join(branch_path[1:]))}{RESET}'
+				return f'{Runner._get_branch_icon(branch)}{RESET}{glyphs('space')}{branch}'
 		else:
 			return ''
 
@@ -358,20 +358,20 @@ class Runner:
 			if upstream:
 				ahead, behind = repo.ahead_behind(local_ref.target, upstream.target)
 				if ahead != 0:
-					sync_str += f'{BRIGHT_GREEN}{glyphs("ahead")} {ahead}{RESET}'
+					sync_str += f'{BRIGHT_GREEN}{glyphs('ahead')} {ahead}{RESET}'
 				if behind != 0:
-					sync_str += f'{BRIGHT_BLUE}{glyphs("behind")} {behind}{RESET}'
+					sync_str += f'{BRIGHT_BLUE}{glyphs('behind')} {behind}{RESET}'
 				if ahead == 0 and behind == 0:
-					sync_str = f'{GREEN}{glyphs("synced")}{RESET}'
+					sync_str = f'{GREEN}{glyphs('synced')}{RESET}'
 			return sync_str
 
-		return f'{RED}{glyphs("question")}{RESET}'
+		return f'{RED}{glyphs('question')}{RESET}'
 
 	@staticmethod
 	def _print_process_header(path: str, command: str, failed: bool, code: int) -> None:
-		command = f'{BKG_WHITE}{BLACK}{glyphs("space")}{glyphs("terminal")} {BOLD}{command} {END_BOLD}{WHITE}{RESET}'
-		code = f'{WHITE}{BKG_RED if failed else BKG_GREEN}{glyphs(")")} {glyphs("failed") if failed else glyphs("finished")} {f"{BOLD}{code}" if failed else ""}{glyphs("space")}{RESET}'
-		path = f'{BKG_BLACK}{RED if failed else GREEN}{glyphs(")")}{RESET}{BKG_BLACK}{glyphs("space")}{WHITE}{glyphs("directory")}{END_DIM} {Runner._get_formatted_path(path)}{BKG_BLACK} {RESET}{BLACK}{glyphs(")")}{RESET}'
+		command = f'{BKG_WHITE}{BLACK}{glyphs('space')}{glyphs('terminal')} {BOLD}{command} {END_BOLD}{WHITE}{RESET}'
+		code = f'{WHITE}{BKG_RED if failed else BKG_GREEN}{glyphs(')')} {glyphs('failed') if failed else glyphs('finished')} {f'{BOLD}{code}' if failed else ''}{glyphs('space')}{RESET}'
+		path = f'{BKG_BLACK}{RED if failed else GREEN}{glyphs(')')}{RESET}{BKG_BLACK}{glyphs('space')}{WHITE}{glyphs('directory')}{END_DIM} {Runner._get_formatted_path(path)}{BKG_BLACK} {RESET}{BLACK}{glyphs(')')}{RESET}'
 		print(f'{command}{code}{path}')
 
 	@staticmethod
@@ -379,11 +379,11 @@ class Runner:
 		collapse_paths = utils.settings.config['mud'].getboolean('collapse_paths', fallback=False)
 		abs_path = utils.settings.config['mud'].getboolean('display_absolute_paths', fallback=False)
 
-		in_quotes = path.startswith('\"') and path.endswith('\"')
-		quote = '\"' if in_quotes else ''
+		in_quotes = path.startswith('\'') and path.endswith('\'')
+		quote = '\'' if in_quotes else ''
 
 		if in_quotes:
-			path = path.replace('\"', '')
+			path = path.replace('\'', '')
 
 		def apply_styles(text: str) -> str:
 			return color + quote + text + quote + RESET
@@ -419,7 +419,7 @@ class Runner:
 		colored_labels = ''
 		for label in labels:
 			color_index = Runner._get_color_index(label) % len(TEXT)
-			colored_labels += f'{TEXT[(color_index + 3) % len(TEXT)]}{glyphs("label")}{glyphs("space")}{label}{RESET} '
+			colored_labels += f'{TEXT[(color_index + 3) % len(TEXT)]}{glyphs('label')}{glyphs('space')}{label}{RESET} '
 
 		return colored_labels.rstrip()
 
@@ -433,7 +433,7 @@ class Runner:
 			prefix = f'{BOLD}{RED}*{RESET}' if current_branch == branch else ''
 			icon = Runner._get_branch_icon(branch.split('/')[0])
 			branch = Runner._get_formatted_path(branch, False)
-			output += f'{icon}{glyphs("space")}{prefix}{branch}{RESET} '
+			output += f'{icon}{glyphs('space')}{prefix}{branch}{RESET} '
 		return output
 
 	@staticmethod

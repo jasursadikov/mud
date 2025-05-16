@@ -51,7 +51,7 @@ def configure() -> None:
 
 def ask(text: str) -> bool:
 	try:
-		answer = input(f"{text} [Y/n]: ").strip().lower()
+		answer = input(f'{text} [Y/n]: ').strip().lower()
 		if answer in ('y', 'yes', ''):
 			return True
 		elif answer in ('n', 'no'):
