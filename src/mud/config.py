@@ -88,7 +88,7 @@ class Config:
 		git_repos.sort()
 
 		for repo in git_repos:
-			if repo in self.data.keys():
+			if repo in self.data.keys() or repo == '.' or repo == os.getcwd():
 				continue
 
 			self.add(repo, '')
