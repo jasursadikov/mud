@@ -39,9 +39,10 @@ def configure() -> None:
 		settings.config['mud']['run_table'] = str(ask('Do you want to see command execution progress in table view? This will limit output content.'))
 		settings.config['mud']['run_async'] = str(ask('Do you want to run commands simultaneously for multiple repositories?'))
 		settings.config['mud']['nerd_fonts'] = str(ask(f'Do you want to use {BOLD}nerd-fonts{RESET}?'))
-		settings.config['mud']['show_borders'] = str(ask(f'Do you want to see borders in table view?'))
-		settings.config['mud']['collapse_paths'] = str(ask(f'Do you want to collapse paths, such as directory paths and branches? (ex. {BOLD}feature/name{RESET} -> {BOLD}f/name{RESET}'))
 		settings.config['mud']['display_absolute_paths'] = str(ask(f'Do you want to display absolute paths for directories? (ex. {BOLD}~/Documents/repo{RESET} -> {BOLD}/home/user/Documents/repo{RESET}'))
+		settings.config['mud']['display_header'] = str(ask(f'Do you want to display headers in a table view {BOLD}nerd-fonts{RESET}?'))
+		settings.config['mud']['display_borders'] = str(ask(f'Do you want to see borders in table view?'))
+		settings.config['mud']['collapse_paths'] = str(ask(f'Do you want to collapse paths, such as directory paths and branches? (ex. {BOLD}feature/name{RESET} -> {BOLD}f/name{RESET}'))
 	except KeyboardInterrupt:
 		return
 
@@ -105,9 +106,10 @@ def get_table(field_names: List[str]) -> PrettyTable:
 	def set_style(item: str) -> str:
 		return f'{GRAY}{item}{RESET}'
 
-	borders = settings.config['mud'].getboolean('show_borders', fallback=False)
+	borders = settings.config['mud'].getboolean('display_borders', fallback=False)
 	round_corners = settings.config['mud'].getboolean('round_corners', fallback=False)
 	table = PrettyTable(border=borders, header=False, style=PLAIN_COLUMNS, align='l')
+
 	if borders:
 		table.horizontal_char = set_style('─')
 		table.vertical_char = set_style('│')
@@ -130,7 +132,7 @@ def get_table(field_names: List[str]) -> PrettyTable:
 			table.bottom_right_junction_char = set_style('┘')
 
 	table.field_names = field_names
-
+	table.header = settings.config['mud'].getboolean('display_header', fallback=False)
 	return table
 
 

@@ -82,8 +82,10 @@ GLYPHS = {
 	'failed':		['\uf00d',	'Failed'],
 	'finished':		['\uf00c',	'Finished'],
 	'running':		['\uf46a',	'Running'],
-	'label':		['\uf435',	''],
+	'label':		['\uf041',	''],
+	'labels':		['\uf041',	''],
 	'tag':			['\uf02b',	'>'],
+	'tags':			['\uf02c',	''],
 	'terminal':		['\ue795',	''],
 	'directory':	['\uf4d4',	''],
 	'(':			['\uE0B2',	''],
@@ -94,5 +96,13 @@ GLYPHS = {
 	'github':		['\uf09b',	''],
 	'gitlab':		['\uf296',	''],
 	'azure':		['\uebe8',	''],
-	'bitbucket':	['\ue703',	'']
+	'bitbucket':	['\ue703',	''],
+	'git-repo':		['\ue5fb',	''],
+	'git-modified':	['\uf05f',	''],
+	'hash':			['\uf4df',	''],
+	'author':		['\uf4ff',	''],
+	'time':			['\uf017',	''],
+	'message':		['\uf27a',	''],
+	'info':			['\uf05a',	''],
+	'origin-sync':	['\uf4dd', 	'']
 }

@@ -58,10 +58,15 @@ class Runner:
 			else:
 				return YELLOW + glyphs('git') + RESET
 
-		table: PrettyTable = utils.get_table(['Path', 'Commits', 'User Commits', 'Size', 'Labels'])
-		table.align['Commits'] = 'r'
-		table.align['User Commits'] = 'r'
-		table.align['Size'] = 'r'
+		table: PrettyTable = utils.get_table([
+			f'{YELLOW}{glyphs('git-repo')}{glyphs('space')}{RESET}Directory',
+			f'{BLUE}{glyphs('commit')}{glyphs('space')}{RESET}Commits',
+			f'{BLUE}{glyphs('commit')}{glyphs('space')}{RESET}User Commits',
+			f'{MAGENTA}{glyphs('weight')}{glyphs('space')}{RESET}Size',
+			f'{MAGENTA}{glyphs('labels')}{glyphs('space')}{RESET}Labels'])
+		table.align[f'{BLUE}{glyphs('commit')}{glyphs('space')}{RESET}Commits'] = 'r'
+		table.align[f'{BLUE}{glyphs('commit')}{glyphs('space')}{RESET}User Commits'] = 'r'
+		table.align[f'{MAGENTA}{glyphs('weight')}{glyphs('space')}{RESET}Size'] = 'r'
 
 		for path, labels in repos.items():
 			repo = Repository(path)
@@ -91,7 +96,12 @@ class Runner:
 
 	# `mud status` command implementation
 	def status(self, repos: Dict[str, List[str]]) -> None:
-		table = utils.get_table(['Path', 'Branch', 'Origin Sync', 'Status', 'Edits'])
+		table = utils.get_table([
+			f'{YELLOW}{glyphs('git-repo')}{glyphs('space')}{RESET}Directory',
+			f'{GREEN}{glyphs('branch')}{glyphs('space')}{RESET}Branch',
+			f'{CYAN}{glyphs('origin-sync')}{glyphs('space')}{RESET}Origin Sync',
+			f'{BRIGHT_YELLOW}{glyphs('info')}{glyphs('space')}{RESET}Status',
+			f'{BRIGHT_GREEN}{glyphs('git-modified')}{glyphs('space')}{RESET}Modified Files'])
 
 		for path, labels in repos.items():
 			repo = Repository(os.path.abspath(path))
@@ -122,7 +132,9 @@ class Runner:
 
 	# `mud labels` command implementation
 	def labels(self, repos: Dict[str, List[str]]) -> None:
-		table = utils.get_table(['Path', 'Labels'])
+		table = utils.get_table([
+			f'{YELLOW}{glyphs('git-repo')}{glyphs('space')}{RESET}Directory',
+			f'{MAGENTA}{glyphs('labels')}{glyphs('space')}{RESET}Labels'])
 
 		for path, labels in repos.items():
 			formatted_path = self._get_formatted_path(path)
@@ -133,7 +145,13 @@ class Runner:
 
 	# `mud log` command implementation
 	def log(self, repos: Dict[str, List[str]]) -> None:
-		table = utils.get_table(['Path', 'Branch', 'Hash', 'Author', 'Time', 'Message'])
+		table = utils.get_table([
+			f'{YELLOW}{glyphs('git-repo')}{glyphs('space')}{RESET}Directory',
+			f'{GREEN}{glyphs('branch')}{glyphs('space')}{RESET}Branch',
+			f'{BRIGHT_YELLOW}{glyphs('hash')}{glyphs('space')}{RESET}Hash',
+			f'{BRIGHT_GREEN}{glyphs('author')}{glyphs('space')}{RESET}Author',
+			f'{BRIGHT_CYAN}{glyphs('time')}{glyphs('space')}{RESET}Time',
+			f'{BRIGHT_BLUE}{glyphs('message')}{glyphs('space')}{RESET}Message'])
 
 		for path in repos.keys():
 			repo = Repository(path)
@@ -156,7 +174,9 @@ class Runner:
 
 	# `mud branch` command implementation
 	def branches(self, paths: Dict[str, List[str]], remote: bool) -> None:
-		table = utils.get_table(['Path', 'Branches'])
+		table = utils.get_table([
+			f'{YELLOW}{glyphs('git-repo')}{glyphs('space')}{RESET}Directory',
+			f'{BLUE}{glyphs('branch')}{glyphs('space')}{RESET}Branches'])
 		all_branches = {}
 		repos = [[path, Repository(path)] for path in paths]
 		prefix = 'refs/remotes/' if remote else 'refs/heads/'
@@ -187,7 +207,6 @@ class Runner:
 	# `mud tags` command implementation
 	def tags(self, repos: Dict[str, List[str]]) -> None:
 		COLORS = [196, 202, 208, 214, 220, 226, 118, 154, 190, 33, 39, 45, 51, 87, 93, 99, 105, 111, 27, 63, 69, 75, 81, 87, 123, 129, 135, 141, 147, 183, 189, 225]
-
 		tag_colors = {}
 
 		def assign_color(tag: str) -> str:
@@ -196,7 +215,9 @@ class Runner:
 				tag_colors[tag] = f'\033[38;5;{color_code}m'
 			return tag_colors[tag]
 
-		table = utils.get_table(['Path', 'Tags'])
+		table = utils.get_table([
+			f'{YELLOW}{glyphs('git-repo')}{glyphs('space')}{RESET}Directory',
+			f'{BRIGHT_BLUE}{glyphs('tags')}{glyphs('space')}{RESET}Tags'])
 
 		for path, labels in repos.items():
 			repo = Repository(path)
@@ -282,7 +303,8 @@ class Runner:
 		self._print_process(table)
 
 	def _print_process(self, info: Dict[str, List[str]]) -> None:
-		table: PrettyTable = utils.get_table(['Path', 'Status', 'Output'])
+		table = utils.get_table([f'{YELLOW}{glyphs('git-repo')}{glyphs('space')}{RESET}Directory', f'{BRIGHT_YELLOW}{glyphs('info')}{glyphs('space')}{RESET}Status', 'Output'])
+		table.header = False
 		for path, (line, status) in info.items():
 			formatted_path = self._get_formatted_path(path)
 			table.add_row([formatted_path, status, line])
