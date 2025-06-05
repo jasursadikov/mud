@@ -3,7 +3,7 @@ import sys
 import shutil
 import random
 
-from typing import List, Any
+from typing import List
 from prettytable import PrettyTable, PLAIN_COLUMNS
 
 from mud.settings import *
@@ -31,7 +31,8 @@ def info() -> None:
 	print(f'  {m}__ _  {u}__ __{d}___/ /{RESET}')
 	print(f' {m}/  \' \\{u}/ // / {d}_  /{RESET}')
 	print(f'{m}/_/_/_/{u}\\_,_/{d}\\_,_/  {RESET}')
-	print(f'Jasur Sadikov <jasur@sadikoff.com>\nhttps://github.com/jasursadikov/mud')
+	print(f'Jasur Sadikov <{link('jasur@sadikoff.com', 'mailto:jasur@sadikoff.com')}>')
+	print(link('https://github.com/jasursadikov/mud', 'https://github.com/jasursadikov/mud'))
 
 
 def configure() -> None:
@@ -68,17 +69,30 @@ def print_table(table: PrettyTable) -> None:
 	width, _ = shutil.get_terminal_size()
 
 	def get_real_length(string):
-		ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
+		ansi_csi = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
 		i = 0
 		displayed_count = 0
 
 		while displayed_count < width and i < len(string):
-			match = ansi_escape.match(string, i)
+			if string.startswith(URL_START, i):
+				end_of_wrapper = string.find(URL_TEXT, i + len(URL_START))
+				if end_of_wrapper == -1:
+					break
+				i = end_of_wrapper + len(URL_TEXT)
+				continue
+
+			if string.startswith(URL_END, i):
+				i += len(URL_END)
+				continue
+
+			match = ansi_csi.match(string, i)
 			if match:
 				i = match.end()
-			else:
-				displayed_count += 1
-				i += 1
+				continue
+
+			displayed_count += 1
+			i += 1
+
 		return i
 
 	for col in table.field_names[:]:
@@ -91,7 +105,7 @@ def print_table(table: PrettyTable) -> None:
 		stripped = row.strip()
 		if len(stripped) != 0:
 			if len(stripped) > width:
-				print(stripped[:get_real_length(stripped)] + RESET)
+				print(stripped[:get_real_length(stripped)] + URL_END + RESET)
 			else:
 				print(stripped)
 
@@ -100,6 +114,10 @@ def table_to_str(table: PrettyTable) -> str:
 	table = table.get_string()
 	table = '\n'.join(line.lstrip() for line in table.splitlines())
 	return table
+
+
+def link(text: str, url: str):
+	return f'{URL_START}{url}{URL_TEXT}{text}{URL_END}'
 
 
 def get_table(field_names: List[str]) -> PrettyTable:

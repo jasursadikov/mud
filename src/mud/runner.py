@@ -55,11 +55,14 @@ class Runner:
 				return YELLOW + glyphs('gitlab') + RESET
 			elif 'bitbucket' in url:
 				return CYAN + glyphs('bitbucket') + RESET
+			elif len(url) == 0:
+				return ''
 			else:
 				return YELLOW + glyphs('git') + RESET
 
 		table: PrettyTable = utils.get_table([
 			f'{YELLOW}{glyphs('git-repo')}{glyphs('space')}{RESET}Directory',
+			f'{BRIGHT_RED}{glyphs('git')}{glyphs('space')}{RESET}Url',
 			f'{BLUE}{glyphs('commit')}{glyphs('space')}{RESET}Commits',
 			f'{BLUE}{glyphs('commit')}{glyphs('space')}{RESET}User Commits',
 			f'{MAGENTA}{glyphs('weight')}{glyphs('space')}{RESET}Size',
@@ -84,13 +87,14 @@ class Runner:
 				walker = repo.walk(repo.head.target, pygit2.GIT_SORT_TOPOLOGICAL)
 				user_commits_count = sum(1 for c in walker if c.author.name == user_name)
 
-			formatted_path = f'{get_git_origin_host_icon(origin_url)}{glyphs('space')}{self._get_formatted_path(path)}'
+			formatted_path = link(self._get_formatted_path(path), os.path.abspath(path))
+			url = f'{get_git_origin_host_icon(origin_url)}{glyphs('space')}{link(origin_url.split('://', 1)[-1].split("/", 1)[0], origin_url)}'
 			size = format_size(get_directory_size(path))
 			total_commits = '' if total_commits_count is None else f'{BOLD}{total_commits_count}{RESET} {DIM}commits{RESET}'
 			user_commits = '' if user_commits_count is None else f'{GREEN}{BOLD}{user_commits_count}{RESET} {DIM}by you{RESET}'
 			colored_labels = self._get_formatted_labels(labels)
 
-			table.add_row([formatted_path, total_commits, user_commits, size, colored_labels])
+			table.add_row([formatted_path, url, total_commits, user_commits, size, colored_labels])
 
 		utils.print_table(table)
 
@@ -104,10 +108,11 @@ class Runner:
 			f'{BRIGHT_GREEN}{glyphs('git-modified')}{glyphs('space')}{RESET}Modified Files'])
 
 		for path, labels in repos.items():
-			repo = Repository(os.path.abspath(path))
+			repo_path = os.path.abspath(path)
+			repo = Repository(repo_path)
 			status = repo.status()
 			modified = status.items()
-			formatted_path = self._get_formatted_path(path)
+			formatted_path = link(self._get_formatted_path(path), os.path.abspath(path))
 			origin_sync = self._get_origin_sync(repo)
 			mini_status = self._get_status_string(modified)
 			head_info = self._get_head_info(repo)
@@ -124,8 +129,7 @@ class Runner:
 					color = BLUE
 				else:
 					color = CYAN
-				colored_output.append(self._get_formatted_path(file, False, color))
-
+				colored_output.append(link(self._get_formatted_path(file, False, color), os.path.join(repo_path, file)))
 			table.add_row([formatted_path, head_info, origin_sync, mini_status, ', '.join(colored_output)])
 
 		utils.print_table(table)
@@ -137,7 +141,7 @@ class Runner:
 			f'{MAGENTA}{glyphs('labels')}{glyphs('space')}{RESET}Labels'])
 
 		for path, labels in repos.items():
-			formatted_path = self._get_formatted_path(path)
+			formatted_path = link(self._get_formatted_path(path), os.path.abspath(path))
 			colored_labels = self._get_formatted_labels(labels)
 			table.add_row([formatted_path, colored_labels])
 
@@ -165,7 +169,7 @@ class Runner:
 				time = datetime.fromtimestamp(commit.commit_time, timezone(timedelta(minutes=commit.commit_time_offset))).strftime('%Y-%m-%d %H:%M:%S')
 				message = commit.message.splitlines()[0]
 
-			formatted_path = self._get_formatted_path(path)
+			formatted_path = link(self._get_formatted_path(path), os.path.abspath(path))
 			head_info = self._get_head_info(repo)
 
 			table.add_row([formatted_path, head_info, commit_hash, author, time, message])
@@ -190,7 +194,7 @@ class Runner:
 		branch_counter = Counter(all_branches)
 
 		for path, repo in repos:
-			formatted_path = self._get_formatted_path(path)
+			formatted_path = link(self._get_formatted_path(path), os.path.abspath(path))
 			branches = [ref.replace(prefix + (repo.remotes[0].name + '/' if remote else ''), '') for ref in repo.references if ref.startswith(prefix + (repo.remotes[0].name + '/' if remote else ''))]
 			current_branch = '' if repo.head_is_unborn or repo.head_is_detached else repo.head.shorthand
 			sorted_branches = sorted(branches, key=lambda x: branch_counter.get(x, 0), reverse=True)
@@ -232,7 +236,7 @@ class Runner:
 				]
 				tags.sort()
 
-			formatted_path = self._get_formatted_path(path)
+			formatted_path = link(self._get_formatted_path(path), os.path.abspath(path))
 
 			tags = [f'{assign_color(tag)}{glyphs('tag')} {RESET}{tag}' for tag in tags]
 			table.add_row([formatted_path, ' '.join(tags)])
@@ -306,7 +310,7 @@ class Runner:
 		table = utils.get_table([f'{YELLOW}{glyphs('git-repo')}{glyphs('space')}{RESET}Directory', f'{BRIGHT_YELLOW}{glyphs('info')}{glyphs('space')}{RESET}Status', 'Output'])
 		table.header = False
 		for path, (line, status) in info.items():
-			formatted_path = self._get_formatted_path(path)
+			formatted_path = link(self._get_formatted_path(path), os.path.abspath(path))
 			table.add_row([formatted_path, status, line])
 
 		table_str = utils.table_to_str(table)
@@ -411,7 +415,7 @@ class Runner:
 			path = path.replace('\'', '')
 
 		def apply_styles(text: str) -> str:
-			return color + quote + text + quote + RESET
+			return color + quote + text + quote + END_FRG
 
 		if file_system and abs_path:
 			return apply_styles(os.path.abspath(path))
@@ -444,7 +448,7 @@ class Runner:
 		colored_labels = ''
 		for label in labels:
 			color_index = Runner._get_color_index(label) % len(TEXT)
-			colored_labels += f'{TEXT[(color_index + 3) % len(TEXT)]}{glyphs('label')}{glyphs('space')}{label}{RESET} '
+			colored_labels += f'{TEXT[(color_index + 3) % len(TEXT)]}{glyphs('label')}{glyphs('space')}{label}{END_FRG} '
 
 		return colored_labels.rstrip()
 
