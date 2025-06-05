@@ -21,7 +21,8 @@ class Settings:
 				'nerd_fonts': True,
 				'run_async': True,
 				'run_table': True,
-				'show_borders': True,
+				'display_header': True,
+				'display_borders': True,
 				'round_corners': False,
 				'simplify_branches': True,
 				'display_absolute_paths': False

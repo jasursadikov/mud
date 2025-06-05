@@ -95,10 +95,11 @@ Settings are stored at `~/.config/mud/settings.ini`.
 | `run_async`              | `True`/`False`           | enables asynchronous commands.                                                   |
 | `run_table`              | `True`/`False`           | enables table view for asynchronous commands. Requires `run_async`.              |
 | `nerd_fonts`             | `True`/`False`           | enables nerd fonts in the output.                                                |
-| `show_borders`           | `True`/`False`           | enables borders in the table view.                                               |
+| `display_borders`        | `True`/`False`           | enables borders in the table view.                                               |
+| `display_headers`        | `True`/`False`           | enables headers in the table view.                                               |
+| `display_absolute_paths` | `True`/`False`           | displays absolute paths for directories.                                         |
 | `round_corners`          | `True`/`False`           | enables round corners for the table view. Requires `show_borders` to be enabled. |
 | `collapse_paths`         | `True`/`False`           | simplifies branch names in the branch view.                                      |
-| `display_absolute_paths` | `True`/`False`           | displays absolute paths for directories.                                         |
 | `config_path`            | `~/Documents/.mudconfig` | this is set by the `mud set-global` command.                                     |
 
 ### Aliases
