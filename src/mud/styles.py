@@ -89,6 +89,7 @@ GLYPHS = {
 	'tag':			['\uf02b',	'>'],
 	'tags':			['\uf02c',	''],
 	'terminal':		['\ue795',	''],
+	'stash':		['\uf1c0',	''],
 	'directory':	['\uf4d4',	''],
 	'(':			['\uE0B2',	''],
 	')':			['\uE0B0',	''],

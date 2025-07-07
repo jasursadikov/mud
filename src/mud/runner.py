@@ -104,6 +104,7 @@ class Runner:
 			f'{YELLOW}{glyphs('git-repo')}{glyphs('space')}{RESET}Directory',
 			f'{GREEN}{glyphs('branch')}{glyphs('space')}{RESET}Branch',
 			f'{CYAN}{glyphs('origin-sync')}{glyphs('space')}{RESET}Origin Sync',
+			f'{RED}{glyphs('stash')}{glyphs('space')}{RESET}Stash',
 			f'{BRIGHT_YELLOW}{glyphs('info')}{glyphs('space')}{RESET}Status',
 			f'{BRIGHT_GREEN}{glyphs('git-modified')}{glyphs('space')}{RESET}Modified Files'])
 
@@ -113,9 +114,10 @@ class Runner:
 			status = repo.status()
 			modified = status.items()
 			formatted_path = link(self._get_formatted_path(path), os.path.abspath(path))
-			origin_sync = self._get_origin_sync(repo)
-			mini_status = self._get_status_string(modified)
 			head_info = self._get_head_info(repo)
+			origin_sync = self._get_origin_sync(repo)
+			stash_count = self._stash_count(repo)
+			mini_status = self._get_status_string(modified)
 			colored_output = []
 
 			for file, flag in modified:
@@ -130,7 +132,7 @@ class Runner:
 				else:
 					color = CYAN
 				colored_output.append(link(self._get_formatted_path(file, False, color), os.path.join(repo_path, file)))
-			table.add_row([formatted_path, head_info, origin_sync, mini_status, ', '.join(colored_output)])
+			table.add_row([formatted_path, head_info, origin_sync, stash_count, mini_status, ', '.join(colored_output)])
 
 		utils.print_table(table)
 
@@ -354,28 +356,36 @@ class Runner:
 
 	@staticmethod
 	def _get_head_info(repo: Repository) -> str:
-		if not repo.head_is_unborn:
-			if repo.head_is_detached:
-				for ref_name in repo.references:
-					if not ref_name.startswith('refs/tags/'):
-						continue
-					ref = repo.references.get(ref_name)
-					obj = repo[ref.target]
-					commit_oid = obj.target if isinstance(obj, pygit2.Tag) else ref.target
-					if commit_oid == ref.target:
-						branch = ref_name.replace('refs/tags/', '')
-						return f'{BRIGHT_MAGENTA}{glyphs('tag')}{RESET}{glyphs('space')}{branch}{RESET}'
-				commit_id = str(repo.revparse_single('HEAD').id)
-				return f'{CYAN}{glyphs('commit')}{RESET}{glyphs('space')}{commit_id[-8:]}'
-			else:
-				branch = repo.head.shorthand
-				if '/' in branch:
-					branch_path = branch.split('/')
-					icon = Runner._get_branch_icon(branch_path[0])
-					return f'{icon}{RESET}{glyphs('space')}{branch_path[0]}{RESET}/{BOLD}{('/'.join(branch_path[1:]))}{RESET}'
-				return f'{Runner._get_branch_icon(branch)}{RESET}{glyphs('space')}{branch}'
-		else:
+		if repo.head_is_unborn:
 			return ''
+
+		if repo.head_is_detached:
+			head_target = repo.head.target
+			for ref_name in repo.references:
+				if ref_name.startswith('refs/tags/'):
+					ref = repo.references[ref_name]
+					tag_obj = repo[ref.target]
+					tag_commit = tag_obj.target if isinstance(tag_obj, pygit2.Tag) else ref.target
+					if tag_commit == head_target:
+						tag_name = ref_name.replace('refs/tags/', '')
+						return f'{BRIGHT_MAGENTA}{glyphs("tag")}{RESET}{glyphs("space")}{tag_name}{RESET}'
+
+			# fallback: show short commit hash
+			return f'{CYAN}{glyphs("commit")}{RESET}{glyphs("space")}{str(head_target)[-8:]}'
+
+		# normal branch
+		branch = repo.head.shorthand
+		if '/' in branch:
+			parts = branch.split('/')
+			icon = Runner._get_branch_icon(parts[0])
+			return f'{icon}{RESET}{glyphs("space")}{parts[0]}{RESET}/{BOLD}{"/".join(parts[1:])}{RESET}'
+		return f'{Runner._get_branch_icon(branch)}{RESET}{glyphs("space")}{branch}'
+
+	@staticmethod
+	def _stash_count(repo: Repository) -> str:
+		count: int = len(repo.listall_stashes())
+		return '' if count == 0 else f'{BRIGHT_RED}{glyphs("stash")}{RESET}{glyphs('space')}x{str(count)}'
+
 
 	@staticmethod
 	def _get_origin_sync(repo: Repository) -> str:
@@ -418,9 +428,9 @@ class Runner:
 			return color + quote + text + quote + END_FRG
 
 		if file_system and abs_path:
-			return apply_styles(os.path.abspath(path))
+			parts = os.path.abspath(path).split('/')
+			return apply_styles((DIM + '/'.join(parts[:-1]) + '/' + END_DIM + parts[-1]))
 
-		# TODO: Has some issues with coloring here
 		if os.path.isabs(path):
 			home = os.path.expanduser('~')
 			if path.startswith(home):
