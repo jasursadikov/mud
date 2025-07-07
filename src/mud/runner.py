@@ -384,11 +384,8 @@ class Runner:
 	@staticmethod
 	def _stash_count(repo: Repository) -> str:
 		count: int = len(repo.listall_stashes())
+		return '' if count == 0 else f'{BRIGHT_RED}{glyphs("stash")}{RESET}{glyphs('space')}x{str(count)}'
 
-		if count == 0:
-			return ''
-		else:
-			return f'{BRIGHT_RED}{glyphs("stash")}{RESET}{glyphs('space')}x{str(count)}'
 
 	@staticmethod
 	def _get_origin_sync(repo: Repository) -> str:
