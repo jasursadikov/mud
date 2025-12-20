@@ -79,8 +79,8 @@ GLYPHS = {
 	'feature':		['\uf0ad',	''],
 	'test':			['\uf0c3',	''],
 	'branch':		['\ue725',	''],
-	'commit':		['\ueafc', ''],
-	'question':		['\uf128', ''],
+	'commit':		['\ueafc',	''],
+	'question':		['\uf128',	''],
 	'failed':		['\uf00d',	'Failed'],
 	'finished':		['\uf00c',	'Finished'],
 	'running':		['\uf46a',	'Running'],
@@ -94,7 +94,7 @@ GLYPHS = {
 	'(':			['\uE0B2',	''],
 	')':			['\uE0B0',	''],
 	'weight':		['\uee94',	''],
-	'space':		[' ', 		''],
+	'space':		[' ',		''],
 	'git':			['\uefa0',	''],
 	'github':		['\uf09b',	''],
 	'gitlab':		['\uf296',	''],
@@ -107,5 +107,5 @@ GLYPHS = {
 	'time':			['\uf017',	''],
 	'message':		['\uf27a',	''],
 	'info':			['\uf05a',	''],
-	'origin-sync':	['\uf4dd', 	'']
+	'origin-sync':	['\uf4dd',	'']
 }

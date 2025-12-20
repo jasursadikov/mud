@@ -397,9 +397,9 @@ class Runner:
 			if upstream:
 				ahead, behind = repo.ahead_behind(local_ref.target, upstream.target)
 				if ahead != 0:
-					sync_str += f'{BRIGHT_GREEN}{glyphs('ahead')} {ahead}{RESET}'
+					sync_str += f'{BRIGHT_GREEN}{glyphs('ahead')} {ahead}{RESET} '
 				if behind != 0:
-					sync_str += f'{BRIGHT_BLUE}{glyphs('behind')} {behind}{RESET}'
+					sync_str += f'{BRIGHT_BLUE}{glyphs('behind')} {behind}{RESET} '
 				if ahead == 0 and behind == 0:
 					sync_str = f'{GREEN}{glyphs('synced')}{RESET}'
 			return sync_str
