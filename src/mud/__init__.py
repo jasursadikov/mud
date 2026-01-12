@@ -3,7 +3,7 @@
 import mud.utils
 import mud.settings
 
-from .app import App
+from mud.app import App
 
 
 def run():

@@ -23,7 +23,7 @@ class App:
 
 		subparsers.add_parser(LOG[0], aliases=LOG[1:], help='Displays log of latest commit messages for all repositories in a table view.')
 		subparsers.add_parser(INFO[0], aliases=INFO[1:], help='Displays branch divergence and working directory changes')
-		subparsers.add_parser(INIT[0], aliases=INIT[1:], help=f'Initializes the .mudconfig and adds all repositories in this directory to .mudconfig.')
+		subparsers.add_parser(INIT[0], aliases=INIT[1:], help='Initializes the .mudconfig and adds all repositories in this directory to .mudconfig.')
 		subparsers.add_parser(TAGS[0], aliases=TAGS[1:], help='Displays git tags in repositories.')
 		subparsers.add_parser(LABELS[0], aliases=LABELS[1:], help='Displays mud labels across repositories.')
 		subparsers.add_parser(STATUS[0], aliases=STATUS[1:], help='Displays working directory changes.')
@@ -31,6 +31,7 @@ class App:
 		subparsers.add_parser(REMOTE_BRANCHES[0], aliases=REMOTE_BRANCHES[1:], help='Displays all remote branches in repositories.')
 		subparsers.add_parser(CONFIGURE[0], aliases=CONFIGURE[1:], help='Runs the interactive configuration wizard.')
 		subparsers.add_parser(GET_CONFIG[0], aliases=GET_CONFIG[1:], help='Prints current .mudconfig path.')
+		subparsers.add_parser(SET_GLOBAL[0], aliases=SET_GLOBAL[1:], help='Sets .mudconfig in the current repository as your fallback .mudconfig.')
 
 		add_parser = subparsers.add_parser(ADD[0], aliases=ADD[1:], help='Adds repository or labels an existing repository.')
 		add_parser.add_argument('path', help='Repository to add.', nargs='?', type=str)
@@ -52,7 +53,6 @@ class App:
 		parser.add_argument(*MODIFIED_ATTR, action='store_true', help='Filters modified repositories.')
 		parser.add_argument(*DIVERGED_ATTR, action='store_true', help='Filters repositories with diverged branches.')
 		parser.add_argument(*ASYNC_ATTR, action='store_true', help='Switches asynchronous run feature.')
-		parser.add_argument(SET_GLOBAL[0], help=f'Sets .mudconfig in the current repository as your fallback .mudconfig.', action='store_true')
 		parser.add_argument('catch_all', help='Type any commands to execute among repositories.', nargs='*')
 		return parser
 
@@ -199,6 +199,7 @@ class App:
 
 		for path, labels in self.config.filter_label('ignore', self.config.data).items():
 			del self.repos[path]
+
 		include_labels = []
 		exclude_labels = []
 		contains_strings = []
@@ -240,9 +241,7 @@ class App:
 		to_delete = []
 
 		for path, labels in self.repos.items():
-			os.chdir(directory)
 			abs_path = os.path.join(directory, path)
-			repo = Repository(path)
 
 			if not os.path.isdir(abs_path):
 				utils.print_error(7, meta=path)
@@ -252,7 +251,12 @@ class App:
 				utils.print_error(8, meta=path)
 				to_delete.append(path)
 				continue
+			elif not os.path.exists(abs_path):
+				utils.print_error(7, meta=path)
+				to_delete.append(path)
+				continue
 
+			repo = Repository(abs_path)
 			os.chdir(abs_path)
 			delete = False
 
