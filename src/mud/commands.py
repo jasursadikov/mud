@@ -10,12 +10,14 @@ LABELS = ['labels', 'lb']
 STATUS = ['status', 'st']
 BRANCHES = ['branch', 'branches', 'br']
 REMOTE_BRANCHES = ['remote-branch', 'remote-branches', 'rbr']
+COMPLETE_BRANCH = ['complete-branch']
+COMPLETE_BRANCH_ALL = ['complete-branch-all']
 HELP = ['help', '--help', '-h']
 CONFIGURE = ['configure', 'config']
 GET_CONFIG = ['get-config']
 SET_GLOBAL = ['set-global']
 
-COMMANDS = ADD + REMOVE + PRUNE + LOG + INFO + INIT + TAGS + LABELS + STATUS + BRANCHES + REMOTE_BRANCHES + HELP + CONFIGURE + SET_GLOBAL + GET_CONFIG
+COMMANDS = ADD + REMOVE + PRUNE + LOG + INFO + INIT + TAGS + LABELS + STATUS + BRANCHES + REMOTE_BRANCHES + COMPLETE_BRANCH + COMPLETE_BRANCH_ALL + HELP + CONFIGURE + SET_GLOBAL + GET_CONFIG
 
 # Filters
 ASYNC_ATTR = '-a', '--async'

@@ -57,6 +57,8 @@ mud --diverged git pull
 | `mud labels`/`mud lb`           | displays mud labels across repositories.                                                                                          |
 | `mud branches`/`mud br`         | displays all branches in repositories.                                                                                            |
 | `mud remote-branches`/`mud rbr` | displays all remote branches in repositories.                                                                                     |
+| `mud complete-branch`           | prints unique current branch names across repositories for shell completion.                                                      |
+| `mud complete-branch-all`       | prints unique local and remote branch names across repositories for shell completion.                                             |
 | `mud tags`/`mud t`              | displays git tags in repositories.                                                                                                |
 
 ### Flags
@@ -84,6 +86,16 @@ mud -b=master -d git pull
 
 # Fetches all repositories that are not on the master branch and have the "personal" label, excluding those with the "work" label.
 mud -B=master -l=personal -L=work git fetch
+```
+
+Completion helpers:
+
+```bash
+# Menu for -b= and -B= suggestions
+mud complete-branch
+
+# Full unique branch menu suitable for commands like "mud to <branch>"
+mud complete-branch-all
 ```
 
 ## Settings
