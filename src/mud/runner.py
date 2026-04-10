@@ -2,7 +2,7 @@ import asyncio
 import subprocess
 import pygit2
 
-from typing import Dict
+from typing import Dict, Iterable, List
 from asyncio import Semaphore
 from datetime import datetime, timezone, timedelta
 from collections import Counter
@@ -209,6 +209,11 @@ class Runner:
 			table.add_row([formatted_path, formatted_branches])
 
 		utils.print_table(table)
+
+	# `mud complete-branch` and `mud complete-branch-all` command implementation
+	def complete_branches(self, paths: Dict[str, List[str]], include_remote: bool) -> None:
+		for branch in self._get_unique_branch_names(paths.keys(), include_remote):
+			print(branch)
 
 	# `mud tags` command implementation
 	def tags(self, repos: Dict[str, List[str]]) -> None:
@@ -496,3 +501,33 @@ class Runner:
 			Runner._label_color_cache[label] = Runner._current_color_index
 			Runner._current_color_index = (Runner._current_color_index + 1) % len(BKG)
 		return Runner._label_color_cache[label]
+
+	@staticmethod
+	def _get_unique_branch_names(paths: Iterable[str], include_remote: bool) -> List[str]:
+		branch_names: set[str] = set()
+
+		for path in paths:
+			repo = Repository(path)
+
+			if not include_remote:
+				if not repo.head_is_unborn and not repo.head_is_detached:
+					branch_names.add(repo.head.shorthand)
+				continue
+
+			for ref_name in repo.references:
+				if ref_name.startswith('refs/heads/'):
+					branch_names.add(ref_name.removeprefix('refs/heads/'))
+					continue
+
+				if not ref_name.startswith('refs/remotes/'):
+					continue
+
+				remote_branch = ref_name.removeprefix('refs/remotes/')
+				if '/' not in remote_branch:
+					continue
+
+				branch_name = remote_branch.split('/', 1)[1]
+				if branch_name != 'HEAD':
+					branch_names.add(branch_name)
+
+		return sorted(branch_names, key=str.casefold)
