@@ -17,6 +17,23 @@ class App:
 		self.parser: ArgumentParser = self._create_parser()
 
 	@staticmethod
+	def _has_diverged_branch(repo: Repository) -> bool:
+		if repo.head_is_unborn or repo.head_is_detached:
+			return False
+
+		try:
+			local_ref = repo.branches[repo.head.shorthand]
+		except KeyError:
+			return False
+
+		upstream = local_ref.upstream
+		if upstream is None:
+			return False
+
+		ahead, behind = repo.ahead_behind(local_ref.target, upstream.target)
+		return ahead != 0 or behind != 0
+
+	@staticmethod
 	def _create_parser() -> ArgumentParser:
 		parser = ArgumentParser(description=f'mud allows you to run commands in multiple repositories.')
 		subparsers = parser.add_subparsers(dest='command')
@@ -283,13 +300,8 @@ class App:
 				if not repo.head_is_unborn and not repo.status():
 					delete = True
 
-			if not delete and diverged and not repo.head_is_unborn:
-				local_ref = repo.branches[repo.head.shorthand]
-				upstream = local_ref.upstream
-				if upstream:
-					ahead, behind = repo.ahead_behind(local_ref.target, upstream.target)
-					if ahead == 0 and behind == 0:
-						delete = True
+			if not delete and diverged and not self._has_diverged_branch(repo):
+				delete = True
 
 			if delete:
 				to_delete.append(path)
