@@ -233,6 +233,11 @@ class App:
 		index = 1
 		while index < len(sys.argv):
 			arg = sys.argv[index]
+			# Support '-- command' style: treat everything after '--' as the command
+			if arg == '--':
+				self.command = ' '.join(sys.argv[index+1:])
+				del sys.argv[index:]
+				break
 			if not arg.startswith('-'):
 				break
 			if any(arg.startswith(prefix) for prefix in LABEL_PREFIX):

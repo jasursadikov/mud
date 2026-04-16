@@ -61,6 +61,8 @@ mud --diverged git pull
 | `mud complete-branch-all`       | prints unique local and remote branch names across repositories for shell completion.                                             |
 | `mud tags`/`mud t`              | displays git tags in repositories.                                                                                                |
 
+`--` format is also supported. An example would be `mud -- git status`.
+
 ### Flags
 
 `mud <FLAG> <COMMAND>` will execute a bash command across all repositories.
