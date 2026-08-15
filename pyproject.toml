@@ -28,6 +28,7 @@ dev = ["pytest"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["tests"]
+addopts = "-v"
 
 [project.scripts]
 mud = "mud:run"
