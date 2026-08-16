@@ -35,7 +35,10 @@ class App:
 
 	@staticmethod
 	def _create_parser() -> ArgumentParser:
-		parser = ArgumentParser(description=f'mud allows you to run commands in multiple repositories.')
+		parser = ArgumentParser(
+			description=f'mud allows you to run commands in multiple repositories.',
+			usage='%(prog)s [OPTIONS] [COMMAND] ...',
+		)
 		subparsers = parser.add_subparsers(dest='command')
 
 		subparsers.add_parser(LOG[0], aliases=LOG[1:], help='Displays log of latest commit messages for all repositories in a table view.')
@@ -130,7 +133,7 @@ class App:
 
 		# Handling commands
 		if native_command:
-			args = self.parser.parse_args()
+			args, _ = self.parser.parse_known_args()
 
 			if args.command in INIT + ADD + REMOVE + PRUNE + GET_CONFIG:
 				if args.command in GET_CONFIG:
