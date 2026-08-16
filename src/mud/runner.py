@@ -413,10 +413,9 @@ class Runner:
 
 	@staticmethod
 	def _print_process_header(path: str, command: str, failed: bool, code: int) -> None:
-		command = f'{BKG_WHITE}{BLACK}{glyphs('space')}{glyphs('terminal')} {BOLD}{command} {END_BOLD}{WHITE}{RESET}'
-		code = f'{WHITE}{BKG_RED if failed else BKG_GREEN}{glyphs(')')} {glyphs('failed') if failed else glyphs('finished')} {f'{BOLD}{code}' if failed else ''}{glyphs('space')}{RESET}'
-		path = f'{BKG_BLACK}{RED if failed else GREEN}{glyphs(')')}{RESET}{BKG_BLACK}{glyphs('space')}{WHITE}{glyphs('directory')}{END_DIM} {Runner._get_formatted_path(path)}{BKG_BLACK} {RESET}{BLACK}{glyphs(')')}{RESET}'
-		print(f'{command}{code}{path}')
+		path = f'{BKG_BLACK}{BRIGHT_WHITE} {Runner._get_formatted_path(path)} {RESET}{BLACK}{BKG_RED if failed else BKG_GREEN}{glyphs(')')}{RESET}'
+		code = f'{BKG_RED if failed else BKG_GREEN} {BRIGHT_WHITE}{command}{f':{BOLD}{code}' if failed else ''} {RESET}{RED if failed else GREEN}{glyphs(')')}{RESET}'
+		print(f'{path}{code}')
 
 	@staticmethod
 	def _get_formatted_path(path: str, file_system: bool = True, color: str = '') -> str:
