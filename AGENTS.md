@@ -1,6 +1,6 @@
-# mud — Agent Instructions
+# AI Agent Instructions
 
-## What mud does
+## What `mud` does
 
 `mud` runs git commands (and arbitrary shell commands) across multiple repositories simultaneously. It reads a `.mudconfig` TSV file listing repo paths and optional labels, then dispatches to every matching repo with filtering, async execution, and rich terminal output.
 
@@ -46,7 +46,7 @@ pytest tests/test_run.py  # run a single file
 
 ## Tests
 
-Tests are black-box CLI tests — each runs `python -m mud` as a subprocess against real git repos in a temp directory. No mocking.
+Tests are black-box CLI tests — each runs `python -m mud` as a subprocess against real git repos in a temporary directory.
 
 | File | Covers |
 |---|---|
@@ -57,7 +57,14 @@ Tests are black-box CLI tests — each runs `python -m mud` as a subprocess agai
 | `tests/test_states.py` | Edge-case repo states (unborn, detached, rebasing) |
 
 ## Knowledge base update rule
-
 After editing any file under `src/mud/`, update the affected sections of this file before finishing the task.
-
 `README.md` is the source of truth for user-facing behaviour — if commands, flags, or settings changed, update the relevant table rows there. Table edits only — no new prose.
+
+# Git
+
+## Branching
+- All new features should have `feature/` prefix
+- Bugfixes are using `bugfix/` prefix
+
+## Tags
+Tags format is vX.Y.Z
