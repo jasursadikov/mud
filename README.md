@@ -17,7 +17,7 @@ pip install mud-git
 ```
 **ArchLinux**
 ```bash
-paru -S mud-git
+yay -S mud-git
 ```
 
 For requirements check [requirements.txt](requirements.txt).
