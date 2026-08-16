@@ -41,8 +41,10 @@ class Config:
 
 			for path, labels in self.data.items():
 				valid_labels = [label for label in labels if _filter_labels(label)]
-				formatted_labels = ','.join(valid_labels) if valid_labels else ''
-				writer.writerow([path, formatted_labels])
+				if valid_labels:
+					writer.writerow([path, ','.join(valid_labels)])
+				else:
+					writer.writerow([path])
 
 	def load(self, file_path: str) -> None:
 		self.data = {}
@@ -108,6 +110,8 @@ class Config:
 
 			config_path = os.path.join(config_dir, utils.CONFIG_FILE_NAME)
 			path = os.path.relpath(current_path, config_path)
+		if path is not None:
+			path = path.rstrip('/')
 		if path is None:
 			path = label
 			label = None
