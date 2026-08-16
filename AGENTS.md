@@ -4,6 +4,8 @@
 
 `mud` runs git commands (and arbitrary shell commands) across multiple repositories simultaneously. It reads a `.mudconfig` TSV file listing repo paths and optional labels, then dispatches to every matching repo with filtering, async execution, and rich terminal output.
 
+For commands, flags, and settings refer to `README.md` — it is the source of truth for user-facing behaviour. For runtime dependencies refer to `requirements.txt`.
+
 ## Build and test
 
 ```sh
@@ -30,7 +32,17 @@ pytest tests/test_run.py  # run a single file
 | `src/mud/styles.py` | ANSI escape codes and Nerd Font glyphs |
 | `src/mud/utils.py` | Shared helpers: table creation, error printing, configure wizard |
 
-Full module details, architecture patterns, and error codes are in `.github/copilot-instructions.md`.
+## Architecture notes
+
+**Global settings instance** — `utils.settings` is a single `Settings` object created in `__init__.run()` and accessed across all modules.
+
+**Command dispatch** — `App.run()` routes to either a native `Runner` method (matched against constants in `commands.py`) or a shell pass-through. The `--` separator and `-c=<cmd>` flag both reach the shell path.
+
+**Execution modes** — three modes controlled by `run_async` + `run_table` settings (toggled by `-a` / `-t` flags): sequential, async streamed, async live-table.
+
+**Filter chain** — `App._filter_with_arguments()` applies up to eight filters in sequence (ignore label, include/exclude label, include/exclude branch, name substring, modified, diverged). Each step removes non-matching repos.
+
+**Nerd Fonts** — every glyph in `styles.GLYPHS` has an ASCII fallback. `utils.glyphs(key)` selects between them based on the `nerd_fonts` setting, so mud works with or without a patched font.
 
 ## Tests
 
@@ -46,6 +58,6 @@ Tests are black-box CLI tests — each runs `python -m mud` as a subprocess agai
 
 ## Knowledge base update rule
 
-After editing any file under `src/mud/`, update the affected sections of `.github/copilot-instructions.md` before finishing the task.
+After editing any file under `src/mud/`, update the affected sections of this file before finishing the task.
 
-If user-facing behaviour changed (commands, flags, or settings), also update the relevant table rows in `README.md`. Table edits only — no new prose.
+`README.md` is the source of truth for user-facing behaviour — if commands, flags, or settings changed, update the relevant table rows there. Table edits only — no new prose.
