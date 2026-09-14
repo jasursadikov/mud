@@ -12,12 +12,13 @@ BRANCHES = ['branch', 'branches', 'br']
 REMOTE_BRANCHES = ['remote-branch', 'remote-branches', 'rbr']
 COMPLETE_BRANCH = ['complete-branch']
 COMPLETE_BRANCH_ALL = ['complete-branch-all']
+COMPLETION = ['completion']
 HELP = ['help', '--help', '-h']
 CONFIGURE = ['configure', 'config']
 GET_CONFIG = ['get-config']
 SET_GLOBAL = ['set-global']
 
-COMMANDS = ADD + REMOVE + PRUNE + LOG + INFO + INIT + TAGS + LABELS + STATUS + BRANCHES + REMOTE_BRANCHES + COMPLETE_BRANCH + COMPLETE_BRANCH_ALL + HELP + CONFIGURE + SET_GLOBAL + GET_CONFIG
+COMMANDS = ADD + REMOVE + PRUNE + LOG + INFO + INIT + TAGS + LABELS + STATUS + BRANCHES + REMOTE_BRANCHES + COMPLETE_BRANCH + COMPLETE_BRANCH_ALL + COMPLETION + HELP + CONFIGURE + SET_GLOBAL + GET_CONFIG
 
 # Filters
 ASYNC_ATTR = '-a', '--async'
@@ -25,6 +26,7 @@ TABLE_ATTR = '-t', '--table'
 MODIFIED_ATTR = '-m', '--modified'
 DIVERGED_ATTR = '-d', '--diverged'
 NAME_PREFIX = '-n=', '--name='
+NOT_NAME_PREFIX = '-N=', '--not-name='
 LABEL_PREFIX = '-l=', '--label='
 COMMAND_ATTR = '-c=', '--command='
 BRANCH_PREFIX = '-b=', '--branch='

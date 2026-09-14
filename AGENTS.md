@@ -17,17 +17,18 @@ pytest tests/test_run.py  # run a single file
 
 ## Entry point
 
-`mud` CLI → `mud:run` in `src/mud/__init__.py` → `App` in `src/mud/app.py`
+`mud` CLI → `mud:run` in `src/mud/__init__.py` → `App` in `src/mud/app.py`; `mud completion` is dispatched to `completion.complete()` before writable settings are initialised.
 
 ## Module map
 
 | File | Purpose |
 |---|---|
-| `src/mud/__init__.py` | Entry point; initialises `Settings`, creates `App`, calls `run()` |
+| `src/mud/__init__.py` | Entry point; creates `App`, dispatches completion or initialises `Settings` and calls `run()` |
 | `src/mud/app.py` | CLI dispatch; parses args, applies filters, calls `Runner` |
+| `src/mud/completion.py` | Exports the Carapace spec and provides read-only dynamic completion via `C_ARG<n>` / `C_VALUE` |
 | `src/mud/runner.py` | All display commands and execution modes |
 | `src/mud/config.py` | `.mudconfig` TSV read/write; `init`, `add`, `remove`, `prune` |
-| `src/mud/settings.py` | `~/.config/mud/settings.ini` read/write |
+| `src/mud/settings.py` | `~/.config/mud/settings.ini` read/write; read-only initialisation for completion |
 | `src/mud/commands.py` | Constants for every command name and filter flag prefix |
 | `src/mud/styles.py` | ANSI escape codes and Nerd Font glyphs |
 | `src/mud/utils.py` | Shared helpers: table creation, error printing, configure wizard |
@@ -38,9 +39,13 @@ pytest tests/test_run.py  # run a single file
 
 **Command dispatch** — `App.run()` routes to either a native `Runner` method (matched against constants in `commands.py`) or a shell pass-through. The `--` separator and `-c=<cmd>` flag both reach the shell path.
 
+**Carapace completion** — `mud completion carapace` exports a shell-independent spec; its fixed `mud completion values` callback handles mud's equals-only flags without executing user input. Command/flag descriptions come from the argparse definitions, aliases from settings, and label/path/branch values from the discovered config. Local and remote branch names reuse `Runner._get_unique_branch_names()`. Nothing is completed after `--`, inside `-c=`, or in arbitrary shell/alias arguments. Filters remain available after a completed `-c=` token. Neither spec export nor completion creates settings files.
+
+**Argument metadata** — argparse registers value-taking options without trailing `=` and toggles as booleans, so empty values and `-t` cannot consume native commands. The execution scanner still requires `-flag=value`; completion inserts the equals sign.
+
 **Execution modes** — three modes controlled by `run_async` + `run_table` settings (toggled by `-a` / `-t` flags): sequential, async streamed, async live-table.
 
-**Filter chain** — `App._filter_with_arguments()` applies up to eight filters in sequence (ignore label, include/exclude label, include/exclude branch, name substring, modified, diverged). Each step removes non-matching repos.
+**Filter chain** — `App._filter_with_arguments()` applies up to nine filters in sequence (ignore label, include/exclude label, include/exclude branch, include/exclude name substring, modified, diverged). Each step removes non-matching repos. Repeated `-N=` / `--not-name=` values exclude any matching path substring; empty exclusions are ignored.
 
 **Nerd Fonts** — every glyph in `styles.GLYPHS` has an ASCII fallback. `utils.glyphs(key)` selects between them based on the `nerd_fonts` setting, so mud works with or without a patched font.
 
@@ -53,8 +58,11 @@ Tests are black-box CLI tests — each runs `python -m mud` as a subprocess agai
 | `tests/test_config.py` | `init`, `add`, `remove`, `prune` |
 | `tests/test_display.py` | `status`, `info`, `log`, `labels`, `branches`, `tags` |
 | `tests/test_run.py` | Execution modes and flags |
-| `tests/test_filters.py` | `-l=`, `-L=`, `-b=`, `-B=`, `-n=` filter flags |
+| `tests/test_filters.py` | `-l=`, `-L=`, `-b=`, `-B=`, `-n=`, `-N=` filter flags and native-command parsing regressions |
+| `tests/test_completion.py` | Completion callback, dynamic values, command boundaries, read-only discovery, and optional real Carapace/Nushell integration |
 | `tests/test_states.py` | Edge-case repo states (unborn, detached, rebasing) |
+
+Carapace integration tests run when `carapace` is on `PATH`; the Nushell round-trip test also requires `nu`. Tests isolate `HOME`, Carapace config/cache directories, and use the current Python environment's `mud` executable.
 
 ## Knowledge base update rule
 After editing any file under `src/mud/`, update the affected sections of this file before finishing the task.

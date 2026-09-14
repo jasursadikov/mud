@@ -51,6 +51,8 @@ class App:
 		subparsers.add_parser(REMOTE_BRANCHES[0], aliases=REMOTE_BRANCHES[1:], help='Displays all remote branches in repositories.')
 		subparsers.add_parser(COMPLETE_BRANCH[0], help='Prints unique current branch names across repositories for shell completion.')
 		subparsers.add_parser(COMPLETE_BRANCH_ALL[0], help='Prints unique local and remote branch names across repositories for shell completion.')
+		completion_parser = subparsers.add_parser(COMPLETION[0], help='Prints shell completion support.')
+		completion_parser.add_argument('shell', choices=['carapace', 'values'], help='Completion format (values is the Carapace callback).')
 		subparsers.add_parser(CONFIGURE[0], aliases=CONFIGURE[1:], help='Runs the interactive configuration wizard.')
 		subparsers.add_parser(GET_CONFIG[0], aliases=GET_CONFIG[1:], help='Prints current .mudconfig path.')
 		subparsers.add_parser(SET_GLOBAL[0], aliases=SET_GLOBAL[1:], help='Sets .mudconfig in the current repository as your fallback .mudconfig.')
@@ -65,13 +67,17 @@ class App:
 
 		subparsers.add_parser(PRUNE[0], help='Removes invalid paths from .mudconfig.')
 
-		parser.add_argument(*COMMAND_ATTR, metavar='COMMAND', help=f'Explicit command argument. Use this when you want to run a command that has a special characters.', nargs='?', default='', type=str)
-		parser.add_argument(*TABLE_ATTR, metavar='TABLE', help=f'Switches table view, runs in table view it is disabled in .mudsettings.', nargs='?', default='', type=str)
-		parser.add_argument(*NAME_PREFIX, metavar='NAME', help='Includes repositories where name contains provided value.', nargs='?', default='', type=str)
-		parser.add_argument(*LABEL_PREFIX, metavar='LABEL', help='Includes repositories with provided label.', nargs='?', default='', type=str)
-		parser.add_argument(*NOT_LABEL_PREFIX, metavar='NOT_LABEL', help=f'Excludes repositories with provided label.', nargs='?', default='', type=str)
-		parser.add_argument(*BRANCH_PREFIX, metavar='BRANCH', help='Includes repositories on a provided branch.', nargs='?', default='', type=str)
-		parser.add_argument(*NOT_BRANCH_PREFIX, metavar='NOT_BRANCH', help='Excludes repositories on a provided branch.', nargs='?', default='', type=str)
+		for prefixes, metavar, description in [
+			(COMMAND_ATTR, 'COMMAND', 'Explicit shell command; use for complex commands.'),
+			(NAME_PREFIX, 'NAME', 'Includes repositories where name contains provided value.'),
+			(NOT_NAME_PREFIX, 'NOT_NAME', 'Excludes repositories where name contains provided value.'),
+			(LABEL_PREFIX, 'LABEL', 'Includes repositories with provided label.'),
+			(NOT_LABEL_PREFIX, 'NOT_LABEL', 'Excludes repositories with provided label.'),
+			(BRANCH_PREFIX, 'BRANCH', 'Includes repositories on a provided branch.'),
+			(NOT_BRANCH_PREFIX, 'NOT_BRANCH', 'Excludes repositories on a provided branch.'),
+		]:
+			parser.add_argument(*(prefix.rstrip('=') for prefix in prefixes), metavar=metavar, help=description, default='', type=str)
+		parser.add_argument(*TABLE_ATTR, action='store_true', help='Toggles the table view setting for execution.')
 		parser.add_argument(*MODIFIED_ATTR, action='store_true', help='Filters modified repositories.')
 		parser.add_argument(*DIVERGED_ATTR, action='store_true', help='Filters repositories with diverged branches.')
 		parser.add_argument(*ASYNC_ATTR, action='store_true', help='Switches asynchronous run feature.')
@@ -229,6 +235,7 @@ class App:
 		include_labels = []
 		exclude_labels = []
 		contains_strings = []
+		not_contains_strings = []
 		include_branches = []
 		exclude_branches = []
 		modified = False
@@ -253,6 +260,10 @@ class App:
 				exclude_branches.append(arg.split('=', 1)[1])
 			elif any(arg.startswith(prefix) for prefix in NAME_PREFIX):
 				contains_strings.append(arg.split('=', 1)[1])
+			elif any(arg.startswith(prefix) for prefix in NOT_NAME_PREFIX):
+				value = arg.split('=', 1)[1]
+				if value:
+					not_contains_strings.append(value)
 			elif arg in MODIFIED_ATTR:
 				modified = True
 			elif arg in DIVERGED_ATTR:
@@ -296,6 +307,8 @@ class App:
 			if any(exclude_labels) and any(item in exclude_labels for item in labels):
 				delete = True
 			if any(contains_strings) and not any(substr in path for substr in contains_strings):
+				delete = True
+			if any(not_contains_strings) and any(substr in path for substr in not_contains_strings):
 				delete = True
 
 			if not delete and not repo.head_is_unborn and (any(include_branches) or any(exclude_branches)):

@@ -48,18 +48,23 @@ mud --diverged git pull
 ### Commands
 | Command                         | Description                                                                                                                       |
 |---------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
-| `mud set-global`                | sets the current `.mudconfig` as a global configuration so it will be used as a fallback configuration to run from any directory. |
+| `mud init`                     | creates `.mudconfig` and adds repositories beneath the current directory. |
+| `mud configure`/`mud config`    | runs the interactive settings wizard. |
+| `mud help`/`mud --help`/`mud -h` | displays available commands and flags. |
+| `mud set-global [path]`         | sets the current `.mudconfig`, or the specified configuration path, as the fallback configuration to run from any directory. |
 | `mud get-config`                | prints the current `.mudconfig` location.                                                                                         |
 | `mud prune`                     | removes all invalid repositories from the `.mudconfig`.                                                                           |
 | `mud info`/`mud i`              | displays branch divergence and working directory changes.                                                                         |
 | `mud status`/`mud st`           | displays working directory changes.                                                                                               |
 | `mud log`/`mud l`               | displays the latest commit message, its time, and its author.                                                                     |
 | `mud labels`/`mud lb`           | displays mud labels across repositories.                                                                                          |
-| `mud branches`/`mud br`         | displays all branches in repositories.                                                                                            |
-| `mud remote-branches`/`mud rbr` | displays all remote branches in repositories.                                                                                     |
+| `mud branch`/`mud branches`/`mud br` | displays all branches in repositories.                                                                                        |
+| `mud remote-branch`/`mud remote-branches`/`mud rbr` | displays all remote branches in repositories.                                                               |
 | `mud complete-branch`           | prints unique current branch names across repositories for shell completion.                                                      |
 | `mud complete-branch-all`       | prints unique local and remote branch names across repositories for shell completion.                                             |
-| `mud tags`/`mud t`              | displays git tags in repositories.                                                                                                |
+| `mud completion carapace`       | exports a Carapace spec for all commands, aliases, flags, and native arguments; dynamically completes labels, local/remote branch names, and configured repository paths. |
+| `mud completion values`         | internal read-only Carapace callback; reads completion context from `C_ARG<n>` and `C_VALUE`, never executing command text. |
+| `mud tags`/`mud tag`/`mud t`     | displays git tags in repositories.                                                                                                |
 
 `--` format is also supported. An example would be `mud -- git status`.
 
@@ -70,11 +75,13 @@ mud --diverged git pull
 | Flag                                     | Description                                                                          |
 |------------------------------------------|--------------------------------------------------------------------------------------|
 | `-n=<str>` or `--name=<str>`             | includes repositories that contains provided string.                                 |
+| `-N=<str>` or `--not-name=<str>`         | excludes repositories whose path contains the provided string; repeat to exclude multiple substrings. |
 | `-l=<label>` or `--label=<label>`        | includes repositories with the provided label.                                       |
 | `-L=<label>` or `--not-label=<label>`    | excludes repositories with the provided label.                                       |
 | `-b=<branch>` or `--branch=<branch>`     | includes repositories with the provided branch.                                      |
 | `-B=<branch>` or `--not-branch=<branch>` | excludes repositories with the provided branch.                                      |
-| `-c` or `--command`                      | explicit command argument. Use this whenever you're trying to run a complex command. |
+| `-c="<command>"` or `--command="<command>"` | explicit shell command; no completion inside its value, but mud filters remain available in following arguments. |
+| `--`                                    | starts an opaque shell command; no mud completion or filtering after this separator. |
 | `-m` or `--modified`                     | filters out modified repositories.                                                   |
 | `-d` or `--diverged`                     | filters repositories with diverged branches.                                         |
 | `-t` or `--table`                        | toggles the default table view setting for execution.                                |
@@ -99,6 +106,18 @@ mud complete-branch
 # Full unique branch menu suitable for commands like "mud to <branch>"
 mud complete-branch-all
 ```
+
+| Carapace Setup | Instructions |
+|----------------|--------------|
+| Requirements | Install `mud` and [Carapace](https://carapace-sh.github.io/carapace-bin/install.html) on `PATH`; the same spec works across Carapace-supported shells. |
+| Install Spec (Nushell, Linux) | `let specs = (($env.XDG_CONFIG_HOME? \| default ($nu.home-path \| path join .config)) \| path join carapace specs)`; `mkdir $specs`; `mud completion carapace \| save --force ($specs \| path join mud.yaml)` |
+| Install Spec (Bash/Zsh, Linux) | `mkdir -p "${XDG_CONFIG_HOME:-$HOME/.config}/carapace/specs"`; `mud completion carapace > "${XDG_CONFIG_HOME:-$HOME/.config}/carapace/specs/mud.yaml"` |
+| Nushell Hook | Follow [Carapace's Nushell setup](https://carapace-sh.github.io/carapace-bin/setup.html#nushell), or use `{\|spans\| carapace $spans.0 nushell ...$spans \| from json }` as your external completer; preserve empty results for mud rather than falling back to file or command completion. |
+| Bash/Zsh Hook | `source <(carapace _carapace)`; Zsh also requires `autoload -U compinit && compinit`. |
+| Fish Hook | `carapace _carapace fish \| source` |
+| Other Platforms/Shells | Install `mud.yaml` in [Carapace's user spec directory](https://carapace-sh.github.io/carapace-bin/spec/user.html), then follow the appropriate [shell setup](https://carapace-sh.github.io/carapace-bin/setup.html). Restart the shell after first installing the spec. |
+| Dynamic Values | Labels and paths come from the nearest ancestor `.mudconfig` or global fallback; branches include unique local and remote names with remote prefixes removed. Branch filters still match the current branch. No settings or repositories are written during completion. |
+| Command Boundaries | Complete mud filters before a command or `--`, or after a completed `-c="..."` argument. Arbitrary shell commands and alias arguments are not completed. |
 
 ## Settings
 
@@ -133,7 +152,7 @@ You can modify your `.mudconfig` file using the following commands:
 
 | Command                     | Description                                    |
 |-----------------------------|------------------------------------------------|
-| `mud add <path>`            | adds a path without a label.                   |
-| `mud add <path> <label>`    | adds a path with an optional label.            |
-| `mud remove <path>`         | removes the directory with the specified path. |
-| `mud remove <path> <label>` | removes the label from a directory.            |
+| `mud add <path>`/`mud a <path>` | adds a path without a label.                |
+| `mud add <path> <label>`/`mud a <path> <label>` | adds a path with an optional label. |
+| `mud remove <path>`/`mud rm <path>` | removes the directory with the specified path. |
+| `mud remove <path> <label>`/`mud rm <path> <label>` | removes the label from a directory. |
