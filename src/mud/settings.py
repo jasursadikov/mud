@@ -6,7 +6,7 @@ ALIAS_SCOPE = 'alias'
 
 
 class Settings:
-	def __init__(self, file_name: str, old_file_name: str) -> None:
+	def __init__(self, file_name: str, old_file_name: str, read_only: bool = False) -> None:
 		use_old = os.path.exists(os.path.join(os.path.expanduser('~'), old_file_name))
 		file_name = old_file_name if use_old else file_name
 		directory = os.path.expanduser('~' if use_old else '~/.config/mud')
@@ -15,6 +15,7 @@ class Settings:
 		self.alias_settings = None
 		self.config = configparser.ConfigParser()
 		self.settings_file = os.path.join(directory, file_name)
+		self.read_only = read_only
 		self.defaults = {
 			'mud': {
 				'config_path': '',
@@ -38,7 +39,8 @@ class Settings:
 	def load_settings(self) -> None:
 		if not os.path.exists(self.settings_file):
 			self.config.read_dict(self.defaults)
-			self.save()
+			if not self.read_only:
+				self.save()
 		else:
 			self.config.read(self.settings_file)
 

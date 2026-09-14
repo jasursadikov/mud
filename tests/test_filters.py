@@ -5,6 +5,7 @@ All shell commands here use -a to run in ordered mode so the output is
 straightforward to assert on.
 """
 import subprocess
+import pytest
 from pathlib import Path
 from helpers import run_mud
 
@@ -39,6 +40,41 @@ def test_name_filter(repos: Path, home: Path):
 	assert result.returncode == 0
 	assert "repo_a" in result.stdout
 	assert "repo_b" not in result.stdout
+
+
+@pytest.mark.parametrize("command", [
+	("status",),
+	("echo", "hello"),
+	("--", "echo", "hello"),
+	("-c=echo hello",),
+], ids=["native", "passthrough", "separator", "explicit-command"])
+@pytest.mark.parametrize("filters, expected", [
+	(("-N=po_a",), ("repo_b",)),
+	(("--not-name=po_b",), ("repo_a",)),
+	(("-N=po_a", "-N=po_b"), ()),
+	(("--not-name=po_a", "--not-name=po_b"), ()),
+	(("-N=po_a", "--not-name=po_b"), ()),
+	(("-n=repo", "-N=po_a"), ("repo_b",)),
+	(("--name=repo", "--not-name=po_b"), ("repo_a",)),
+	(("-n=po_a", "-N=po_a"), ()),
+	(("-N=missing",), ("repo_a", "repo_b")),
+	(("--not-name=PO_A",), ("repo_a", "repo_b")),
+	(("-N=",), ("repo_a", "repo_b")),
+	(("-N=", "-N=repo_a"), ("repo_b",)),
+])
+def test_name_exclude_filter(repos: Path, home: Path, command, filters, expected):
+	result = run_mud("-a", *filters, *command, cwd=repos, home=home)
+	assert result.returncode == 0, result.stderr
+	for name in ("repo_a", "repo_b"):
+		assert (name in result.stdout) == (name in expected), result.stdout
+
+
+@pytest.mark.parametrize('flag', ['-t', '--table', '-n=', '-N=', '-l=', '-L=', '-b=', '-B='])
+def test_flags_do_not_consume_native_command(repos: Path, home: Path, flag):
+	result = run_mud(flag, 'status', cwd=repos, home=home)
+	assert result.returncode == 0, result.stderr
+	assert 'repo_a' in result.stdout
+	assert 'repo_b' in result.stdout
 
 
 def test_branch_filter(repos_labeled: Path, home: Path):
