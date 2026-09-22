@@ -22,6 +22,13 @@ class Runner:
 
 	def __init__(self, repos):
 		self._force_color_env = self._force_color_env | os.environ.copy()
+		if getattr(sys, 'frozen', False):
+			# PyInstaller's bundled libraries must not override system command libraries.
+			library_path = self._force_color_env.pop('LD_LIBRARY_PATH_ORIG', None)
+			if library_path is None:
+				self._force_color_env.pop('LD_LIBRARY_PATH', None)
+			else:
+				self._force_color_env['LD_LIBRARY_PATH'] = library_path
 		self._printed_lines_count = 0
 		self.repos = repos
 

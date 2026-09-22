@@ -85,8 +85,14 @@ def make_rebasing_repo(path: Path) -> None:
 # CLI runner
 # ---------------------------------------------------------------------------
 
+def mud_command(*args: str) -> list[str]:
+	executable = os.environ.get('MUD_EXECUTABLE')
+	command = [executable] if executable else [sys.executable, '-m', 'mud']
+	return [*command, *args]
+
+
 def run_mud(*args: str, cwd: Path, home: Path) -> subprocess.CompletedProcess:
-	"""Run ``python -m mud <args>`` inside *cwd* and return the result.
+	"""Run mud inside *cwd*, using MUD_EXECUTABLE when set.
 
 	HOME is pointed at an empty temp directory so the subprocess gets
 	clean default mud settings, isolated from the developer's own machine.
@@ -94,7 +100,7 @@ def run_mud(*args: str, cwd: Path, home: Path) -> subprocess.CompletedProcess:
 	env = os.environ.copy()
 	env["HOME"] = str(home)
 	return subprocess.run(
-		[sys.executable, "-m", "mud", *args],
+		mud_command(*args),
 		cwd=cwd,
 		capture_output=True,
 		text=True,

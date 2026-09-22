@@ -1,7 +1,7 @@
 # mud
 
 ![Version](https://img.shields.io/pypi/v/mud-git?logo=python)
-![AUR Version](https://img.shields.io/aur/version/mud-git?logo=archlinux)
+![AUR Version](https://img.shields.io/aur/version/mud?logo=archlinux)
 [![Test projects integrity](https://github.com/jasursadikov/mud/actions/workflows/test.yaml/badge.svg)](https://github.com/jasursadikov/mud/actions/workflows/test.yaml)
 [![Publish Python Package](https://github.com/jasursadikov/mud/actions/workflows/publish-pypi.yaml/badge.svg)](https://github.com/jasursadikov/mud/actions/workflows/publish-pypi.yaml)
 [![Publish to AUR](https://github.com/jasursadikov/mud/actions/workflows/publish-aur.yaml/badge.svg)](https://github.com/jasursadikov/mud/actions/workflows/publish-aur.yaml)
@@ -11,14 +11,16 @@
 mud is CLI utility that allows you to run git commands in multiple repositories. It has multiple powerful filtering tools, native commands with an informative terminal output and support of aliasing. This tool is not limited to git commands only; you can run any commands you wish. However, this tool was primarily designed to be used with git, so each referenced directory should have a `.git` directory.
 
 ## Installing
-**PyPI**
-```bash
-pip install mud-git
-```
-**ArchLinux**
-```bash
-yay -S mud-git
-```
+| Distribution | Installation |
+|--------------|--------------|
+| PyPI | `pip install mud-git` |
+| Arch Linux (x86_64) | `yay -S mud` installs the prebuilt release executable with its bundled Python runtime and libraries. |
+| Migrate from AUR `mud-git` | Run `yay -S mud` and accept removal of the conflicting `mud-git` package. Existing mud settings and repository configurations are preserved. |
+| Linux binary (x86_64) | Download `mud-X.Y.Z-linux-x86_64.tar.gz` from [GitHub Releases](https://github.com/jasursadikov/mud/releases), extract it, and run `mud/mud`; keep its `_internal` directory beside the executable. Requires Git, glibc 2.35 or newer, and zlib. |
+| AUR release automation | Publish a stable `vX.Y.Z` GitHub release, or run **Publish mud binary to AUR** with its published release tag. CI tests the wheel and frozen executable, tests installation on Arch Linux, uploads the binary, and publishes `mud` with a SHA-256 checksum. |
+| AUR credentials | Configure repository secrets `AUR_USERNAME`, `AUR_EMAIL`, and `AUR_SSH_KEY`; the key must belong to an AUR account allowed to publish `mud`. GitHub release uploads use the workflow's automatic token. |
+| Retire the old AUR listing | After the first successful `mud` publication, request that AUR merge `mud-git` into `mud`. New releases publish only to `mud`. |
+| Retry AUR publication | Re-run failed jobs to reuse the tested artifact. Existing release binaries are never overwritten; rebuilding a published binary requires a new release version. |
 
 For requirements check [requirements.txt](requirements.txt).
 

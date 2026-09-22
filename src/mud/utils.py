@@ -21,7 +21,6 @@ def glyphs(key: str) -> str:
 
 
 def info() -> None:
-	os.chdir(os.path.dirname(os.path.abspath(__file__)))
 	colors = TEXT[3:]
 	colors.remove(BRIGHT_WHITE)
 	m = random.choice(colors)

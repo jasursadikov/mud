@@ -1,15 +1,48 @@
-name: Upload to Arch Linux (AUR)
+name: Publish mud binary to AUR
 
 on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Published stable release tag (vX.Y.Z)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-aur
+  cancel-in-progress: false
+
+env:
+  RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
+  build:
+    if: github.event_name == 'workflow_dispatch' || !github.event.release.prerelease
+    runs-on: ubuntu-22.04
+    outputs:
+      version: ${{ steps.release.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Validate release
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          stable=$(gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+            --json isDraft,isPrerelease --jq '(.isDraft or .isPrerelease) | not')
+          [[ "$stable" == true ]]
+          echo "version=${RELEASE_TAG#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+          fetch-depth: 0
 
       - name: Set up Python 3.13
         uses: actions/setup-python@v5
@@ -21,40 +54,116 @@ jobs:
           git config --global user.name "Test User"
           git config --global user.email "test@example.com"
 
-      - name: Install dependencies and build
+      - name: Install dependencies and build wheel
         run: |
-          pip install -r requirements.txt pytest build
+          python -m pip install build pytest -r .github/requirements-binary.txt
           python -m build
-          pip install dist/*.whl
+          python -m pip install dist/*.whl
 
-      - name: Run tests
-        run: pytest -v
+      - name: Test wheel
+        run: python -m pytest
 
-  aur-publish:
-    needs: [test]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Update PKGBUILD with Tag Version
+      - name: Build standalone executable
         run: |
-          version=$(git describe --tags --abbrev=0 | sed 's/^v//')
-          echo "latest_version=$version" >> $GITHUB_ENV
-          sed -i "s/^pkgver=.*/pkgver=${version}/" PKGBUILD
-          cat PKGBUILD
+          python -m PyInstaller --noconfirm --clean --onedir --name mud \
+            --distpath dist/binary --workpath build/pyinstaller --specpath build \
+            --collect-all pygit2 --hidden-import _cffi_backend \
+            --recursive-copy-metadata mud-git src/mud/__main__.py
+
+      - name: Test standalone executable
+        env:
+          MUD_EXECUTABLE: ${{ github.workspace }}/dist/binary/mud/mud
+        run: python -m pytest
+
+      - name: Prepare release archive and PKGBUILD
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          mkdir -p dist/aur
+          install -m644 LICENSE dist/binary/LICENSE
+          archive="mud-${VERSION}-linux-x86_64.tar.gz"
+          tar -czf "dist/aur/$archive" -C dist/binary mud LICENSE
+          checksum=$(sha256sum "dist/aur/$archive" | cut -d ' ' -f 1)
+          sed -e "s/@VERSION@/$VERSION/" -e "s/@SHA256@/$checksum/" \
+            PKGBUILD > dist/aur/PKGBUILD
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mud-aur
+          path: dist/aur/
+          if-no-files-found: error
+
+  test-package:
+    needs: build
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    steps:
+      - name: Install runtime dependencies
+        run: pacman -Syu --noconfirm git
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: mud-aur
+          path: package
+
+      - name: Build and install Arch package
+        working-directory: package
+        run: |
+          useradd --create-home builder
+          chown -R builder:builder .
+          runuser -u builder -- makepkg --noconfirm
+          pacman -U --noconfirm mud-*.pkg.tar.zst
+
+      - name: Smoke test installed binary
+        shell: bash
+        run: |
+          HOME=$(mktemp -d)
+          export HOME
+          cd "$HOME"
+          mud completion carapace | grep -F 'mud'
+          test ! -e "$HOME/.config/mud/settings.ini"
+          mud --help
+          git init repo-a
+          git -C repo-a -c user.name=Test -c user.email=test@example.com \
+            commit --allow-empty -m Initial
+          mud init
+          mud status | grep -F 'repo-a'
+          mud -a -c='git rev-parse --is-inside-work-tree' | grep -F 'true'
+
+  publish:
+    needs: [build, test-package]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: mud-aur
+          path: package
+
+      - name: Upload binary to GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          archive="mud-${VERSION}-linux-x86_64.tar.gz"
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+            --json assets --jq '.assets[].name' | grep -Fxq "$archive"; then
+            gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+              --pattern "$archive" --dir "$RUNNER_TEMP/published"
+            cmp "package/$archive" "$RUNNER_TEMP/published/$archive"
+          else
+            gh release upload "$RELEASE_TAG" "package/$archive" --repo "$GITHUB_REPOSITORY"
+          fi
 
       - name: Publish AUR package
         uses: KSXGitHub/github-actions-deploy-aur@v4.1.2
-        env:
-          latest_version: ${{ env.latest_version }}
         with:
-          pkgname: mud-git
-          pkgbuild: ./PKGBUILD
+          pkgname: mud
+          pkgbuild: ./package/PKGBUILD
+          test: true
           commit_username: ${{ secrets.AUR_USERNAME }}
           commit_email: ${{ secrets.AUR_EMAIL }}
           ssh_private_key: ${{ secrets.AUR_SSH_KEY }}
-          commit_message: "Update AUR package to version ${{ env.latest_version }}"
-          ssh_keyscan_types: rsa,ecdsa
+          commit_message: "Update mud to version ${{ needs.build.outputs.version }}"
+          ssh_keyscan_types: rsa,ecdsa,ed25519

@@ -15,6 +15,12 @@ pytest                    # run tests (verbose by default)
 pytest tests/test_run.py  # run a single file
 ```
 
+## Binary releases and AUR
+
+`.github/workflows/publish-aur.yaml` builds stable `vX.Y.Z` releases, with an explicit published tag required for manual runs. It checks out that exact tag, tests the wheel, freezes an x86_64 executable with PyInstaller on Ubuntu 22.04, and reruns the CLI tests against the executable. Build tools are pinned in `.github/requirements-binary.txt`.
+
+The workflow fills `@VERSION@` and `@SHA256@` in the root `PKGBUILD` template, tests the package in Arch Linux, uploads `mud-X.Y.Z-linux-x86_64.tar.gz` to the release, then publishes `mud` and generated `.SRCINFO` to AUR using `AUR_USERNAME`, `AUR_EMAIL`, and `AUR_SSH_KEY`. Published assets are immutable; retry failed jobs with the original artifact. The package installs the bundled runtime under `/opt/mud` and links `/usr/bin/mud`, with no end-user Python build. `mud-git` is a provided/conflicting legacy AUR package; its listing is retired by requesting an AUR merge after `mud` is published. The PyPI distribution is still named `mud-git`.
+
 ## Entry point
 
 `mud` CLI → `mud:run` in `src/mud/__init__.py` → `App` in `src/mud/app.py`; `mud completion` is dispatched to `completion.complete()` before writable settings are initialised.
@@ -31,7 +37,7 @@ pytest tests/test_run.py  # run a single file
 | `src/mud/settings.py` | `~/.config/mud/settings.ini` read/write; legacy settings migration; read-only initialisation for completion |
 | `src/mud/commands.py` | Constants for every command name and filter flag prefix |
 | `src/mud/styles.py` | ANSI escape codes and Nerd Font glyphs |
-| `src/mud/utils.py` | Shared helpers: table creation, error printing, configure wizard |
+| `src/mud/utils.py` | Shared helpers: table creation, error printing, configure wizard, help banner (independent of source-file paths for frozen builds) |
 
 ## Architecture notes
 
@@ -47,25 +53,27 @@ pytest tests/test_run.py  # run a single file
 
 **Execution modes** — three modes controlled by `run_async` + `run_table` settings (toggled by `-a` / `-t` flags): sequential, async streamed, async live-table.
 
+**Frozen subprocesses** — `Runner` restores the original `LD_LIBRARY_PATH` (or removes it if originally unset) in the child-command environment when running under PyInstaller, so Git and arbitrary shell commands use system libraries rather than the bundled runtime.
+
 **Filter chain** — `App._filter_with_arguments()` applies up to nine filters in sequence (ignore label, include/exclude label, include/exclude branch, include/exclude name substring, modified, diverged). Each step removes non-matching repos. Repeated `-N=` / `--not-name=` values exclude any matching path substring; empty exclusions are ignored.
 
 **Nerd Fonts** — every glyph in `styles.GLYPHS` has an ASCII fallback. `utils.glyphs(key)` selects between them based on the `nerd_fonts` setting, so mud works with or without a patched font.
 
 ## Tests
 
-Tests are black-box CLI tests — each runs `python -m mud` as a subprocess against real git repos in a temporary directory.
+Tests are black-box CLI tests — each runs `python -m mud` as a subprocess against real git repos in a temporary directory. Set `MUD_EXECUTABLE` to an absolute executable path to run CLI and completion tests against a frozen binary instead; import-only checks still use the Python environment.
 
 | File | Covers |
 |---|---|
 | `tests/test_config.py` | `init`, `add`, `remove`, `prune` |
 | `tests/test_settings.py` | Import side effects, first-launch settings location, legacy moves and migration failures, modern-file precedence, and settings save destination |
 | `tests/test_display.py` | `status`, `info`, `log`, `labels`, `branches`, `tags` |
-| `tests/test_run.py` | Execution modes and flags |
+| `tests/test_run.py` | Execution modes, flags, and preservation of the external-command library path in frozen builds |
 | `tests/test_filters.py` | `-l=`, `-L=`, `-b=`, `-B=`, `-n=`, `-N=` filter flags and native-command parsing regressions |
 | `tests/test_completion.py` | Completion callback, dynamic values, command boundaries, read-only settings precedence/discovery, and optional real Carapace/Nushell integration |
 | `tests/test_states.py` | Edge-case repo states (unborn, detached, rebasing) |
 
-Carapace integration tests run when `carapace` is on `PATH`; the Nushell round-trip test also requires `nu`. Tests isolate `HOME`, Carapace config/cache directories, and use the current Python environment's `mud` executable.
+Carapace integration tests run when `carapace` is on `PATH`; the Nushell round-trip test also requires `nu`. Tests isolate `HOME`, Carapace config/cache directories, and use `MUD_EXECUTABLE` or the current Python environment's `mud` executable.
 
 ## Knowledge base update rule
 After editing any file under `src/mud/`, update the affected sections of this file before finishing the task.

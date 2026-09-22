@@ -11,6 +11,9 @@ Default settings have both enabled, so:
 We test that all modes exit 0 and that the command actually ran in each repo.
 """
 from pathlib import Path
+
+import pytest
+
 from helpers import run_mud
 
 
@@ -53,3 +56,19 @@ def test_run_command_runs_in_every_repo(repos: Path, home: Path):
 	result = run_mud("-a", "echo", "hello", cwd=repos, home=home)
 	# "hello" appears at least once per repo (the header also echoes the command name)
 	assert result.stdout.count("hello") >= 2
+
+
+@pytest.mark.parametrize('flags', [('-a',), ('-t',), ()])
+@pytest.mark.parametrize('library_path', [None, '', '/external/libraries'])
+def test_run_preserves_library_path(repos: Path, home: Path, monkeypatch, flags, library_path):
+	monkeypatch.delenv('LD_LIBRARY_PATH_ORIG', raising=False)
+	if library_path is None:
+		monkeypatch.delenv('LD_LIBRARY_PATH', raising=False)
+	else:
+		monkeypatch.setenv('LD_LIBRARY_PATH', library_path)
+	result = run_mud(
+		*flags, '-c=printf %s "${LD_LIBRARY_PATH-}" > library-path', cwd=repos, home=home,
+	)
+	assert result.returncode == 0, result.stderr
+	for name in ['repo_a', 'repo_b']:
+		assert (repos / name / 'library-path').read_text() == (library_path or '')

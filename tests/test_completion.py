@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from helpers import make_detached_repo, make_empty_repo, make_git_repo, run_mud
+from helpers import make_detached_repo, make_empty_repo, make_git_repo, mud_command, run_mud
 
 
 @pytest.fixture
@@ -18,7 +18,7 @@ def complete(repos_labeled: Path, home: Path):
 		env['C_VALUE'] = arguments[-1]
 		env.update({f'C_ARG{index}': argument for index, argument in enumerate(arguments[:-1])})
 		result = subprocess.run(
-			[sys.executable, '-m', 'mud', 'completion', 'values'],
+			mud_command('completion', 'values'),
 			cwd=cwd, env=env, capture_output=True, text=True, check=True,
 		)
 		assert result.stderr == ''
@@ -165,7 +165,7 @@ def carapace(repos_labeled: Path, home: Path):
 	env.update({
 		'HOME': str(home), 'XDG_CONFIG_HOME': str(home / '.config'),
 		'XDG_CACHE_HOME': str(home / '.cache'), 'CARAPACE_BRIDGES': '',
-		'PATH': str(Path(sys.executable).parent) + os.pathsep + env['PATH'],
+		'PATH': str(Path(mud_command()[0]).parent) + os.pathsep + env['PATH'],
 	})
 
 	def invoke(*arguments, shell='export'):
