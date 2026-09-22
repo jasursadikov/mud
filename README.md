@@ -15,12 +15,6 @@ mud is CLI utility that allows you to run git commands in multiple repositories.
 |--------------|--------------|
 | PyPI | `pip install mud-git` |
 | Arch Linux (x86_64) | `yay -S mud` installs the prebuilt release executable with its bundled Python runtime and libraries. |
-| Migrate from AUR `mud-git` | Run `yay -S mud` and accept removal of the conflicting `mud-git` package. Existing mud settings and repository configurations are preserved. |
-| Linux binary (x86_64) | Download `mud-X.Y.Z-linux-x86_64.tar.gz` from [GitHub Releases](https://github.com/jasursadikov/mud/releases), extract it, and run `mud/mud`; keep its `_internal` directory beside the executable. Requires Git, glibc 2.35 or newer, zlib, and system CA certificates. |
-| AUR release automation | Publish a stable `vX.Y.Z` GitHub release, or run **Publish mud binary to AUR** with its published release tag. CI tests the wheel and frozen executable, tests installation on Arch Linux, uploads the binary, and publishes `mud` with a SHA-256 checksum. |
-| AUR credentials | Configure repository secrets `AUR_USERNAME`, `AUR_EMAIL`, and `AUR_SSH_KEY`; the key must belong to an AUR account allowed to publish `mud`. GitHub release uploads use the workflow's automatic token. |
-| Retire the old AUR listing | After the first successful `mud` publication, request that AUR merge `mud-git` into `mud`. New releases publish only to `mud`. |
-| Retry AUR publication | Re-run failed jobs to reuse the tested artifact. Existing release binaries are never overwritten; rebuilding a published binary requires a new release version. |
 
 For requirements check [requirements.txt](requirements.txt).
 
@@ -99,28 +93,6 @@ mud -b=master -d git pull
 mud -B=master -l=personal -L=work git fetch
 ```
 
-Completion helpers:
-
-```bash
-# Menu for -b= and -B= suggestions
-mud complete-branch
-
-# Full unique branch menu suitable for commands like "mud to <branch>"
-mud complete-branch-all
-```
-
-| Carapace Setup | Instructions |
-|----------------|--------------|
-| Requirements | Install `mud` and [Carapace](https://carapace-sh.github.io/carapace-bin/install.html) on `PATH`; the same spec works across Carapace-supported shells. |
-| Install Spec (Nushell, Linux) | `let specs = (($env.XDG_CONFIG_HOME? \| default ($nu.home-path \| path join .config)) \| path join carapace specs)`; `mkdir $specs`; `mud completion carapace \| save --force ($specs \| path join mud.yaml)` |
-| Install Spec (Bash/Zsh, Linux) | `mkdir -p "${XDG_CONFIG_HOME:-$HOME/.config}/carapace/specs"`; `mud completion carapace > "${XDG_CONFIG_HOME:-$HOME/.config}/carapace/specs/mud.yaml"` |
-| Nushell Hook | Follow [Carapace's Nushell setup](https://carapace-sh.github.io/carapace-bin/setup.html#nushell), or use `{\|spans\| carapace $spans.0 nushell ...$spans \| from json }` as your external completer; preserve empty results for mud rather than falling back to file or command completion. |
-| Bash/Zsh Hook | `source <(carapace _carapace)`; Zsh also requires `autoload -U compinit && compinit`. |
-| Fish Hook | `carapace _carapace fish \| source` |
-| Other Platforms/Shells | Install `mud.yaml` in [Carapace's user spec directory](https://carapace-sh.github.io/carapace-bin/spec/user.html), then follow the appropriate [shell setup](https://carapace-sh.github.io/carapace-bin/setup.html). Restart the shell after first installing the spec. |
-| Dynamic Values | Labels and paths come from the nearest ancestor `.mudconfig` or global fallback; branches include unique local and remote names with remote prefixes removed. Branch filters still match the current branch. No settings or repositories are written during completion. |
-| Command Boundaries | Complete mud filters before a command or `--`, or after a completed `-c="..."` argument. Arbitrary shell commands and alias arguments are not completed. |
-
 ## Settings
 
 Settings are stored at `~/.config/mud/settings.ini`.
@@ -158,3 +130,25 @@ You can modify your `.mudconfig` file using the following commands:
 | `mud add <path> <label>`/`mud a <path> <label>` | adds a path with an optional label. |
 | `mud remove <path>`/`mud rm <path>` | removes the directory with the specified path. |
 | `mud remove <path> <label>`/`mud rm <path> <label>` | removes the label from a directory. |
+
+## Completion helpers
+
+```bash
+# Menu for -b= and -B= suggestions
+mud complete-branch
+
+# Full unique branch menu suitable for commands like "mud to <branch>"
+mud complete-branch-all
+```
+
+| Carapace Setup | Instructions |
+|----------------|--------------|
+| Requirements | Install `mud` and [Carapace](https://carapace-sh.github.io/carapace-bin/install.html) on `PATH`; the same spec works across Carapace-supported shells. |
+| Install Spec (Nushell, Linux) | `let specs = (($env.XDG_CONFIG_HOME? \| default ($nu.home-path \| path join .config)) \| path join carapace specs)`; `mkdir $specs`; `mud completion carapace \| save --force ($specs \| path join mud.yaml)` |
+| Install Spec (Bash/Zsh, Linux) | `mkdir -p "${XDG_CONFIG_HOME:-$HOME/.config}/carapace/specs"`; `mud completion carapace > "${XDG_CONFIG_HOME:-$HOME/.config}/carapace/specs/mud.yaml"` |
+| Nushell Hook | Follow [Carapace's Nushell setup](https://carapace-sh.github.io/carapace-bin/setup.html#nushell), or use `{\|spans\| carapace $spans.0 nushell ...$spans \| from json }` as your external completer; preserve empty results for mud rather than falling back to file or command completion. |
+| Bash/Zsh Hook | `source <(carapace _carapace)`; Zsh also requires `autoload -U compinit && compinit`. |
+| Fish Hook | `carapace _carapace fish \| source` |
+| Other Platforms/Shells | Install `mud.yaml` in [Carapace's user spec directory](https://carapace-sh.github.io/carapace-bin/spec/user.html), then follow the appropriate [shell setup](https://carapace-sh.github.io/carapace-bin/setup.html). Restart the shell after first installing the spec. |
+| Dynamic Values | Labels and paths come from the nearest ancestor `.mudconfig` or global fallback; branches include unique local and remote names with remote prefixes removed. Branch filters still match the current branch. No settings or repositories are written during completion. |
+| Command Boundaries | Complete mud filters before a command or `--`, or after a completed `-c="..."` argument. Arbitrary shell commands and alias arguments are not completed. |
