@@ -67,6 +67,7 @@ jobs:
         run: |
           python -m PyInstaller --noconfirm --clean --onedir --name mud \
             --distpath dist/binary --workpath build/pyinstaller --specpath build \
+            --runtime-hook .github/pyinstaller/runtime_tls.py \
             --collect-all pygit2 --hidden-import _cffi_backend \
             --recursive-copy-metadata mud-git src/mud/__main__.py
 
@@ -119,6 +120,7 @@ jobs:
         run: |
           HOME=$(mktemp -d)
           export HOME
+          unset SSL_CERT_FILE SSL_CERT_DIR
           cd "$HOME"
           mud completion carapace | grep -F 'mud'
           test ! -e "$HOME/.config/mud/settings.ini"

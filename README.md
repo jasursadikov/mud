@@ -16,7 +16,7 @@ mud is CLI utility that allows you to run git commands in multiple repositories.
 | PyPI | `pip install mud-git` |
 | Arch Linux (x86_64) | `yay -S mud` installs the prebuilt release executable with its bundled Python runtime and libraries. |
 | Migrate from AUR `mud-git` | Run `yay -S mud` and accept removal of the conflicting `mud-git` package. Existing mud settings and repository configurations are preserved. |
-| Linux binary (x86_64) | Download `mud-X.Y.Z-linux-x86_64.tar.gz` from [GitHub Releases](https://github.com/jasursadikov/mud/releases), extract it, and run `mud/mud`; keep its `_internal` directory beside the executable. Requires Git, glibc 2.35 or newer, and zlib. |
+| Linux binary (x86_64) | Download `mud-X.Y.Z-linux-x86_64.tar.gz` from [GitHub Releases](https://github.com/jasursadikov/mud/releases), extract it, and run `mud/mud`; keep its `_internal` directory beside the executable. Requires Git, glibc 2.35 or newer, zlib, and system CA certificates. |
 | AUR release automation | Publish a stable `vX.Y.Z` GitHub release, or run **Publish mud binary to AUR** with its published release tag. CI tests the wheel and frozen executable, tests installation on Arch Linux, uploads the binary, and publishes `mud` with a SHA-256 checksum. |
 | AUR credentials | Configure repository secrets `AUR_USERNAME`, `AUR_EMAIL`, and `AUR_SSH_KEY`; the key must belong to an AUR account allowed to publish `mud`. GitHub release uploads use the workflow's automatic token. |
 | Retire the old AUR listing | After the first successful `mud` publication, request that AUR merge `mud-git` into `mud`. New releases publish only to `mud`. |

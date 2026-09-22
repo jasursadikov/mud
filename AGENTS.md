@@ -19,6 +19,8 @@ pytest tests/test_run.py  # run a single file
 
 `.github/workflows/publish-aur.yaml` builds stable `vX.Y.Z` releases, with an explicit published tag required for manual runs. It checks out that exact tag, tests the wheel, freezes an x86_64 executable with PyInstaller on Ubuntu 22.04, and reruns the CLI tests against the executable. Build tools are pinned in `.github/requirements-binary.txt`.
 
+`.github/pyinstaller/runtime_tls.py` selects a system CA bundle before pygit2 is imported when the bundled Python's compiled-in certificate paths are absent on the target distribution. Explicit `SSL_CERT_FILE` and `SSL_CERT_DIR` overrides are preserved. The Arch package depends on `ca-certificates`, and its smoke test clears those overrides to verify automatic discovery.
+
 The workflow fills `@VERSION@` and `@SHA256@` in the root `PKGBUILD` template, tests the package in Arch Linux, uploads `mud-X.Y.Z-linux-x86_64.tar.gz` to the release, then publishes `mud` and generated `.SRCINFO` to AUR using `AUR_USERNAME`, `AUR_EMAIL`, and `AUR_SSH_KEY`. Published assets are immutable; retry failed jobs with the original artifact. The package installs the bundled runtime under `/opt/mud` and links `/usr/bin/mud`, with no end-user Python build. `mud-git` is a provided/conflicting legacy AUR package; its listing is retired by requesting an AUR merge after `mud` is published. The PyPI distribution is still named `mud-git`.
 
 ## Entry point

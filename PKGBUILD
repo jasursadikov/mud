@@ -8,7 +8,7 @@ url="https://github.com/jasursadikov/mud"
 license=('MIT')
 provides=("mud-git=$pkgver")
 conflicts=('mud-git')
-depends=('git' 'glibc' 'zlib')
+depends=('git' 'glibc' 'zlib' 'ca-certificates')
 options=('!strip')
 source=("${url}/releases/download/v${pkgver}/mud-${pkgver}-linux-x86_64.tar.gz")
 sha256sums=('@SHA256@')
