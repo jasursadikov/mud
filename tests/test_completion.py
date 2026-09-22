@@ -101,11 +101,33 @@ def test_native_positionals(complete, repos_labeled: Path):
 def test_read_only_discovery(complete, repos_labeled: Path, home: Path, tmp_path_factory):
 	assert complete('-l=', cwd=repos_labeled / 'repo_a') == ['-l=label_a', '-l=label_b']
 	assert not (home / '.config').exists()
+	assert not (home / '.mudsettings').exists()
 	settings = home / '.config' / 'mud' / 'settings.ini'
 	settings.parent.mkdir(parents=True)
 	settings.write_text(f'[mud]\nconfig_path = {repos_labeled / ".mudconfig"}\n[alias]\nto = git checkout\n')
 	assert complete('-n=', cwd=tmp_path_factory.mktemp('outside-config')) == ['-n=repo_a', '-n=repo_b']
 	assert 'to' in complete('')
+
+
+@pytest.mark.parametrize('modern_exists', [False, True])
+def test_settings_precedence_without_migration(complete, home: Path, modern_exists):
+	legacy = home / '.mudsettings'
+	legacy_contents = '[mud]\n[alias]\nlegacy = git status\n'
+	legacy.write_text(legacy_contents)
+	modern = home / '.config' / 'mud' / 'settings.ini'
+	modern_contents = '[mud]\n[alias]\nmodern = git diff\n'
+	if modern_exists:
+		modern.parent.mkdir(parents=True)
+		modern.write_text(modern_contents)
+
+	values = complete('')
+	assert ('modern' in values) == modern_exists
+	assert ('legacy' in values) != modern_exists
+	assert legacy.read_text() == legacy_contents
+	if modern_exists:
+		assert modern.read_text() == modern_contents
+	else:
+		assert not (home / '.config').exists()
 
 
 def test_invalid_and_empty_configs(complete, repos_labeled: Path, home: Path):
@@ -135,6 +157,7 @@ def carapace(repos_labeled: Path, home: Path):
 	spec = run_mud('completion', 'carapace', cwd=home, home=home)
 	assert spec.returncode == 0, spec.stderr
 	assert not (home / '.config').exists()
+	assert not (home / '.mudsettings').exists()
 	spec_directory = home / '.config' / 'carapace' / 'specs'
 	spec_directory.mkdir(parents=True)
 	(spec_directory / 'mud.yaml').write_text(spec.stdout)

@@ -49,9 +49,9 @@ mud --diverged git pull
 | Command                         | Description                                                                                                                       |
 |---------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
 | `mud init`                     | creates `.mudconfig` and adds repositories beneath the current directory. |
-| `mud configure`/`mud config`    | runs the interactive settings wizard. |
+| `mud configure`/`mud config`    | runs the interactive settings wizard, saving only to `~/.config/mud/settings.ini`. If the modern file is missing, normal startup moves `~/.mudsettings` there or creates defaults if neither exists. An existing modern file takes precedence and leaves the legacy file untouched; mud never creates `~/.mudsettings`. |
 | `mud help`/`mud --help`/`mud -h` | displays available commands and flags. |
-| `mud set-global [path]`         | sets the current `.mudconfig`, or the specified configuration path, as the fallback configuration to run from any directory. |
+| `mud set-global [path]`         | sets the current `.mudconfig`, or the specified configuration path, as the fallback configuration to run from any directory; saves to `~/.config/mud/settings.ini`. |
 | `mud get-config`                | prints the current `.mudconfig` location.                                                                                         |
 | `mud prune`                     | removes all invalid repositories from the `.mudconfig`.                                                                           |
 | `mud info`/`mud i`              | displays branch divergence and working directory changes.                                                                         |
