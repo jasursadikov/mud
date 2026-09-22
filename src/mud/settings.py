@@ -1,4 +1,5 @@
 import os
+import shutil
 import configparser
 
 MAIN_SCOPE = 'mud'
@@ -7,14 +8,11 @@ ALIAS_SCOPE = 'alias'
 
 class Settings:
 	def __init__(self, file_name: str, old_file_name: str, read_only: bool = False) -> None:
-		use_old = os.path.exists(os.path.join(os.path.expanduser('~'), old_file_name))
-		file_name = old_file_name if use_old else file_name
-		directory = os.path.expanduser('~' if use_old else '~/.config/mud')
-
 		self.mud_settings = None
 		self.alias_settings = None
 		self.config = configparser.ConfigParser()
-		self.settings_file = os.path.join(directory, file_name)
+		self.settings_file = os.path.join(os.path.expanduser('~/.config/mud'), file_name)
+		self.old_settings_file = os.path.join(os.path.expanduser('~'), old_file_name)
 		self.read_only = read_only
 		self.defaults = {
 			'mud': {
@@ -38,9 +36,15 @@ class Settings:
 
 	def load_settings(self) -> None:
 		if not os.path.exists(self.settings_file):
-			self.config.read_dict(self.defaults)
-			if not self.read_only:
-				self.save()
+			if os.path.exists(self.old_settings_file):
+				self.config.read(self.old_settings_file)
+				if not self.read_only:
+					os.makedirs(os.path.dirname(self.settings_file), exist_ok=True)
+					shutil.move(self.old_settings_file, self.settings_file)
+			else:
+				self.config.read_dict(self.defaults)
+				if not self.read_only:
+					self.save()
 		else:
 			self.config.read(self.settings_file)
 

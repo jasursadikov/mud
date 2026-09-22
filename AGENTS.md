@@ -28,7 +28,7 @@ pytest tests/test_run.py  # run a single file
 | `src/mud/completion.py` | Exports the Carapace spec and provides read-only dynamic completion via `C_ARG<n>` / `C_VALUE` |
 | `src/mud/runner.py` | All display commands and execution modes |
 | `src/mud/config.py` | `.mudconfig` TSV read/write; `init`, `add`, `remove`, `prune` |
-| `src/mud/settings.py` | `~/.config/mud/settings.ini` read/write; read-only initialisation for completion |
+| `src/mud/settings.py` | `~/.config/mud/settings.ini` read/write; legacy settings migration; read-only initialisation for completion |
 | `src/mud/commands.py` | Constants for every command name and filter flag prefix |
 | `src/mud/styles.py` | ANSI escape codes and Nerd Font glyphs |
 | `src/mud/utils.py` | Shared helpers: table creation, error printing, configure wizard |
@@ -36,6 +36,8 @@ pytest tests/test_run.py  # run a single file
 ## Architecture notes
 
 **Global settings instance** — `utils.settings` is a single `Settings` object created in `__init__.run()` and accessed across all modules.
+
+**Settings location** — All settings writes target `~/.config/mud/settings.ini`; mud never creates `~/.mudsettings`. An existing modern file takes precedence and leaves the legacy file untouched; otherwise normal startup moves the legacy file to the modern location, preserving its contents, or creates defaults at the modern location if neither file exists. The legacy file is removed only after a successful move. Completion can read legacy settings as a fallback but never migrates them. Ordinary package imports and builds do not initialise settings.
 
 **Command dispatch** — `App.run()` routes to either a native `Runner` method (matched against constants in `commands.py`) or a shell pass-through. The `--` separator and `-c=<cmd>` flag both reach the shell path.
 
@@ -56,10 +58,11 @@ Tests are black-box CLI tests — each runs `python -m mud` as a subprocess agai
 | File | Covers |
 |---|---|
 | `tests/test_config.py` | `init`, `add`, `remove`, `prune` |
+| `tests/test_settings.py` | Import side effects, first-launch settings location, legacy moves and migration failures, modern-file precedence, and settings save destination |
 | `tests/test_display.py` | `status`, `info`, `log`, `labels`, `branches`, `tags` |
 | `tests/test_run.py` | Execution modes and flags |
 | `tests/test_filters.py` | `-l=`, `-L=`, `-b=`, `-B=`, `-n=`, `-N=` filter flags and native-command parsing regressions |
-| `tests/test_completion.py` | Completion callback, dynamic values, command boundaries, read-only discovery, and optional real Carapace/Nushell integration |
+| `tests/test_completion.py` | Completion callback, dynamic values, command boundaries, read-only settings precedence/discovery, and optional real Carapace/Nushell integration |
 | `tests/test_states.py` | Edge-case repo states (unborn, detached, rebasing) |
 
 Carapace integration tests run when `carapace` is on `PATH`; the Nushell round-trip test also requires `nu`. Tests isolate `HOME`, Carapace config/cache directories, and use the current Python environment's `mud` executable.

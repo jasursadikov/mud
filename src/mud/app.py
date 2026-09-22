@@ -91,7 +91,6 @@ class App:
 			print()
 			self.parser.print_help()
 			return
-		# Sets global repository in .mudsettings
 		if sys.argv[1] in SET_GLOBAL:
 			if len(sys.argv) > 2:
 				config_path = sys.argv[2]
