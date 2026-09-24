@@ -421,7 +421,7 @@ class Runner:
 	@staticmethod
 	def _print_process_header(path: str, command: str, failed: bool, code: int) -> None:
 		path = f'{BKG_BLACK}{BRIGHT_WHITE} {Runner._get_formatted_path(path)} {RESET}{BLACK}{BKG_RED if failed else BKG_GREEN}{glyphs(')')}{RESET}'
-		code = f'{BKG_RED if failed else BKG_GREEN} {BRIGHT_WHITE}{command}{f':{BOLD}{code}' if failed else ''} {RESET}{RED if failed else GREEN}{glyphs(')')}{RESET}'
+		code = f'{BKG_RED if failed else BKG_GREEN} {BLACK}{command}{f':{BOLD}{code}' if failed else ''} {RESET}{RED if failed else GREEN}{glyphs(')')}{RESET}'
 		print(f'{path}{code}')
 
 	@staticmethod
